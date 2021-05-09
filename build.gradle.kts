@@ -14,6 +14,11 @@ allprojects {
                 googleJavaFormat("1.10.0")
             }
         }
+        project.plugins.withId("kotlin") {
+            kotlin {
+                ktlint()
+            }
+        }
         kotlinGradle {
             ktlint()
         }

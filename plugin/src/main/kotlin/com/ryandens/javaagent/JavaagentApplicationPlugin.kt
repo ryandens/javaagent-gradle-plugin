@@ -17,8 +17,10 @@ import java.io.File
  */
 class JavaagentApplicationPlugin: Plugin<Project> {
     override fun apply(project: Project) {
-        // Register a task
-        val javaagentConfiguration = project.configurations.register("javaagent")
+        // apply base plugin
+        project.pluginManager.apply(JavaagentBasePlugin::class.java)
+        // get configuration
+        val javaagentConfiguration = project.configurations.named(JavaagentBasePlugin.CONFIGURATION_NAME)
         project.tasks.withType(JavaExec::class.java).configureEach {
             it.jvmArgumentProviders.add {
                 mutableListOf("-javaagent:${javaagentConfiguration.get().asPath}").plus(it.jvmArgs ?: mutableListOf())

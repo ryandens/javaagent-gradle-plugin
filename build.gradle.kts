@@ -8,7 +8,7 @@ allprojects {
     spotless {
         project.plugins.withId("java") {
             java {
-                googleJavaFormat()
+                googleJavaFormat("1.10.0")
             }
         }
         kotlinGradle {

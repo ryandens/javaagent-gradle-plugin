@@ -17,9 +17,9 @@ dependencies {
 
 gradlePlugin {
     plugins {
-        create("attach") {
-            id = "com.ryandens.javaagent.attach"
-            implementationClass = "com.ryandens.javaagent.JavaagentAttachPlugin"
+        create("javaagentApplicationPlugin") {
+            id = "com.ryandens.javaagent-application"
+            implementationClass = "com.ryandens.javaagent.JavaagentApplicationPlugin"
         }
     }
 }

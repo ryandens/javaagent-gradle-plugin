@@ -10,11 +10,11 @@ import kotlin.test.assertNotNull
 /**
  * A simple unit test for the 'com.ryandens.javaagent.attach' plugin.
  */
-class JavaagentAttachPluginTest {
+class JavaagentApplicationPluginTest {
     @Test fun `plugin registers task`() {
         // Create a test project and apply the plugin
         val project = ProjectBuilder.builder().build()
-        project.plugins.apply("com.ryandens.javaagent.attach")
+        project.plugins.apply("com.ryandens.javaagent-application")
 
         // Verify the result
         assertNotNull(project.configurations.findByName("javaagent"))

@@ -15,7 +15,7 @@ import java.io.File
 /**
  * A simple 'hello world' plugin.
  */
-class JavaagentAttachPlugin: Plugin<Project> {
+class JavaagentApplicationPlugin: Plugin<Project> {
     override fun apply(project: Project) {
         // Register a task
         val javaagentConfiguration = project.configurations.register("javaagent")

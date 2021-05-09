@@ -15,8 +15,11 @@ import java.io.File
 /**
  * A simple 'hello world' plugin.
  */
-class JavaagentApplicationPlugin: Plugin<Project> {
+class JavaagentApplicationPlugin : Plugin<Project> {
     override fun apply(project: Project) {
+        if (!project.pluginManager.hasPlugin(ApplicationPlugin.APPLICATION_PLUGIN_NAME)) {
+            throw IllegalStateException("In order to use this plugin, the Application plugin must be applied")
+        }
         // apply base plugin
         project.pluginManager.apply(JavaagentBasePlugin::class.java)
         // get configuration
@@ -28,18 +31,20 @@ class JavaagentApplicationPlugin: Plugin<Project> {
         }
 
 
-        if (project.pluginManager.hasPlugin(ApplicationPlugin.APPLICATION_PLUGIN_NAME)) {
-            project.tasks.named(ApplicationPlugin.TASK_START_SCRIPTS_NAME, CreateStartScripts::class.java) {
-                it.defaultJvmOpts = listOf("-javaagent:COM_RYANDENS_APP_HOME_ENV_VAR_PLACEHOLDER/lib/${File(javaagentConfiguration.get().asPath).name}").plus(it.defaultJvmOpts ?: listOf())
-                it.unixStartScriptGenerator = JavaagentAwareStartScriptGenerator()
-            }
-            project.extensions.getByType(DistributionContainer::class.java).named(DistributionPlugin.MAIN_DISTRIBUTION_NAME).configure { distribution ->
+        project.tasks.named(ApplicationPlugin.TASK_START_SCRIPTS_NAME, CreateStartScripts::class.java) {
+            it.defaultJvmOpts =
+                listOf("-javaagent:COM_RYANDENS_APP_HOME_ENV_VAR_PLACEHOLDER/lib/${File(javaagentConfiguration.get().asPath).name}").plus(
+                    it.defaultJvmOpts ?: listOf()
+                )
+            it.unixStartScriptGenerator = JavaagentAwareStartScriptGenerator()
+        }
+        project.extensions.getByType(DistributionContainer::class.java).named(DistributionPlugin.MAIN_DISTRIBUTION_NAME)
+            .configure { distribution ->
                 distribution.contents { copy ->
                     copy.from(javaagentConfiguration) {
                         it.into("lib")
                     }
                 }
             }
-        }
     }
 }

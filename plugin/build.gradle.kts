@@ -1,5 +1,6 @@
 plugins {
     `java-gradle-plugin`
+    `maven-publish`
     id("org.jetbrains.kotlin.jvm") version "1.4.31"
 }
 

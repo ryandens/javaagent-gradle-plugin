@@ -1,9 +1,9 @@
 package com.ryandens.javaagent
 
 import java.io.File
-import org.gradle.testkit.runner.GradleRunner
 import kotlin.test.Test
 import kotlin.test.assertTrue
+import org.gradle.testkit.runner.GradleRunner
 
 /**
  * A simple functional test for the 'com.ryandens.javaagent.attach' plugin.
@@ -52,11 +52,10 @@ class JavaagentPluginPluginFunctionalTest {
         runner.withPluginClasspath()
         runner.withArguments("build", "run")
         runner.withProjectDir(projectDir)
-        val result = runner.build();
+        val result = runner.build()
 
         // Verify the result
         assertTrue(result.output.contains("Hello World!"))
         assertTrue(result.output.contains("Hello from my simple agent!"))
     }
-
 }

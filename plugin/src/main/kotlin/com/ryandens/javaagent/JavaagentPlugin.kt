@@ -3,7 +3,6 @@ package com.ryandens.javaagent
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.plugins.ApplicationPlugin
 
 /**
  * Mixin for [org.gradle.api.Plugin]s that rely on the [JavaagentBasePlugin]
@@ -21,7 +20,7 @@ interface JavaagentPlugin {
         return project.configurations.named(JavaagentBasePlugin.CONFIGURATION_NAME)
     }
 
-    fun failIfPluginNotApplied(project : Project, pluginId: String) {
+    fun failIfPluginNotApplied(project: Project, pluginId: String) {
         if (!project.pluginManager.hasPlugin(pluginId)) {
             throw IllegalStateException("In order to use this plugin, the $pluginId plugin must be applied")
         }

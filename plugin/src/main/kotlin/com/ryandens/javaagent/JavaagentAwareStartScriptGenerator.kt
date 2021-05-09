@@ -1,5 +1,6 @@
 package com.ryandens.javaagent
 
+import java.io.Writer
 import org.gradle.api.Transformer
 import org.gradle.api.internal.plugins.DefaultTemplateBasedStartScriptGenerator
 import org.gradle.api.internal.plugins.StartScriptTemplateBindingFactory
@@ -7,7 +8,6 @@ import org.gradle.api.internal.plugins.UnixStartScriptGenerator
 import org.gradle.jvm.application.scripts.JavaAppStartScriptGenerationDetails
 import org.gradle.jvm.application.scripts.ScriptGenerator
 import org.gradle.util.TextUtil
-import java.io.Writer
 
 class JavaagentAwareStartScriptGenerator(
     private val inner: ScriptGenerator = DefaultTemplateBasedStartScriptGenerator(
@@ -20,7 +20,6 @@ class JavaagentAwareStartScriptGenerator(
         inner.generateScript(details, Fake(destination))
     }
 
-
     private class FakeTransformer(private val inner: StartScriptTemplateBindingFactory) :
         Transformer<MutableMap<String, String>, JavaAppStartScriptGenerationDetails> by inner {
 
@@ -28,8 +27,8 @@ class JavaagentAwareStartScriptGenerator(
             val result = inner.transform(`in`)
             val jvmOpts = result["defaultJvmOpts"] ?: ""
             val trimmedJvmOpts = if (jvmOpts.startsWith("'") && jvmOpts.endsWith("'")) {
-                jvmOpts.substring(1, jvmOpts.length -1)
-            } else  {
+                jvmOpts.substring(1, jvmOpts.length - 1)
+            } else {
                 jvmOpts
             }
             result["defaultJvmOpts"] = trimmedJvmOpts.replace("\" \"", " ")

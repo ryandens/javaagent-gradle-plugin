@@ -1,7 +1,7 @@
 package com.ryandens.javaagent
 
-import org.gradle.api.Project
 import org.gradle.api.Plugin
+import org.gradle.api.Project
 import org.gradle.api.internal.plugins.WindowsStartScriptGenerator
 import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.tasks.JavaExec

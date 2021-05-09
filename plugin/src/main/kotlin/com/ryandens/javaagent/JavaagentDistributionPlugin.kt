@@ -1,11 +1,10 @@
 package com.ryandens.javaagent
 
-import org.gradle.api.NamedDomainObjectProvider
+import java.io.File
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.distribution.DistributionContainer
 import org.gradle.api.distribution.plugins.DistributionPlugin
-import java.io.File
 
 /**
  * Gradle plugin for configuration a project that uses the [org.gradle.api.distribution.plugins.DistributionPlugin] to

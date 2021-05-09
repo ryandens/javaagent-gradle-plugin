@@ -21,7 +21,7 @@ class JavaagentApplicationPlugin: Plugin<Project> {
         project.pluginManager.apply(JavaagentBasePlugin::class.java)
         // get configuration
         val javaagentConfiguration = project.configurations.named(JavaagentBasePlugin.CONFIGURATION_NAME)
-        project.tasks.withType(JavaExec::class.java).configureEach {
+        project.tasks.named(ApplicationPlugin.TASK_RUN_NAME, JavaExec::class.java).configure {
             it.jvmArgumentProviders.add {
                 mutableListOf("-javaagent:${javaagentConfiguration.get().asPath}").plus(it.jvmArgs ?: mutableListOf())
             }

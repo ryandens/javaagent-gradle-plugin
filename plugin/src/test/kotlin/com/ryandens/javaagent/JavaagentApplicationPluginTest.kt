@@ -14,6 +14,7 @@ class JavaagentApplicationPluginTest {
     @Test fun `plugin registers task`() {
         // Create a test project and apply the plugin
         val project = ProjectBuilder.builder().build()
+        project.plugins.apply("application")
         project.plugins.apply("com.ryandens.javaagent-application")
 
         // Verify the result

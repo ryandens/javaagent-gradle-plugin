@@ -1,8 +1,10 @@
 package com.ryandens.javaagent
 
 import java.io.File
+import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.distribution.DistributionContainer
 import org.gradle.api.distribution.plugins.DistributionPlugin
 
@@ -16,10 +18,12 @@ class JavaagentDistributionPlugin : Plugin<Project>, JavaagentPlugin {
 
     private lateinit var javaagentPathProvider: () -> String
 
-    override fun apply(project: Project) {
-        // ideally, we would get the DistributionPlugin ID from the class itself, but this information is not exposed
-        failIfPluginNotApplied(project, "distribution")
-        val javaagentConfiguration = setupAndGetJavaagentConfiguration(project)
+    override fun applyAfterJavaagentSetup(
+        project: Project,
+        javaagentConfiguration: NamedDomainObjectProvider<Configuration>
+    ) {
+        // in order to use this plugin, the DistributionPlugin must be applied
+        project.pluginManager.apply(DistributionPlugin::class.java)
         // Create a function to build the relative path to the javaagent inside the distribution to defer evaluation of javaagentConfiguration.get()
         javaagentPathProvider = {
             "$destinationDirectory/${File(javaagentConfiguration.get().asPath).name}"

@@ -1,28 +1,26 @@
 package com.ryandens.javaagent
 
 import org.gradle.api.NamedDomainObjectProvider
+import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 
 /**
  * Mixin for [org.gradle.api.Plugin]s that rely on the [JavaagentBasePlugin]
  */
-interface JavaagentPlugin {
+interface JavaagentPlugin : Plugin<Project> {
 
     /**
-     * Applies the [JavaagentBasePlugin] and returns the javaagent [Configuration] in [NamedDomainObjectProvider] for
-     * use by implementing [org.gradle.api.Plugin]s
+     * Initial setup for any plugin that wants to configure a javaagent for a project, followed by delegating to the
+     * [applyAfterJavaagentSetup] implementation provided by the plugin implementing this interface
      */
-    fun setupAndGetJavaagentConfiguration(project: Project): NamedDomainObjectProvider<Configuration> {
+    override fun apply(project: Project) {
         // apply base plugin
         project.pluginManager.apply(JavaagentBasePlugin::class.java)
         // get configuration
-        return project.configurations.named(JavaagentBasePlugin.CONFIGURATION_NAME)
+        val javaagentConfiguration = project.configurations.named(JavaagentBasePlugin.CONFIGURATION_NAME)
+        applyAfterJavaagentSetup(project, javaagentConfiguration)
     }
 
-    fun failIfPluginNotApplied(project: Project, pluginId: String) {
-        if (!project.pluginManager.hasPlugin(pluginId)) {
-            throw IllegalStateException("In order to use this plugin, the $pluginId plugin must be applied")
-        }
-    }
+    fun applyAfterJavaagentSetup(project: Project, javaagentConfiguration: NamedDomainObjectProvider<Configuration>)
 }

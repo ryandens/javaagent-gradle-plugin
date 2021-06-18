@@ -1,7 +1,9 @@
 package com.ryandens.javaagent
 
+import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.internal.plugins.WindowsStartScriptGenerator
 import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.tasks.JavaExec
@@ -11,9 +13,12 @@ import org.gradle.api.tasks.application.CreateStartScripts
  * Configures a project that leverages the [ApplicationPlugin] to easily integrate a javaagent into its tasks and outputs.
  */
 class JavaagentApplicationPlugin : Plugin<Project>, JavaagentPlugin {
-    override fun apply(project: Project) {
-        failIfPluginNotApplied(project, ApplicationPlugin.APPLICATION_PLUGIN_NAME)
-        val javaagentConfiguration = setupAndGetJavaagentConfiguration(project)
+
+    override fun applyAfterJavaagentSetup(
+        project: Project,
+        javaagentConfiguration: NamedDomainObjectProvider<Configuration>
+    ) {
+        project.pluginManager.apply(ApplicationPlugin::class.java)
         project.pluginManager.apply(JavaagentDistributionPlugin::class.java)
         // configure the run task to use the `javaagent` flag pointing to the dependency stored in the local Maven repository
         project.tasks.named(ApplicationPlugin.TASK_RUN_NAME, JavaExec::class.java).configure {

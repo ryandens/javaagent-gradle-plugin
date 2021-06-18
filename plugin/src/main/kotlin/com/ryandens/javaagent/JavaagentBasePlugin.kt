@@ -14,6 +14,9 @@ class JavaagentBasePlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         // Register configuration
-        project.configurations.register(CONFIGURATION_NAME)
+        project.configurations.register(CONFIGURATION_NAME) {
+            // we expect javaagents to come as shaded JARs
+            it.isTransitive = false
+        }
     }
 }

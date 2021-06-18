@@ -9,6 +9,7 @@ repositories {
 }
 
 dependencies {
+    compileOnly("com.google.cloud.tools:jib-gradle-plugin-extension-api:0.4.0")
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
@@ -29,6 +30,10 @@ gradlePlugin {
         create("javaagentApplicationRunPlugin") {
             id = "com.ryandens.javaagent-application-run"
             implementationClass = "com.ryandens.javaagent.JavaagentApplicationRunPlugin"
+        }
+        create("javaagentJibPlugin") {
+            id = "com.ryandens.javaagent-jib"
+            implementationClass = "com.ryandens.javaagent.JavaagentJibExtension"
         }
     }
 }

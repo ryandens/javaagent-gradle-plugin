@@ -14,12 +14,14 @@ import org.gradle.api.tasks.application.CreateStartScripts
  */
 class JavaagentApplicationPlugin : Plugin<Project>, JavaagentPlugin {
 
+    override fun dependentProjectPlugins(): Collection<Class<out Plugin<Project>>> {
+        return setOf(ApplicationPlugin::class.java, JavaagentDistributionPlugin::class.java)
+    }
+
     override fun applyAfterJavaagentSetup(
         project: Project,
         javaagentConfiguration: NamedDomainObjectProvider<Configuration>
     ) {
-        project.pluginManager.apply(ApplicationPlugin::class.java)
-        project.pluginManager.apply(JavaagentDistributionPlugin::class.java)
         // configure the run task to use the `javaagent` flag pointing to the dependency stored in the local Maven repository
         project.tasks.named(ApplicationPlugin.TASK_RUN_NAME, JavaExec::class.java).configure {
             it.jvmArgumentProviders.add {

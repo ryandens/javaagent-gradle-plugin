@@ -18,12 +18,14 @@ class JavaagentDistributionPlugin : Plugin<Project>, JavaagentPlugin {
 
     private lateinit var javaagentPathProvider: () -> String
 
+    override fun dependentProjectPlugins(): Collection<Class<out Plugin<Project>>> {
+        return setOf(DistributionPlugin::class.java)
+    }
+
     override fun applyAfterJavaagentSetup(
         project: Project,
         javaagentConfiguration: NamedDomainObjectProvider<Configuration>
     ) {
-        // in order to use this plugin, the DistributionPlugin must be applied
-        project.pluginManager.apply(DistributionPlugin::class.java)
         // Create a function to build the relative path to the javaagent inside the distribution to defer evaluation of javaagentConfiguration.get()
         javaagentPathProvider = {
             "$destinationDirectory/${File(javaagentConfiguration.get().asPath).name}"

@@ -18,6 +18,10 @@ dependencies {
 
 gradlePlugin {
     plugins {
+        create("javaagentDistributionPlugin") {
+            id = "com.ryandens.javaagent-distribution"
+            implementationClass = "com.ryandens.javaagent.JavaagentDistributionPlugin"
+        }
         create("javaagentApplicationPlugin") {
             id = "com.ryandens.javaagent-application"
             implementationClass = "com.ryandens.javaagent.JavaagentApplicationPlugin"

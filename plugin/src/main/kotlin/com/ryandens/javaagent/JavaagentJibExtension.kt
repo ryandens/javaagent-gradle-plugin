@@ -5,6 +5,7 @@ import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan
 import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer
 import com.google.cloud.tools.jib.api.buildplan.FileEntry
 import com.google.cloud.tools.jib.api.buildplan.FilePermissions
+import com.google.cloud.tools.jib.gradle.JibExtension
 import com.google.cloud.tools.jib.gradle.extension.GradleData
 import com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger
@@ -78,6 +79,14 @@ class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
         listOf("jib", "jibDockerBuild", "jibBuildTar").forEach { jibTaskName ->
             project.tasks.named(jibTaskName) { jibTask ->
                 jibTask.dependsOn(copyAgents)
+            }
+        }
+
+        val jibExtension: JibExtension? = project.extensions.findByType(JibExtension::class.java)
+
+        jibExtension?.pluginExtensions { extensionParametersSpec ->
+            extensionParametersSpec.pluginExtension {
+                it.implementation = "com.ryandens.javaagent.JavaagentJibExtension"
             }
         }
 

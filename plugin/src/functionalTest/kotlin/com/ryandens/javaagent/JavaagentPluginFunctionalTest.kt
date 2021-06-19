@@ -9,9 +9,12 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 
 /**
- * A simple functional test for the 'com.ryandens.javaagent.attach' plugin.
+ * A simple functional test for plugins with IDs matching 'com.ryandens.javaagent-*'. Currently tested plugins are:
+ *
+ * `com.ryandens.javaagent-application-run` (via `com.ryandens.javaagent-application`)
+ * `com.ryandens.javaagent-application-distribution` (via `com.ryandens.javaagent-application`)
  */
-class JavaagentPluginPluginFunctionalTest {
+class JavaagentPluginFunctionalTest {
 
     private lateinit var functionalTestDir: File
 

@@ -47,11 +47,8 @@ class JavaagentApplicationDistributionPlugin : Plugin<Project>, JavaagentPlugin 
             // here. Instead, when we put in a placeholder String so that when we generate the start script we can
             // unescape the defaultJvmOpts String and replace directly replace our placeholder with the environment
             // variable that corresponds to the distribution installation's home directory
-            val agentRelativeDistributionPath = "$destinationDirectory/${File(javaagentConfiguration.get().asPath).name}"
-            it.defaultJvmOpts =
-                listOf(
-                    "-javaagent:COM_RYANDENS_APP_HOME_ENV_VAR_PLACEHOLDER/$agentRelativeDistributionPath"
-                ).plus(
+            it.defaultJvmOpts = javaagentConfiguration.get().asPath.split(":").map { jar -> "-javaagent:COM_RYANDENS_APP_HOME_ENV_VAR_PLACEHOLDER/$destinationDirectory/${File(jar).name}" }
+                .plus(
                     it.defaultJvmOpts ?: listOf()
                 )
             // custom start script generator that replaces the placeholder

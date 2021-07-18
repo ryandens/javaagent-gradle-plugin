@@ -16,7 +16,7 @@ then specify the javaagent you would like to attach in the dependencies block
 ```kotlin
 plugins {
     application
-    id("com.ryandens.javaagent-application") version "0.1.0"
+    id("com.ryandens.javaagent-application") version "0.2.0"
 }
 
 application {
@@ -46,7 +46,7 @@ would like to attach in the dependencies block.
 plugins {
     java
     id("com.google.cloud.tools.jib") version "3.1.1"
-    id("com.ryandens.javaagent-jib") version "0.1.0"
+    id("com.ryandens.javaagent-jib") version "0.2.0"
 }
 
 jib.container {

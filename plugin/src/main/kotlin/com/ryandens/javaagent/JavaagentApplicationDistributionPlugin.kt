@@ -21,7 +21,7 @@ class JavaagentApplicationDistributionPlugin : Plugin<Project>, JavaagentPlugin 
     /**
      * Destination directory for dependencies as specified by the [ApplicationPlugin]
      */
-    private val destinationDirectory = "lib"
+    private val destinationDirectory = "agent-libs"
 
     override fun dependentProjectPlugins(): Collection<Class<out Plugin<Project>>> {
         return setOf(ApplicationPlugin::class.java)

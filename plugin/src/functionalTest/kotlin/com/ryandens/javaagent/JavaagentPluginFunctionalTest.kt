@@ -43,6 +43,22 @@ class JavaagentPluginFunctionalTest {
         assertTrue(result.output.contains("Hello from my simple agent!"))
     }
 
+    @Test fun `can attach two agents to application run task`() {
+        val otelVersion = "1.3.1"
+        val dependencies = """
+            javaagent project(':simple-agent')
+            javaagent 'io.opentelemetry.javaagent:opentelemetry-javaagent:$otelVersion'
+        """
+
+        // create the test project and run the tasks
+        val result = createAndBuildJavaagentProject(dependencies, listOf("assemble", "run"))
+
+        // Verify the result
+        assertTrue(result.output.contains("Hello World!"))
+        assertTrue(result.output.contains("Hello from my simple agent!"))
+        assertTrue(result.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: $otelVersion"))
+    }
+
     @Test fun `can attach to application distribution`() {
         val dependencies = """
             javaagent project(':simple-agent')

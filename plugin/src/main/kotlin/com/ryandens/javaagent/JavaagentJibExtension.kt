@@ -10,7 +10,6 @@ import com.google.cloud.tools.jib.gradle.extension.GradleData
 import com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger
 import java.io.File
-import java.nio.file.Paths
 import java.util.Optional
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
@@ -40,27 +39,21 @@ class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
         val entrypoint = checkNotNull(buildPlan.entrypoint)
         check(entrypoint.isNotEmpty())
 
-        val localAgentPath = checkNotNull(gradleData?.project?.plugins?.getPlugin(
+        val localAgentPaths = checkNotNull(gradleData?.project?.plugins?.getPlugin(
             JavaagentJibExtension::class.java
         )?.javaagentPathProvider?.invoke())
-
-        val agentFileName = File(localAgentPath).name
 
         val planBuilder = buildPlan.toBuilder()
         val newEntrypoint = buildList<String> {
             addAll(entrypoint)
-            add(1, "-javaagent:/opt/jib-agents/$agentFileName")
+            addAll(1, localAgentPaths.map { localAgentPath -> "-javaagent:/opt/jib-agents/${localAgentPath.name}" })
         }
 
         val javaagentFileEntries = buildList {
-            add(
-                FileEntry(
-                    Paths.get(localAgentPath),
-                    AbsoluteUnixPath.get("/opt/jib-agents/$agentFileName"),
-                    FilePermissions.DEFAULT_FILE_PERMISSIONS,
-                    FileEntriesLayer.DEFAULT_MODIFICATION_TIME
-                )
-            )
+            addAll(localAgentPaths.map {
+                localAgentPath -> FileEntry(localAgentPath.toPath(), AbsoluteUnixPath.get("/opt/jib-agents/${localAgentPath.name}"), FilePermissions.DEFAULT_FILE_PERMISSIONS,
+                FileEntriesLayer.DEFAULT_MODIFICATION_TIME)
+            })
         }
         val javaagentLayer = FileEntriesLayer.builder().setName("javaagent").setEntries(javaagentFileEntries).build()
         return planBuilder.setEntrypoint(newEntrypoint).addLayer(javaagentLayer).build()
@@ -91,9 +84,9 @@ class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
         }
 
         javaagentPathProvider = {
-            "$destinationDirectory/${File(javaagentConfiguration.get().asPath).name}"
+            javaagentConfiguration.get().asPath.split(":").map { javaagentJar -> File("$destinationDirectory/${File(javaagentJar).name}") }
         }
     }
 
-    private lateinit var javaagentPathProvider: () -> String
+    private lateinit var javaagentPathProvider: () -> List<File>
 }

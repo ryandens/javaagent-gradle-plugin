@@ -73,7 +73,7 @@ class JavaagentPluginFunctionalTest {
 
         // verify the expected text was injected into the start script
         val expectedDefaultJavaOpts = """
-DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
+DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar -Xmx256m"
 """
         val applicationDistributionScript = File(functionalTestDir, "hello-world/build/scripts/hello-world")
         assertTrue(applicationDistributionScript.readText().contains(expectedDefaultJavaOpts))
@@ -88,7 +88,7 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
          */
 
         // verify the agent was added to the /lib/ dir of the distribution
-        assertTrue(File(functionalTestDir, "hello-world/build/install/hello-world/lib/simple-agent.jar").exists())
+        assertTrue(File(functionalTestDir, "hello-world/build/install/hello-world/agent-libs/simple-agent.jar").exists())
 
         // Verify the result
         assertTrue(result.output.contains("Hello World!"))

@@ -5,6 +5,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
+import org.gradle.internal.jvm.Jvm
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 
@@ -35,7 +36,43 @@ class JavaagentPluginFunctionalTest {
         """
 
         // create the test project and run the tasks
-        val result = createAndBuildJavaagentProject(dependencies, listOf("build", "run"))
+        val result = createAndBuildJavaagentProject(dependencies, listOf("assemble", "run"))
+
+        // Verify the result
+        assertTrue(result.output.contains("Hello World!"))
+        assertTrue(result.output.contains("Hello from my simple agent!"))
+    }
+
+    @Test fun `can attach to application distribution`() {
+        val dependencies = """
+            javaagent project(':simple-agent')
+        """
+
+        // create the test project and run the tasks
+        val result = createAndBuildJavaagentProject(dependencies, listOf("build", "installDist", "execStartScript"))
+
+        // verify the distribution was created properly
+        val applicationDistribution = File(functionalTestDir, "hello-world/build/distributions/hello-world.tar")
+        assertTrue(applicationDistribution.exists())
+
+        // verify the expected text was injected into the start script
+        val expectedDefaultJavaOpts = """
+DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
+"""
+        val applicationDistributionScript = File(functionalTestDir, "hello-world/build/scripts/hello-world")
+        assertTrue(applicationDistributionScript.readText().contains(expectedDefaultJavaOpts))
+
+        /*
+         * TODO add support for windows
+         * val expectedWindowsDefaultJvmOpts = """
+DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
+"""
+        val applicationDistributionScript = File(functionalTestDir, "hello-world/build/scripts/hello-world.bat")
+        assertTrue(applicationDistributionScript.readText().contains(expectedWindowsDefaultJvmOpts))
+         */
+
+        // verify the agent was added to the /lib/ dir of the distribution
+        assertTrue(File(functionalTestDir, "hello-world/build/install/hello-world/lib/simple-agent.jar").exists())
 
         // Verify the result
         assertTrue(result.output.contains("Hello World!"))
@@ -55,6 +92,7 @@ class JavaagentPluginFunctionalTest {
             include('simple-agent')
             """
         )
+
         helloWorldDir.resolve("build.gradle").writeText(
             """
                 plugins {
@@ -73,6 +111,12 @@ class JavaagentPluginFunctionalTest {
                 
                 run {
                     jvmArgs = ['-Xms100m']
+                }
+                
+                task execStartScript(type: Exec) {
+                    workingDir '${helloWorldDir.canonicalPath}/build/install/hello-world/bin/'
+                    commandLine './hello-world'
+                    environment JAVA_HOME: "${Jvm.current().getJavaHome()}"
                 }
                 
                 dependencies {

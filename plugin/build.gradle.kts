@@ -3,6 +3,7 @@ plugins {
     `maven-publish`
     id("com.gradle.plugin-publish") version "0.14.0"
     id("org.jetbrains.kotlin.jvm") version "1.4.31"
+    id("nebula.maven-apache-license") version "17.3.2"
 }
 
 repositories {

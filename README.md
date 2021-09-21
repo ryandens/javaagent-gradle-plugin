@@ -54,6 +54,6 @@ jib.container {
 }
 
 dependencies {
-    javaagent("io.opentelemetry.javaagent:opentelemetry-javaagent:1.3.0:all")
+    javaagent("io.opentelemetry.javaagent:opentelemetry-javaagent:1.6.0:all")
 }
 ```

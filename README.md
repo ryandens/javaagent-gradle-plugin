@@ -24,7 +24,7 @@ application {
 }
 
 dependencies {
-    javaagent("io.opentelemetry.javaagent:opentelemetry-javaagent:1.6.0:all")
+    javaagent("io.opentelemetry.javaagent:opentelemetry-javaagent:1.7.2:all")
 }
 ```
 
@@ -45,7 +45,7 @@ would like to attach in the dependencies block.
 ```kotlin
 plugins {
     java
-    id("com.google.cloud.tools.jib") version "3.1.1"
+    id("com.google.cloud.tools.jib") version "3.1.4"
     id("com.ryandens.javaagent-jib") version "0.2.1"
 }
 
@@ -54,6 +54,6 @@ jib.container {
 }
 
 dependencies {
-    javaagent("io.opentelemetry.javaagent:opentelemetry-javaagent:1.6.0:all")
+    javaagent("io.opentelemetry.javaagent:opentelemetry-javaagent:1.7.2:all")
 }
 ```

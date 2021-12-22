@@ -9,25 +9,25 @@ import com.google.cloud.tools.jib.gradle.JibExtension
 import com.google.cloud.tools.jib.gradle.extension.GradleData
 import com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger
-import java.io.File
-import java.util.Optional
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.tasks.Copy
+import java.io.File
+import java.util.Optional
 
 /**
  * A [JavaagentPlugin] that copies the javaagent into the build directory prior to any [com.google.cloud.tools.jib]
  * task. Then, A [JibGradlePluginExtension] that configures the [ContainerBuildPlan] to have an extra [FileEntriesLayer]
  * with the javaagent in it and a modified [ContainerBuildPlan.entrypoint] that specifies the `javaagent` flag.
  */
+@ExperimentalStdlibApi
 class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
 
     override fun getExtraConfigType(): Optional<Class<Void>> {
         return Optional.empty()
     }
 
-    @ExperimentalStdlibApi
     override fun extendContainerBuildPlan(
         buildPlan: ContainerBuildPlan?,
         properties: MutableMap<String, String>?,
@@ -39,9 +39,11 @@ class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
         val entrypoint = checkNotNull(buildPlan.entrypoint)
         check(entrypoint.isNotEmpty())
 
-        val localAgentPaths = checkNotNull(gradleData?.project?.plugins?.getPlugin(
-            JavaagentJibExtension::class.java
-        )?.javaagentPathProvider?.invoke())
+        val localAgentPaths = checkNotNull(
+            gradleData?.project?.plugins?.getPlugin(
+                JavaagentJibExtension::class.java
+            )?.javaagentPathProvider?.invoke()
+        )
 
         val planBuilder = buildPlan.toBuilder()
         val newEntrypoint = buildList<String> {
@@ -50,10 +52,15 @@ class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
         }
 
         val javaagentFileEntries = buildList {
-            addAll(localAgentPaths.map {
-                localAgentPath -> FileEntry(localAgentPath.toPath(), AbsoluteUnixPath.get("/opt/jib-agents/${localAgentPath.name}"), FilePermissions.DEFAULT_FILE_PERMISSIONS,
-                FileEntriesLayer.DEFAULT_MODIFICATION_TIME)
-            })
+            addAll(
+                localAgentPaths.map {
+                    localAgentPath ->
+                    FileEntry(
+                        localAgentPath.toPath(), AbsoluteUnixPath.get("/opt/jib-agents/${localAgentPath.name}"), FilePermissions.DEFAULT_FILE_PERMISSIONS,
+                        FileEntriesLayer.DEFAULT_MODIFICATION_TIME
+                    )
+                }
+            )
         }
         val javaagentLayer = FileEntriesLayer.builder().setName("javaagent").setEntries(javaagentFileEntries).build()
         return planBuilder.setEntrypoint(newEntrypoint).addLayer(javaagentLayer).build()

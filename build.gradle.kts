@@ -1,5 +1,5 @@
 plugins {
-    id("com.diffplug.spotless") version "5.14.1"
+    id("com.diffplug.spotless") version "6.0.5"
 }
 
 allprojects {
@@ -7,10 +7,18 @@ allprojects {
     version = "0.2.1"
     apply<com.diffplug.gradle.spotless.SpotlessPlugin>()
 
+    repositories {
+        mavenCentral()
+    }
+
+    tasks.withType(JavaCompile::class.java) {
+        this.options.compilerArgs.add("-Werror")
+    }
+
     spotless {
         project.plugins.withId("java") {
             java {
-                googleJavaFormat("1.10.0")
+                googleJavaFormat()
             }
         }
         project.plugins.withId("kotlin") {

@@ -2,7 +2,7 @@ plugins {
     `java-gradle-plugin`
     `maven-publish`
     id("com.gradle.plugin-publish") version "0.14.0"
-    id("org.jetbrains.kotlin.jvm") version "1.4.31"
+    id("org.jetbrains.kotlin.jvm") version "1.6.10"
     id("nebula.maven-apache-license") version "17.3.2"
 }
 
@@ -30,6 +30,7 @@ dependencies {
 tasks {
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
         kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.allWarningsAsErrors = true
     }
 }
 

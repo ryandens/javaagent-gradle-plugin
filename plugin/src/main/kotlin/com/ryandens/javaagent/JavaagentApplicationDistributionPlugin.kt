@@ -1,6 +1,5 @@
 package com.ryandens.javaagent
 
-import java.io.File
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -10,6 +9,7 @@ import org.gradle.api.distribution.plugins.DistributionPlugin
 import org.gradle.api.internal.plugins.WindowsStartScriptGenerator
 import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.tasks.application.CreateStartScripts
+import java.io.File
 
 /**
  * Gradle plugin for configuration of the [DistributionPlugin.MAIN_DISTRIBUTION_NAME] after it has been configured by

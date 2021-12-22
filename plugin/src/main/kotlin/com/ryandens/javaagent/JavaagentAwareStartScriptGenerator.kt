@@ -1,17 +1,16 @@
 package com.ryandens.javaagent
 
-import java.io.Writer
 import org.gradle.api.Transformer
 import org.gradle.api.internal.plugins.DefaultTemplateBasedStartScriptGenerator
 import org.gradle.api.internal.plugins.StartScriptTemplateBindingFactory
 import org.gradle.api.internal.plugins.UnixStartScriptGenerator
 import org.gradle.jvm.application.scripts.JavaAppStartScriptGenerationDetails
 import org.gradle.jvm.application.scripts.ScriptGenerator
-import org.gradle.util.TextUtil
+import java.io.Writer
 
 class JavaagentAwareStartScriptGenerator(
     private val inner: ScriptGenerator = DefaultTemplateBasedStartScriptGenerator(
-        TextUtil.getUnixLineSeparator(), FakeTransformer(StartScriptTemplateBindingFactory.unix()), UnixStartScriptGenerator().template
+        "\n", FakeTransformer(StartScriptTemplateBindingFactory.unix()), UnixStartScriptGenerator().template
     )
 ) : ScriptGenerator {
 

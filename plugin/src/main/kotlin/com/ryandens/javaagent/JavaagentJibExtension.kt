@@ -5,6 +5,7 @@ import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan
 import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer
 import com.google.cloud.tools.jib.api.buildplan.FileEntry
 import com.google.cloud.tools.jib.api.buildplan.FilePermissions
+import com.google.cloud.tools.jib.api.buildplan.LayerObject
 import com.google.cloud.tools.jib.gradle.JibExtension
 import com.google.cloud.tools.jib.gradle.extension.GradleData
 import com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension
@@ -63,7 +64,11 @@ class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
             )
         }
         val javaagentLayer = FileEntriesLayer.builder().setName("javaagent").setEntries(javaagentFileEntries).build()
-        return planBuilder.setEntrypoint(newEntrypoint).addLayer(javaagentLayer).build()
+        val layers = buildList<LayerObject> {
+            addAll(buildPlan.getLayers())
+            add(1, javaagentLayer)
+        }
+        return planBuilder.setEntrypoint(newEntrypoint).setLayers(layers).build()
     }
 
     override fun applyAfterJavaagentSetup(

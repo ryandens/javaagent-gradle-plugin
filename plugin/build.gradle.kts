@@ -25,6 +25,7 @@ dependencies {
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+    testImplementation("org.apache.commons:commons-compress:1.21")
 }
 
 tasks {

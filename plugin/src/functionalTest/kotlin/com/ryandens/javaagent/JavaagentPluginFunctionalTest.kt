@@ -1,9 +1,13 @@
 package com.ryandens.javaagent
 
+import org.apache.commons.compress.archivers.ArchiveStreamFactory
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import org.gradle.internal.jvm.Jvm
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import java.io.File
+import java.io.FileInputStream
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -95,6 +99,39 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
         assertTrue(result.output.contains("Hello from my simple agent!"))
     }
 
+    @Test fun `can create docker image using jib`() {
+        val dependencies = """
+            javaagent project(':simple-agent')
+            runtimeOnly 'commons-lang:commons-lang:2.6'
+        """
+
+        // create the test project and run the tasks
+        val result = createAndBuildJavaagentProject(dependencies, listOf("jibBuildTar"))
+
+        // Verify the result
+        assertTrue(result.output.contains("BUILD SUCCESSFUL"))
+
+        // verify the agent was added after layer 1 in the Docker image
+        assertTrue(File(functionalTestDir, "hello-world/build/jib-image.tar").exists())
+        FileInputStream(File(functionalTestDir, "hello-world/build/jib-image.tar")).use { fis ->
+            ArchiveStreamFactory().createArchiveInputStream("tar", fis).use { ais ->
+                ais.nextEntry as TarArchiveEntry? // first layer (base image)
+                ais.nextEntry as TarArchiveEntry? // second layer (should be agent)
+                var agentFound = false
+                ArchiveStreamFactory().createArchiveInputStream("tar", GzipCompressorInputStream(ais)).use { l1ais ->
+                    var l1file = l1ais.nextEntry as TarArchiveEntry?
+                    while (l1file != null) {
+                        if (l1file.name.endsWith("HelloWorld.class")) {
+                            agentFound = true
+                        }
+                        l1file = l1ais.nextEntry as TarArchiveEntry?
+                    }
+                }
+                assertTrue(agentFound)
+            }
+        }
+    }
+
     private fun createAndBuildJavaagentProject(dependencies: String, buildArgs: List<String>): BuildResult {
 
         val helloWorldDir = File(functionalTestDir, "hello-world")
@@ -113,6 +150,7 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
             """
                 plugins {
                     id('application')
+                    id('com.google.cloud.tools.jib') version '3.1.4'
                     id('com.ryandens.javaagent-application')
                 }
                 
@@ -137,6 +175,20 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
                 
                 dependencies {
                     $dependencies
+                }
+
+                java {
+                    sourceCompatibility = JavaVersion.VERSION_1_8
+                    targetCompatibility = JavaVersion.VERSION_1_8
+                }
+
+                jib {
+                    from {
+                        image = "scratch"
+                    }
+                    to {
+                        image = "javaagent-hello-world"
+                    }
                 }
             """
         )

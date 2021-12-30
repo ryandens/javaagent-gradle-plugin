@@ -18,8 +18,8 @@ pluginBundle {
 }
 
 dependencies {
-    compileOnly("com.google.cloud.tools:jib-gradle-plugin-extension-api:0.4.0")
-    compileOnly("gradle.plugin.com.google.cloud.tools:jib-gradle-plugin:3.1.1")
+    implementation("com.google.cloud.tools:jib-gradle-plugin-extension-api:0.4.0")
+    implementation("gradle.plugin.com.google.cloud.tools:jib-gradle-plugin:3.1.1")
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 

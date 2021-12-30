@@ -138,11 +138,6 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
                 dependencies {
                     $dependencies
                 }
-
-                java {
-                    sourceCompatibility = JavaVersion.VERSION_1_8
-                    targetCompatibility = JavaVersion.VERSION_1_8
-                }
             """
         )
 

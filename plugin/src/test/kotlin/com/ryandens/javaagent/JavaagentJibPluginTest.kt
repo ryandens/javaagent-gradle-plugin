@@ -10,7 +10,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
- * A simple unit test for the 'com.ryandens.javaagent.attach' plugin.
+ * A simple unit test for the 'com.ryandens.javaagent.jib' plugin.
  */
 class JavaagentJibPluginTest {
     @Test fun `plugin registers task`() {
@@ -22,17 +22,6 @@ class JavaagentJibPluginTest {
 
         // Verify the result
         assertNotNull(project.configurations.findByName("javaagent"))
-
-        val ext = project.extensions.getByType(JibExtension::class.java)
-        assertTrue(ext.pluginExtensions.get().any { it.implementation == "com.ryandens.javaagent.JavaagentJibExtension" })
-    }
-
-    @Test fun `plugin adds layer to build plan`() {
-        val project = ProjectBuilder.builder().build()
-        project.plugins.apply("application")
-        project.plugins.apply("com.google.cloud.tools.jib")
-        project.plugins.apply("com.ryandens.javaagent-jib")
-        project.dependencies.add("javaagent", ":simple-agent")
 
         val ext = project.extensions.getByType(JibExtension::class.java)
         assertTrue(ext.pluginExtensions.get().any { it.implementation == "com.ryandens.javaagent.JavaagentJibExtension" })

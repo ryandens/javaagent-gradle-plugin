@@ -17,9 +17,29 @@ pluginBundle {
     tags = listOf("javaagent", "instrumentation", "docker", "jib", "application")
 }
 
+val plugin: Configuration by configurations.creating
+
+configurations {
+    compileOnly {
+        extendsFrom(plugin)
+    }
+    testImplementation {
+        extendsFrom(plugin)
+    }
+}
+
+tasks.named<PluginUnderTestMetadata>("pluginUnderTestMetadata") {
+    // adds dependencies with the plugin configuration to the plugin classpath
+    pluginClasspath.setFrom(pluginClasspath.plus(plugin.files))
+    // avoid warnings
+    dependsOn(tasks.compileKotlin)
+    dependsOn(tasks.compileJava)
+    dependsOn(tasks.processResources)
+}
+
 dependencies {
-    implementation("com.google.cloud.tools:jib-gradle-plugin-extension-api:0.4.0")
-    implementation("gradle.plugin.com.google.cloud.tools:jib-gradle-plugin:3.1.1")
+    plugin("com.google.cloud.tools:jib-gradle-plugin-extension-api:0.4.0")
+    plugin("gradle.plugin.com.google.cloud.tools:jib-gradle-plugin:3.1.1")
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 

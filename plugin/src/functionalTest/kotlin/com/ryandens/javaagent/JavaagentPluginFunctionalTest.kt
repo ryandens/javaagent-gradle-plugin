@@ -44,7 +44,7 @@ class JavaagentPluginFunctionalTest {
     }
 
     @Test fun `can attach two agents to application run task`() {
-        val otelVersion = "1.3.1"
+        val otelVersion = "1.11.1"
         val dependencies = """
             javaagent project(':simple-agent')
             javaagent 'io.opentelemetry.javaagent:opentelemetry-javaagent:$otelVersion'

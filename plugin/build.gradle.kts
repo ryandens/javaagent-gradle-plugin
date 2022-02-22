@@ -1,9 +1,9 @@
 plugins {
     `java-gradle-plugin`
     `maven-publish`
-    id("com.gradle.plugin-publish") version "0.14.0"
+    id("com.gradle.plugin-publish") version "0.20.0"
     id("org.jetbrains.kotlin.jvm") version "1.6.10"
-    id("nebula.maven-apache-license") version "17.3.2"
+    id("nebula.maven-apache-license") version "18.3.0"
 }
 
 repositories {
@@ -39,7 +39,7 @@ tasks.named<PluginUnderTestMetadata>("pluginUnderTestMetadata") {
 
 dependencies {
     plugin("com.google.cloud.tools:jib-gradle-plugin-extension-api:0.4.0")
-    plugin("gradle.plugin.com.google.cloud.tools:jib-gradle-plugin:3.1.1")
+    plugin("gradle.plugin.com.google.cloud.tools:jib-gradle-plugin:3.2.0")
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 

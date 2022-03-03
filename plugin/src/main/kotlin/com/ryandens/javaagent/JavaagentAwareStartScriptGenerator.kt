@@ -15,7 +15,6 @@ class JavaagentAwareStartScriptGenerator(
 ) : ScriptGenerator {
 
     override fun generateScript(details: JavaAppStartScriptGenerationDetails, destination: Writer) {
-        println(destination.javaClass.name)
         inner.generateScript(details, Fake(destination))
     }
 

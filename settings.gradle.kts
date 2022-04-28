@@ -8,4 +8,4 @@
  */
 
 rootProject.name = "javaagent-plugin"
-include("plugin", "simple-agent")
+include("plugin", "simple-agent", "otel")

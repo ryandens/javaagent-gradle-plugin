@@ -17,6 +17,14 @@ pluginBundle {
     tags = listOf("otel", "instrumentation", "observability")
 }
 
+dependencies {
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    testImplementation("org.jetbrains.kotlin:kotlin-test")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+    testImplementation("org.apache.commons:commons-compress:1.21")
+}
+
 tasks {
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
         kotlinOptions.jvmTarget = "1.8"
@@ -32,7 +40,7 @@ java {
 gradlePlugin {
     plugins {
         create("OTelJavaagentExtensionPlugin") {
-            id = "com.ryandens.javaagent-application"
+            id = "com.ryandens.javaagent-otel"
             displayName = "OpenTelemetry Javaagent Plugin"
             description =
                 "Enables easy extension of OpenTelemetry javaagent distributions with 3rd party extensions or instrumentation libraries"

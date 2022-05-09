@@ -57,3 +57,7 @@ dependencies {
     javaagent("io.opentelemetry.javaagent:opentelemetry-javaagent:1.11.1")
 }
 ```
+
+
+### OpenTelemetry Integration
+:construction: TODO

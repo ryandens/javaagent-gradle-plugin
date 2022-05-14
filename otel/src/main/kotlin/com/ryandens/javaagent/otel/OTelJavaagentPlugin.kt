@@ -3,6 +3,7 @@ package com.ryandens.javaagent.otel
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.jvm.tasks.Jar
+import java.io.File
 
 /**
  * Enables easy consumption of external extensions and instrumentation libraries by creating a new jar with extra
@@ -29,6 +30,7 @@ class OTelJavaagentPlugin : Plugin<Project> {
 
         project.tasks.register("extendedAgent", Jar::class.java) { jar ->
             jar.archiveFileName.set("extended-opentelemetry-javaagent.jar")
+            jar.destinationDirectory.set(File(project.buildDir, "agents"))
             jar.from(project.zipTree(otel.get().singleFile))
             jar.from(otelExtension) {
                 it.into("extensions")

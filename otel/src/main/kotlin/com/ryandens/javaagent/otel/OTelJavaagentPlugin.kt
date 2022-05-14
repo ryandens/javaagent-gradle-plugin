@@ -10,7 +10,7 @@ import org.gradle.jvm.tasks.Jar
  */
 class OTelJavaagentPlugin : Plugin<Project> {
     companion object {
-        const val AGENT_CONFIGURATION_NAME = "otelJavaagent"
+        const val AGENT_CONFIGURATION_NAME = "otel"
         const val EXTENSION_CONFIGURATION_NAME = "otelExtension"
         const val INSTRUMENTATION_CONFIGURATION_NAME = "otelInstrumentation"
     }

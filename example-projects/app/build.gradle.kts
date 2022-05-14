@@ -1,10 +1,10 @@
 plugins {
     id("com.ryandens.javaaagent.example.java-application-conventions")
-    id("com.ryandens.javaagent-application") version "0.2.2"
+    id("com.ryandens.javaagent-otel")
 }
 
 dependencies {
-  javaagent("io.opentelemetry.javaagent:opentelemetry-javaagent:1.11.1")
+  otel("io.opentelemetry.javaagent:opentelemetry-javaagent:1.11.1")
 }
 
 application {

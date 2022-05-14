@@ -1,2 +1,2 @@
 rootProject.name = "example-projects"
-include("app")
+include("app", "custom-instrumentation")

@@ -30,7 +30,7 @@ repositories {
 }
 
 dependencies {
-  otelJavaagent("io.opentelemetry.javaagent:opentelemetry-javaagent:1.11.1")
+  otel("io.opentelemetry.javaagent:opentelemetry-javaagent:1.11.1")
   otelInstrumentation("io.opentelemetry.javaagent.instrumentation:opentelemetry-javaagent-jdbc:1.11.1-alpha")
   otelExtension("io.opentelemetry.contrib:opentelemetry-samplers:1.12.0-alpha")
 }

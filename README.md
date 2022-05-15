@@ -60,4 +60,43 @@ dependencies {
 
 
 ### OpenTelemetry Integration
-:construction: TODO
+[OpenTelemetry](https://OpenTelemetry.io) is a set of tools that enable distributed tracing. 
+[OpenTelemetry Instrumentation for Java](https://github.com/open-telemetry/opentelemetry-java-instrumentation/) is a 
+project that is often consumed as a javaagent in order to instrument OSS libraries with distributed tracing logic. There
+are many distributions of this agent by specific vendors. In addition, OpenTelemetry offers a number of extension points
+that consumers of the libraries and vendors can take advantage of.
+
+This integration strives to make it easier for consumers of OpenTelemetry distributions to modify their chosen distributions
+with other extensions and instrumentation modules. This is desirable because OpenTelemetry provides a high-level API for
+instrumentation which makes writing instrumentation modules using their API a lot more approachable for those unfamiliar
+with bytecode manipulation. 
+
+This integration can be used by applying the `javaagent-otel` plugin, specifying the OTel distribution you would like to
+extend and the libraries or projects you would like to extend it with. In addition, users may often want to also 
+register the appropriate `com.ryandens.javaagent-*` plugin for their preferred distribution or execution method. A full
+example is provided in [example-projects/](./example-projects/ but the following snippet summarizes 
+
+
+```kotlin
+plugins {
+  application
+  id("com.ryandens.javaagent-otel")
+  id("com.ryandens.javaagent-application")
+}
+
+dependencies {
+  // the otel configuration is used to identify the desired distribution to modify
+  otel("io.opentelemetry.javaagent:opentelemetry-javaagent:1.12.0")
+  // the otelExtension configuration expects a shaded JAR that conforms to OTel's rules
+  otelExtension("io.opentelemetry.contrib:opentelemetry-samplers:1.12.0-alpha")
+  // the otelInstrumentation expects a project whose references to the OTel API have been relocated in order to match the agent's shaded class names. Note, this plugin will rename the files from .class -> .classdata 
+  otelInstrumentation(project(":custom-instrumentation"))
+  // the javaagent configuration is provided by the javaagent-application plugin and is unaware of the otel plugin
+  javaagent(files("$buildDir/agents/extended-opentelemetry-javaagent.jar"))
+}
+
+application {
+  // Define the main class for the application.
+  mainClass.set("com.ryandens.javaaagent.example.App")
+}
+```

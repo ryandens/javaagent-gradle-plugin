@@ -7,7 +7,6 @@ plugins {
 
 tasks.shadowJar {
   relocate("io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api")
-  classifier = null
 }
 
 tasks.assemble {

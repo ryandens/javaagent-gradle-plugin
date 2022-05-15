@@ -41,12 +41,12 @@ java {
 
 gradlePlugin {
     plugins {
-        create("OTelJavaagentExtensionPlugin") {
-            id = "com.ryandens.javaagent-otel"
+        create("JavaagentOTelModificationPlugin") {
+            id = "com.ryandens.javaagent-otel-modification"
             displayName = "OpenTelemetry Javaagent Plugin"
             description =
-                "Enables easy extension of OpenTelemetry javaagent distributions with 3rd party extensions or instrumentation libraries"
-            implementationClass = "com.ryandens.javaagent.otel.OTelJavaagentPlugin"
+                "Enables easy modification of OpenTelemetry javaagent distributions with 3rd party extensions or auto-instrumentation modules"
+            implementationClass = "com.ryandens.javaagent.otel.JavaagentOTelModificationPlugin"
         }
     }
 }

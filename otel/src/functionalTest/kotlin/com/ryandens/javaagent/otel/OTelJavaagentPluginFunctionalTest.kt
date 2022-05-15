@@ -22,7 +22,7 @@ class OTelJavaagentPluginFunctionalTest {
             """
 plugins {
     id('java')
-    id('com.ryandens.javaagent-otel')
+    id('com.ryandens.javaagent-otel-modification')
 }
 
 repositories {

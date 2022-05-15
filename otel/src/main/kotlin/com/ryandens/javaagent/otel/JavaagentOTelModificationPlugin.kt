@@ -9,8 +9,12 @@ import java.io.File
 /**
  * Enables easy consumption of external extensions and instrumentation libraries by creating a new jar with extra
  * classes and jars included.
+ *
+ * @see <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/#creating-agent-extensions">creating-agent-extensions<a/>
+ * @see <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/writing-instrumentation.md">writing-instrumentation</a>
+ *
  */
-class OTelJavaagentPlugin : Plugin<Project> {
+class JavaagentOTelModificationPlugin : Plugin<Project> {
     companion object {
         const val AGENT_CONFIGURATION_NAME = "otel"
         const val EXTENSION_CONFIGURATION_NAME = "otelExtension"

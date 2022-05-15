@@ -100,4 +100,23 @@ application {
   // Define the main class for the application.
   mainClass.set("com.ryandens.javaaagent.example.App")
 }
+
+setOf(tasks.distTar, tasks.distZip).forEach {
+  it.configure {
+    dependsOn(tasks.extendedAgent)
+  }
+}
 ```
+
+#### Known issues
+This plugin applies the `com.github.johnrengelman.shadow` plugin to your project. This is done in order to unpack the
+JARs depended on in the `otelInstrumentation`, rename the compiled class files from `*.class` to `*.classdata`, and
+merging the contents of SPI files in `**/META-INF/services/`. This often results in a command line warning from Gradle
+due to [an issue with the shadow plugin](https://github.com/johnrengelman/shadow/issues/713). When this is fixed in 
+the shadow plugin, updating the transitive dependency will be sufficient. For now, the best mitigation is to specify
+the dependency on the `extendedAgent` task explicitly.
+
+However, it is a goal of this project to eliminate the dependency on the shadow plugin as it's rather heavy-handed
+for a task of this type and forces the application of another plugin on the user's project. But, the time I had scoped 
+to spend on implementing the OpenTelemetry feature was running out, and I preferred to push something rather than nothing
+ at all.

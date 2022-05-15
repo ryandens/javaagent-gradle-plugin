@@ -71,7 +71,7 @@ with other extensions and instrumentation modules. This is desirable because Ope
 instrumentation which makes writing instrumentation modules using their API a lot more approachable for those unfamiliar
 with bytecode manipulation. 
 
-This integration can be used by applying the `javaagent-otel` plugin, specifying the OTel distribution you would like to
+This integration can be used by applying the `javaagent-otel-modification` plugin, specifying the OTel distribution you would like to
 extend and the libraries or projects you would like to extend it with. In addition, this plugin also applies the
 [JavaagentBasePlugin](./plugin/src/main/kotlin/com/ryandens/javaagent/JavaagentBasePlugin.kt) and registers the outputted
 extended OpenTelemetry agent as a project dependency with the `javaagent` configuration. This does effectively nothing
@@ -83,7 +83,7 @@ desired application distribution or execution method.
 ```kotlin
 plugins {
   application
-  id("com.ryandens.javaagent-otel")
+  id("com.ryandens.javaagent-otel-modification")
   id("com.ryandens.javaagent-application")
 }
 

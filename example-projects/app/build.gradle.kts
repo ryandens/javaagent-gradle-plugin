@@ -1,6 +1,6 @@
 plugins {
     id("com.ryandens.javaaagent.example.java-application-conventions")
-    id("com.ryandens.javaagent-otel")
+    id("com.ryandens.javaagent-otel-modification")
     id("com.ryandens.javaagent-application")
 }
 

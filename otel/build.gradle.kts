@@ -21,6 +21,7 @@ dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("gradle.plugin.com.github.johnrengelman:shadow:7.1.2")
+    implementation(project(":plugin"))
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
     testImplementation("org.apache.commons:commons-compress:1.21")

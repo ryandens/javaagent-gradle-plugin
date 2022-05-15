@@ -7,7 +7,7 @@ plugins {
 dependencies {
   otel("io.opentelemetry.javaagent:opentelemetry-javaagent:1.12.0")
   otelExtension("io.opentelemetry.contrib:opentelemetry-samplers:1.12.0-alpha")
-  otelInstrumentation(project(":custom-instrumentation"))
+  otelInstrumentation(project(":custom-instrumentation", "shadow"))
 }
 
 application {

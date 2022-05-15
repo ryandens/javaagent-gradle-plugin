@@ -2,6 +2,20 @@ plugins {
   id("com.ryandens.javaaagent.example.java-library-conventions")
   id("io.opentelemetry.instrumentation.muzzle-check") version "1.13.1-alpha"
   id("io.opentelemetry.instrumentation.muzzle-generation") version "1.13.1-alpha"
+  id("com.github.johnrengelman.shadow")
+}
+
+tasks.shadowJar {
+  relocate("io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api")
+  classifier = null
+}
+
+tasks.assemble {
+  dependsOn(tasks.shadowJar)
+}
+
+tasks.jar {
+  enabled = false
 }
 
 configurations {

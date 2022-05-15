@@ -14,3 +14,16 @@ application {
     // Define the main class for the application.
     mainClass.set("com.ryandens.javaaagent.example.App")
 }
+
+/*
+  see https://github.com/johnrengelman/shadow/issues/713
+
+  Currently, tasks that consume the output of the extendedAgent shadowJar task need to be made aware of
+  the implicit dependency (https://docs.gradle.org/7.4.2/userguide/validation_problems.html#implicit_dependency)
+  due to an issue with the shadowJar plugin
+*/
+setOf(tasks.distTar, tasks.distZip).forEach {
+  it.configure {
+    dependsOn(tasks.extendedAgent)
+  }
+}

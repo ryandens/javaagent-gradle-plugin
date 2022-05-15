@@ -3,6 +3,8 @@
 ![Build](https://github.com/ryandens/javaagent-gradle-plugin/workflows/Validate/badge.svg?branch=main)
 [![Javaagent Application Plugin](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com.ryandens/plugin/maven-metadata.xml.svg?label=Javaagent%20Application%20Plugin)](https://plugins.gradle.org/plugin/com.ryandens.javaagent-application)
 [![Javaagent Jib Plugin](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com.ryandens/plugin/maven-metadata.xml.svg?label=Javaagent%20Jib%20Plugin)](https://plugins.gradle.org/plugin/com.ryandens.javaagent-jib)
+[![Javaagent OTel Modification Plugin](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com.ryandens/plugin/maven-metadata.xml.svg?label=Javaagent%20OTel%20Modification%20Plugin)](https://plugins.gradle.org/plugin/com.ryandens.javaagent-otel-modification)
+
 
 A set of vendor-agnostic Gradle plugins to ease building Java applications that leverage instrumentation agents in 
 development and/or in production 

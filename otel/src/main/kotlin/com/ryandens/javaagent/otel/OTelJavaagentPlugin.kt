@@ -1,8 +1,8 @@
 package com.ryandens.javaagent.otel
 
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.jvm.tasks.Jar
 import java.io.File
 
 /**
@@ -28,15 +28,21 @@ class OTelJavaagentPlugin : Plugin<Project> {
             it.isTransitive = false
         }
 
-        project.tasks.register("extendedAgent", Jar::class.java) { jar ->
+        project.plugins.apply("com.github.johnrengelman.shadow")
+        project.tasks.register("extendedAgent", ShadowJar::class.java) { jar ->
+            jar.inputs.files(otelInstrumentation)
             jar.archiveFileName.set("extended-opentelemetry-javaagent.jar")
             jar.destinationDirectory.set(File(project.buildDir, "agents"))
             jar.from(project.zipTree(otel.get().singleFile))
             jar.from(otelExtension) {
                 it.into("extensions")
             }
-            jar.from(otelInstrumentation) {
-                it.into("inst")
+            jar.mergeServiceFiles()
+            otelInstrumentation.get().files.forEach { instrumentationJar ->
+                jar.from(project.zipTree(instrumentationJar)) {
+                    it.into("inst")
+                    it.exclude("META-INF/MANIFEST.MF")
+                }
             }
         }
     }

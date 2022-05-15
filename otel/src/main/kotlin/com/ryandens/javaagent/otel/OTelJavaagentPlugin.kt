@@ -1,6 +1,7 @@
 package com.ryandens.javaagent.otel
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.ryandens.javaagent.JavaagentBasePlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import java.io.File
@@ -29,7 +30,8 @@ class OTelJavaagentPlugin : Plugin<Project> {
         }
 
         project.plugins.apply("com.github.johnrengelman.shadow")
-        project.tasks.register("extendedAgent", ShadowJar::class.java) { jar ->
+        project.plugins.apply(JavaagentBasePlugin::class.java)
+        val extendedAgent = project.tasks.register("extendedAgent", ShadowJar::class.java) { jar ->
             jar.inputs.files(otelInstrumentation)
             jar.archiveFileName.set("extended-opentelemetry-javaagent.jar")
             jar.destinationDirectory.set(File(project.buildDir, "agents"))
@@ -56,5 +58,6 @@ class OTelJavaagentPlugin : Plugin<Project> {
                 }
             }
         }
+        project.dependencies.add("javaagent", extendedAgent.map { project.files(it.outputs.files.singleFile) })
     }
 }

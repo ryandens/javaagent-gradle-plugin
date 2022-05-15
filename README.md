@@ -72,9 +72,12 @@ instrumentation which makes writing instrumentation modules using their API a lo
 with bytecode manipulation. 
 
 This integration can be used by applying the `javaagent-otel` plugin, specifying the OTel distribution you would like to
-extend and the libraries or projects you would like to extend it with. In addition, users may often want to also 
-register the appropriate `com.ryandens.javaagent-*` plugin for their preferred distribution or execution method. A full
-example is provided in [example-projects/](./example-projects/ but the following snippet summarizes 
+extend and the libraries or projects you would like to extend it with. In addition, this plugin also applies the
+[JavaagentBasePlugin](./plugin/src/main/kotlin/com/ryandens/javaagent/JavaagentBasePlugin.kt) and registers the outputted
+extended OpenTelemetry agent as a project dependency with the `javaagent` configuration. This does effectively nothing
+on its own, but allows for seamless integration with plugins that leverage the `javaagent` configuration (such as 
+`javaagent-application` and `javaagent-jib`) so that the extended OpenTelemetry agent is configured is included in the 
+desired application distribution or execution method.
 
 
 ```kotlin
@@ -91,8 +94,6 @@ dependencies {
   otelExtension("io.opentelemetry.contrib:opentelemetry-samplers:1.12.0-alpha")
   // the otelInstrumentation expects a project whose references to the OTel API have been relocated in order to match the agent's shaded class names. Note, this plugin will rename the files from .class -> .classdata 
   otelInstrumentation(project(":custom-instrumentation"))
-  // the javaagent configuration is provided by the javaagent-application plugin and is unaware of the otel plugin
-  javaagent(files("$buildDir/agents/extended-opentelemetry-javaagent.jar"))
 }
 
 application {

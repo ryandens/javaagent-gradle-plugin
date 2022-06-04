@@ -39,8 +39,7 @@ class JavaagentOTelModificationPlugin : Plugin<Project> {
             jar.inputs.files(otelInstrumentation)
             jar.archiveFileName.set("extended-opentelemetry-javaagent.jar")
             jar.destinationDirectory.set(File(project.buildDir, "agents"))
-            val resolvedOtelConfiguration = otel.get()
-            jar.from(project.zipTree(resolvedOtelConfiguration.singleFile))
+            jar.from(otel.map { project.zipTree(it.singleFile) })
             jar.from(otelExtension) {
                 it.into("extensions")
             }
@@ -52,14 +51,18 @@ class JavaagentOTelModificationPlugin : Plugin<Project> {
                 it.attributes["Can-Redefine-Classes"] = "true"
                 it.attributes["Can-Retransform-Classes"] = "true"
                 it.attributes["Implementation-Vendor"] = "Custom"
-                it.attributes["Implementation-Version"] = "custom-${project.version}-otel-${resolvedOtelConfiguration.dependencies.first().version}"
+                it.attributes["Implementation-Version"] = "custom-${project.version}-otel"
             }
-            otelInstrumentation.get().files.forEach { instrumentationJar ->
-                jar.from(project.zipTree(instrumentationJar)) {
-                    it.into("inst")
-                    it.exclude("META-INF/MANIFEST.MF")
-                    it.rename("(^.*)\\.class\$", "\$1.classdata")
+            jar.from(
+                otelInstrumentation.map { resolvedOtelInstrumentation ->
+                    resolvedOtelInstrumentation.files.map { instrumentationJar ->
+                        project.zipTree(instrumentationJar)
+                    }
                 }
+            ) {
+                it.into("inst")
+                it.exclude("META-INF/MANIFEST.MF")
+                it.rename("(^.*)\\.class\$", "\$1.classdata")
             }
         }
         project.dependencies.add("javaagent", extendedAgent.map { project.files(it.outputs.files.singleFile) })

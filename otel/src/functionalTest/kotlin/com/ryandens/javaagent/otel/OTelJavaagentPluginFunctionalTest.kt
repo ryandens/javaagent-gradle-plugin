@@ -1,9 +1,13 @@
 package com.ryandens.javaagent.otel
 
+import org.apache.commons.compress.archivers.ArchiveStreamFactory
+import org.apache.commons.compress.archivers.jar.JarArchiveEntry
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
+import java.io.FileInputStream
 import kotlin.test.DefaultAsserter.assertTrue
 
 class OTelJavaagentPluginFunctionalTest {
@@ -11,31 +15,10 @@ class OTelJavaagentPluginFunctionalTest {
     val tempFolder = TemporaryFolder()
 
     private fun getProjectDir() = tempFolder.root
-    private fun getBuildFile() = getProjectDir().resolve("build.gradle")
-    private fun getSettingsFile() = getProjectDir().resolve("settings.gradle")
 
     @Test
     fun `can run task`() {
-        // Setup the test build
-        getSettingsFile().writeText("")
-        getBuildFile().writeText(
-            """
-plugins {
-    id('java')
-    id('com.ryandens.javaagent-otel-modification')
-}
-
-repositories {
-  mavenCentral()
-}
-
-dependencies {
-  otel("io.opentelemetry.javaagent:opentelemetry-javaagent:1.11.1")
-  otelInstrumentation("io.opentelemetry.javaagent.instrumentation:opentelemetry-javaagent-jdbc:1.11.1-alpha")
-  otelExtension("io.opentelemetry.contrib:opentelemetry-samplers:1.12.0-alpha")
-}
-"""
-        )
+        File("../example-projects/").copyRecursively(getProjectDir())
 
         // Run the build
         val runner = GradleRunner.create()
@@ -45,8 +28,36 @@ dependencies {
         runner.withProjectDir(getProjectDir())
         val result = runner.build()
 
-        assertTrue({ "" }, result.output.isNotEmpty())
         // Verify the result
-//    assertTrue({""}, result.output.contains("Hello from plugin 'com.ryandens.otel.extension.plugin.greeting'"))
+        assertTrue({ "" }, result.output.isNotEmpty())
+        val agent = File(getProjectDir(), "app/build/agents/extended-opentelemetry-javaagent.jar")
+        assertTrue({ "extended agent was created" }, agent.exists())
+        var foundCustomInstrumentationClassData = false
+        // the following must be asserted on in this manner because currently there are duplicate service files for InstrumentationModule
+        var foundSampleInstrumentationModuleInServiceFile = false
+        var foundServletInstrumentationModuleInServiceFile = false
+        FileInputStream(agent).use { fis ->
+            ArchiveStreamFactory().createArchiveInputStream("jar", fis).use { ais ->
+                var entry = ais.nextEntry as JarArchiveEntry?
+                while (entry != null) {
+                    if ("inst/com/ryandens/javaagent/example/SampleInstrumentationModule.classdata" == entry.name) {
+                        foundCustomInstrumentationClassData = true
+                    }
+                    if ("inst/META-INF/services/io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule" == entry.name) {
+                        val instrumentationServices = ais.readBytes().toString(Charsets.UTF_8)
+                        if (instrumentationServices.contains("com.ryandens.javaagent.example.SampleInstrumentationModule")) {
+                            foundSampleInstrumentationModuleInServiceFile = true
+                        }
+                        if (instrumentationServices.contains("io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3InstrumentationModule")) {
+                            foundServletInstrumentationModuleInServiceFile = true
+                        }
+                    }
+                    entry = ais.nextEntry as JarArchiveEntry?
+                }
+            }
+        }
+        assertTrue({ "foundCustomInstrumentationClassData" }, foundCustomInstrumentationClassData)
+        assertTrue({ "foundSampleInstrumentationModuleInServiceFile" }, foundSampleInstrumentationModuleInServiceFile)
+        assertTrue({ "foundServletInstrumentationModuleInServiceFile" }, foundServletInstrumentationModuleInServiceFile)
     }
 }

@@ -1,10 +1,10 @@
-package com.ryandens.javaagent.example;
+package io.opentelemetry.javaagent.instrumentation.ryandens;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
+
+import io.opentelemetry.javaagent.instrumentation.ryandens.utils.SampleSingletons;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -18,8 +18,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 public final class SampleInstrumentation implements TypeInstrumentation {
-
-  private static final Tracer tracer = GlobalOpenTelemetry.get().getTracer("FibonacciTracer");
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -38,17 +36,17 @@ public final class SampleInstrumentation implements TypeInstrumentation {
 
   static final class MethodAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Local("otelContext") Span span,
+    public static void onEnter(@Advice.Local("otelSpan") Span span,
                                @Advice.Local("otelContext") Context context,
                                @Advice.Local("otelScope") Scope scope) {
       Context parentContext = Context.current();
-      span = tracer.spanBuilder("iterative").setSpanKind(SpanKind.INTERNAL).setParent(parentContext).startSpan();
+      span = SampleSingletons.INSTANCE.tracer.spanBuilder("iterative").setSpanKind(SpanKind.INTERNAL).setParent(parentContext).startSpan();
       context = context.with(span);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onExit(@Advice.Local("otelContext") Span span,
+    public static void onExit(@Advice.Local("otelSpan") Span span,
                               @Advice.Local("otelContext") Context context,
                               @Advice.Local("otelScope") Scope scope,
                               @Advice.Thrown Throwable exception) {

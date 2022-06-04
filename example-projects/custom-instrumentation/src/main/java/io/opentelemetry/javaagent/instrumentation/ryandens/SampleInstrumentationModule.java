@@ -1,4 +1,4 @@
-package com.ryandens.javaagent.example;
+package io.opentelemetry.javaagent.instrumentation.ryandens;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;

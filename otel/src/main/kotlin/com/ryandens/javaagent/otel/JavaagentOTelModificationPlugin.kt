@@ -1,9 +1,10 @@
 package com.ryandens.javaagent.otel
 
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.ryandens.javaagent.JavaagentBasePlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.DuplicatesStrategy
+import org.gradle.jvm.tasks.Jar
 import java.io.File
 
 /**
@@ -14,6 +15,7 @@ import java.io.File
  * @see <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/writing-instrumentation.md">writing-instrumentation</a>
  *
  */
+@Suppress("unused")
 class JavaagentOTelModificationPlugin : Plugin<Project> {
     companion object {
         const val AGENT_CONFIGURATION_NAME = "otel"
@@ -33,9 +35,8 @@ class JavaagentOTelModificationPlugin : Plugin<Project> {
             it.isTransitive = false
         }
 
-        project.plugins.apply("com.github.johnrengelman.shadow")
         project.plugins.apply(JavaagentBasePlugin::class.java)
-        val extendedAgent = project.tasks.register("extendedAgent", ShadowJar::class.java) { jar ->
+        val extendedAgent = project.tasks.register("extendedAgent", Jar::class.java) { jar ->
             jar.inputs.files(otelInstrumentation)
             jar.archiveFileName.set("extended-opentelemetry-javaagent.jar")
             jar.destinationDirectory.set(File(project.buildDir, "agents"))
@@ -43,7 +44,6 @@ class JavaagentOTelModificationPlugin : Plugin<Project> {
             jar.from(otelExtension) {
                 it.into("extensions")
             }
-            jar.mergeServiceFiles()
             jar.manifest {
                 it.attributes["Main-Class"] = "io.opentelemetry.javaagent.OpenTelemetryAgent"
                 it.attributes["Agent-Class"] = "io.opentelemetry.javaagent.OpenTelemetryAgent"
@@ -63,6 +63,7 @@ class JavaagentOTelModificationPlugin : Plugin<Project> {
                 it.into("inst")
                 it.exclude("META-INF/MANIFEST.MF")
                 it.rename("(^.*)\\.class\$", "\$1.classdata")
+                it.duplicatesStrategy = DuplicatesStrategy.INCLUDE
             }
         }
         project.dependencies.add("javaagent", extendedAgent.map { project.files(it.outputs.files.singleFile) })

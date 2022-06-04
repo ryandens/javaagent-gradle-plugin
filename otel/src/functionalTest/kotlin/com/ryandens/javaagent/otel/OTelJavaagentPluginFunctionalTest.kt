@@ -40,12 +40,12 @@ class OTelJavaagentPluginFunctionalTest {
             ArchiveStreamFactory().createArchiveInputStream("jar", fis).use { ais ->
                 var entry = ais.nextEntry as JarArchiveEntry?
                 while (entry != null) {
-                    if ("inst/com/ryandens/javaagent/example/SampleInstrumentationModule.classdata" == entry.name) {
+                    if ("inst/io/opentelemetry/javaagent/instrumentation/ryandens/SampleInstrumentationModule.classdata" == entry.name) {
                         foundCustomInstrumentationClassData = true
                     }
                     if ("inst/META-INF/services/io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule" == entry.name) {
                         val instrumentationServices = ais.readBytes().toString(Charsets.UTF_8)
-                        if (instrumentationServices.contains("com.ryandens.javaagent.example.SampleInstrumentationModule")) {
+                        if (instrumentationServices.contains("io.opentelemetry.javaagent.instrumentation.ryandens.SampleInstrumentationModule")) {
                             foundSampleInstrumentationModuleInServiceFile = true
                         }
                         if (instrumentationServices.contains("io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3InstrumentationModule")) {

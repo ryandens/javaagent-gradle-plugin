@@ -4,7 +4,7 @@
 
 plugins {
     // Apply the common convention plugin for shared build configuration between library and application projects.
-    id("com.ryandens.javaaagent.example.java-common-conventions")
+    id("com.ryandens.javaagent.example.java-common-conventions")
 
     // Apply the application plugin to add support for building a CLI application in Java.
     application

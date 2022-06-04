@@ -1,5 +1,5 @@
 plugins {
-  id("com.ryandens.javaaagent.example.java-library-conventions")
+  id("com.ryandens.javaagent.example.java-library-conventions")
   id("io.opentelemetry.instrumentation.muzzle-check") version "1.13.1-alpha"
   id("io.opentelemetry.instrumentation.muzzle-generation") version "1.13.1-alpha"
   id("com.github.johnrengelman.shadow")
@@ -35,13 +35,12 @@ dependencies {
   compileOnly("com.google.auto.service:auto-service-annotations:1.0.1")
   annotationProcessor("com.google.auto.service:auto-service:1.0.1")
   val otelInstrumentationVersion = "1.13.1-alpha"
-  enforcedPlatform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:$otelInstrumentationVersion")
-  muzzleBootstrap("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
-  muzzleBootstrap("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv")
-  muzzleBootstrap("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-annotation-support")
-  muzzleBootstrap( "io.opentelemetry.instrumentation:opentelemetry-instrumentation-appender-api-internal")
-  muzzleTooling("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
-  muzzleTooling("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
+  muzzleBootstrap("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:$otelInstrumentationVersion")
+  muzzleBootstrap("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:$otelInstrumentationVersion")
+  muzzleBootstrap("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-annotation-support:$otelInstrumentationVersion")
+  muzzleBootstrap( "io.opentelemetry.instrumentation:opentelemetry-instrumentation-appender-api-internal:$otelInstrumentationVersion")
+  muzzleTooling("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:$otelInstrumentationVersion")
+  muzzleTooling("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:$otelInstrumentationVersion")
   // for some reason, when pulling this version value from the platform bom, a byte buddy task can't be created
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:$otelInstrumentationVersion")
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:$otelInstrumentationVersion")

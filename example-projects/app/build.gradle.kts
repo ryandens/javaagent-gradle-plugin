@@ -1,18 +1,19 @@
 plugins {
-    id("com.ryandens.javaaagent.example.java-application-conventions")
+    id("com.ryandens.javaagent.example.java-application-conventions")
     id("com.ryandens.javaagent-otel-modification")
     id("com.ryandens.javaagent-application")
 }
 
 dependencies {
-  otel("io.opentelemetry.javaagent:opentelemetry-javaagent:1.12.0")
-  otelExtension("io.opentelemetry.contrib:opentelemetry-samplers:1.12.0-alpha")
+  otel("io.opentelemetry.javaagent:opentelemetry-javaagent:1.13.1")
+  otelExtension("io.opentelemetry.contrib:opentelemetry-samplers:1.13.0-alpha")
   otelInstrumentation(project(":custom-instrumentation", "shadow"))
 }
 
 application {
     // Define the main class for the application.
-    mainClass.set("com.ryandens.javaaagent.example.App")
+    mainClass.set("com.ryandens.javaagent.example.App")
+    applicationDefaultJvmArgs = listOf("-Dotel.javaagent.debug=true", "-Dotel.metrics.exporter=none")
 }
 
 /*

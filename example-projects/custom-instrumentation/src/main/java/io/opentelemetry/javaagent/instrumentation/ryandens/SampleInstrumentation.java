@@ -1,7 +1,7 @@
 package io.opentelemetry.javaagent.instrumentation.ryandens;
 
 
-import io.opentelemetry.javaagent.instrumentation.ryandens.utils.SampleSingletons;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
@@ -40,8 +40,9 @@ public final class SampleInstrumentation implements TypeInstrumentation {
                                @Advice.Local("otelContext") Context context,
                                @Advice.Local("otelScope") Scope scope) {
       Context parentContext = Context.current();
-      span = SampleSingletons.INSTANCE.tracer.spanBuilder("iterative").setSpanKind(SpanKind.INTERNAL).setParent(parentContext).startSpan();
-      context = context.with(span);
+      // TODO helper classes don't seem to work for some reaso
+      span = GlobalOpenTelemetry.get().getTracer("FibonacciTracer").spanBuilder("iterative").setSpanKind(SpanKind.INTERNAL).setParent(parentContext).startSpan();
+      context = parentContext.with(span);
       scope = context.makeCurrent();
     }
 

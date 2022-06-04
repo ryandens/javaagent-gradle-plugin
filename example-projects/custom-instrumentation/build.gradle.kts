@@ -17,20 +17,6 @@ tasks.jar {
   enabled = false
 }
 
-configurations {
-  val bootstrap by creating {
-    isCanBeResolved = false
-    isCanBeConsumed = false
-  }
-
-  named("compileOnly") {
-    extendsFrom(bootstrap)
-  }
-  named("muzzleBootstrap") {
-    extendsFrom(bootstrap)
-  }
-}
-
 dependencies {
   compileOnly("com.google.auto.service:auto-service-annotations:1.0.1")
   annotationProcessor("com.google.auto.service:auto-service:1.0.1")

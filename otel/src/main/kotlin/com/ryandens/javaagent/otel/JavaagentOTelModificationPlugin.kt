@@ -1,10 +1,10 @@
 package com.ryandens.javaagent.otel
 
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.ryandens.javaagent.JavaagentBasePlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.DuplicatesStrategy
-import org.gradle.jvm.tasks.Jar
 import java.io.File
 
 /**
@@ -36,10 +36,13 @@ class JavaagentOTelModificationPlugin : Plugin<Project> {
         }
 
         project.plugins.apply(JavaagentBasePlugin::class.java)
-        val extendedAgent = project.tasks.register("extendedAgent", Jar::class.java) { jar ->
+        val extendedAgent = project.tasks.register("extendedAgent", ShadowJar::class.java) { jar ->
             jar.inputs.files(otelInstrumentation)
             jar.archiveFileName.set("extended-opentelemetry-javaagent.jar")
             jar.destinationDirectory.set(File(project.buildDir, "agents"))
+            jar.mergeServiceFiles {
+                it.include("inst/META-INF/services/*")
+            }
             jar.from(otel.map { project.zipTree(it.singleFile) })
             jar.from(otelExtension) {
                 it.into("extensions")

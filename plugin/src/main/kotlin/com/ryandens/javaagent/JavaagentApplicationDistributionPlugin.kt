@@ -9,7 +9,6 @@ import org.gradle.api.distribution.plugins.DistributionPlugin
 import org.gradle.api.internal.plugins.WindowsStartScriptGenerator
 import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.tasks.application.CreateStartScripts
-import java.io.File
 
 /**
  * Gradle plugin for configuration of the [DistributionPlugin.MAIN_DISTRIBUTION_NAME] after it has been configured by
@@ -47,12 +46,10 @@ class JavaagentApplicationDistributionPlugin : Plugin<Project>, JavaagentPlugin 
             // here. Instead, when we put in a placeholder String so that when we generate the start script we can
             // unescape the defaultJvmOpts String and replace directly replace our placeholder with the environment
             // variable that corresponds to the distribution installation's home directory
-            it.defaultJvmOpts = javaagentConfiguration.get().asPath.split(":").map { jar -> "-javaagent:COM_RYANDENS_APP_HOME_ENV_VAR_PLACEHOLDER/$destinationDirectory/${File(jar).name}" }
-                .plus(
-                    it.defaultJvmOpts ?: listOf()
-                )
+            it.defaultJvmOpts = listOf("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar")
+                .plus(it.defaultJvmOpts ?: listOf())
             // custom start script generator that replaces the placeholder
-            it.unixStartScriptGenerator = JavaagentAwareStartScriptGenerator()
+            it.unixStartScriptGenerator = JavaagentAwareStartScriptGenerator(javaagentConfiguration)
             // TODO build support for windows
             it.windowsStartScriptGenerator = WindowsStartScriptGenerator()
         }

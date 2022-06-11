@@ -10,8 +10,21 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.process.CommandLineArgumentProvider;
 import org.gradle.process.JavaForkOptions;
 
+/**
+ * Utility class for configuring {@link JavaForkOptions}
+ *
+ * <p>This class is written in Java as a result of <a
+ * href="https://docs.gradle.org/7.5.1/userguide/validation_problems.html#implementation_unknown">this
+ * limitation with gradle task inputs</a>
+ */
 public final class JavaForkOptionsConfigurer {
 
+  /**
+   * Configures the provided {@link JavaForkOptions} to use the provided javaagents when laucnhing
+   *
+   * @param javaForkOptions to be configured
+   * @param javaagentConfiguration files to be added as javaagents
+   */
   public static void configureJavaForkOptions(
       JavaForkOptions javaForkOptions,
       NamedDomainObjectProvider<Configuration> javaagentConfiguration) {

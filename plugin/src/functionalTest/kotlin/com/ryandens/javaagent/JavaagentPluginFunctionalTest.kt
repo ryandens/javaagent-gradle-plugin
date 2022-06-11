@@ -55,6 +55,21 @@ class JavaagentPluginFunctionalTest {
         assertTrue(result.output.contains("Hello from my simple agent!"))
     }
 
+    @Test fun `can attach to test task`() {
+        val otelVersion = "1.11.1"
+        val dependencies = """
+            javaagent project(':simple-agent')
+            testJavaagent 'io.opentelemetry.javaagent:opentelemetry-javaagent:$otelVersion'
+        """
+
+        // create the test project and run the tasks
+        val result = createAndBuildJavaagentProject(dependencies, listOf("assemble", "test"))
+
+        // Verify the result
+        assertTrue(result.output.contains("Hello from my simple agent!"))
+        assertTrue(result.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: $otelVersion"))
+    }
+
     @Test fun `can attach two agents to application run task`() {
         val otelVersion = "1.11.1"
         val dependencies = """
@@ -141,6 +156,7 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
                 plugins {
                     id('application')
                     id('com.ryandens.javaagent-application')
+                    id('com.ryandens.javaagent-test')
                 }
                 
                 repositories {
@@ -162,8 +178,13 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
                     environment JAVA_HOME: "${Jvm.current().getJavaHome()}"
                 }
                 
+                test {
+                    useJUnitPlatform()
+                }
+                
                 dependencies {
                     $dependencies
+                    testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
                 }
             """
         )

@@ -86,6 +86,12 @@ gradlePlugin {
             description = "Automatically includes javaagents in OCI images created by Jib"
             implementationClass = "com.ryandens.javaagent.JavaagentJibExtension"
         }
+        create("javaagentTestPlugin") {
+            id = "com.ryandens.javaagent-test"
+            displayName = "Javaagent Test Plugin"
+            description = "Automatically attaches javaagents to the Java Plugin Test tasks"
+            implementationClass = "com.ryandens.javaagent.JavaagentTestPlugin"
+        }
     }
 }
 

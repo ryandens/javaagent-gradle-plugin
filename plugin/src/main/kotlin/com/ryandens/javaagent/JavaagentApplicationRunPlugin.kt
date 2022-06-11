@@ -22,12 +22,7 @@ class JavaagentApplicationRunPlugin : Plugin<Project>, JavaagentPlugin {
     ) {
         // configure the run task to use the `javaagent` flag pointing to the dependency stored in the local Maven repository
         project.tasks.named(ApplicationPlugin.TASK_RUN_NAME, JavaExec::class.java).configure {
-            it.jvmArgumentProviders.add {
-                mutableListOf(
-                    *javaagentConfiguration.get().files
-                        .map { javaagentJarPath -> "-javaagent:${javaagentJarPath.canonicalPath}" }.toTypedArray()
-                ).plus(it.jvmArgs ?: mutableListOf())
-            }
+            JavaForkOptionsConfigurer.configureJavaForkOptions(it, javaagentConfiguration)
         }
     }
 }

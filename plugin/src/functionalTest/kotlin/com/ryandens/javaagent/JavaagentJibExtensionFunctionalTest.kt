@@ -9,8 +9,8 @@ import java.io.FileInputStream
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
-import kotlin.test.assertTrue
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 private const val JIB_IMAGE = "hello-world/build/jib-image.tar"
 

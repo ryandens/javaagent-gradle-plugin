@@ -30,6 +30,17 @@ class JavaagentPluginFunctionalTest {
         functionalTestDir.deleteRecursively()
     }
 
+    @Test fun `can work without javaagent dependencies`() {
+        val dependencies = """
+        """
+
+        // create the test project and run the tasks
+        val result = createAndBuildJavaagentProject(dependencies, listOf("assemble", "run"))
+
+        // Verify the result
+        assertTrue(result.output.contains("Hello World!"))
+    }
+
     @Test fun `can attach to application run task`() {
         val dependencies = """
             javaagent project(':simple-agent')

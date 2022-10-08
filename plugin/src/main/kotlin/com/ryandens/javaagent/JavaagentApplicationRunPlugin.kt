@@ -24,8 +24,8 @@ class JavaagentApplicationRunPlugin : Plugin<Project>, JavaagentPlugin {
         project.tasks.named(ApplicationPlugin.TASK_RUN_NAME, JavaExec::class.java).configure {
             it.jvmArgumentProviders.add {
                 mutableListOf(
-                    *javaagentConfiguration.get().asPath.split(":")
-                        .map { javaagentJarPath -> "-javaagent:$javaagentJarPath" }.toTypedArray()
+                    *javaagentConfiguration.get().files
+                        .map { javaagentJarPath -> "-javaagent:${javaagentJarPath.canonicalPath}" }.toTypedArray()
                 ).plus(it.jvmArgs ?: mutableListOf())
             }
         }

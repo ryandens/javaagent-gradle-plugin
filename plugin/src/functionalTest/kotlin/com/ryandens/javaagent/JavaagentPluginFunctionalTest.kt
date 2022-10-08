@@ -7,6 +7,7 @@ import java.io.File
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -104,6 +105,21 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
         // Verify the result
         assertTrue(result.output.contains("Hello World!"))
         assertTrue(result.output.contains("Hello from my simple agent!"))
+    }
+
+    @Test fun `cat attach no agents to application distribution`() {
+        // create the test project and run the tasks
+        val result = createAndBuildJavaagentProject("", listOf("build", "installDist", "execStartScript"))
+
+        // verify the distribution was created properly
+        val applicationDistribution = File(functionalTestDir, "hello-world/build/distributions/hello-world.tar")
+        assertTrue(applicationDistribution.exists())
+
+        val applicationDistributionScript = File(functionalTestDir, "hello-world/build/scripts/hello-world")
+        assertTrue(applicationDistributionScript.readText().contains("""DEFAULT_JVM_OPTS="-Xmx256m"""))
+
+        assertFalse(File(functionalTestDir, "hello-world/build/install/hello-world/agent-libs/").exists())
+        assertTrue(result.output.contains("Hello World!"))
     }
 
     private fun createAndBuildJavaagentProject(dependencies: String, buildArgs: List<String>): BuildResult {

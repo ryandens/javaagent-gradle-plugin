@@ -51,22 +51,18 @@ class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
             addAll(entrypoint)
             addAll(1, localAgentPaths.map { localAgentPath -> "-javaagent:/opt/jib-agents/${localAgentPath.name}" })
         }
-
-        val javaagentFileEntries = buildList {
-            addAll(
-                localAgentPaths.map {
-                    localAgentPath ->
-                    FileEntry(
-                        localAgentPath.toPath(), AbsoluteUnixPath.get("/opt/jib-agents/${localAgentPath.name}"), FilePermissions.DEFAULT_FILE_PERMISSIONS,
-                        FileEntriesLayer.DEFAULT_MODIFICATION_TIME
-                    )
-                }
+        val javaagentFileEntries = localAgentPaths.map { localAgentPath ->
+            FileEntry(
+                localAgentPath.toPath(),
+                AbsoluteUnixPath.get("/opt/jib-agents/${localAgentPath.name}"),
+                FilePermissions.DEFAULT_FILE_PERMISSIONS,
+                FileEntriesLayer.DEFAULT_MODIFICATION_TIME
             )
         }
         val javaagentLayer = FileEntriesLayer.builder().setName("javaagent").setEntries(javaagentFileEntries).build()
         val layers = buildList<LayerObject> {
-            addAll(buildPlan.getLayers())
-            add(1, javaagentLayer)
+            add(javaagentLayer)
+            addAll(buildPlan.layers)
         }
         return planBuilder.setEntrypoint(newEntrypoint).setLayers(layers).build()
     }
@@ -75,7 +71,7 @@ class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
         project: Project,
         javaagentConfiguration: NamedDomainObjectProvider<Configuration>
     ) {
-        val destinationDirectory = "${project.buildDir}/jib-agents/"
+        val destinationDirectory = File("${project.buildDir}/jib-agents/")
         val copyAgents = project.tasks.register("copyAgentsToJibDir", Copy::class.java) {
             it.from(javaagentConfiguration)
             it.into(destinationDirectory)
@@ -96,7 +92,7 @@ class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
         }
 
         javaagentPathProvider = {
-            javaagentConfiguration.get().asPath.split(":").map { javaagentJar -> File("$destinationDirectory/${File(javaagentJar).name}") }
+            javaagentConfiguration.get().files.map { File(destinationDirectory, it.name) }
         }
     }
 

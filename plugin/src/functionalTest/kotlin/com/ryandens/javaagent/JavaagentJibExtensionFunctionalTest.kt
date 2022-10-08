@@ -9,7 +9,10 @@ import java.io.FileInputStream
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+
+private const val JIB_IMAGE = "hello-world/build/jib-image.tar"
 
 /**
  * A simple functional test for Jib extension
@@ -42,14 +45,41 @@ class JavaagentJibExtensionFunctionalTest {
         assertTrue(result.output.contains("Running extension: com.ryandens.javaagent.JavaagentJibExtension"))
 
         // verify the agent was added to entrypoint
-        assertTrue(File(functionalTestDir, "hello-world/build/jib-image.tar").exists())
-        FileInputStream(File(functionalTestDir, "hello-world/build/jib-image.tar")).use { fis ->
+        assertTrue(File(functionalTestDir, JIB_IMAGE).exists())
+        FileInputStream(File(functionalTestDir, JIB_IMAGE)).use { fis ->
             ArchiveStreamFactory().createArchiveInputStream("tar", fis).use { ais ->
                 var entry = ais.nextEntry as TarArchiveEntry?
                 while (entry != null) {
                     if ("config.json".equals(entry.name)) {
                         val json = ais.readBytes().toString(Charsets.UTF_8)
                         assertTrue(json.contains("-javaagent:/opt/jib-agents/simple-agent.jar"))
+                    }
+                    entry = ais.nextEntry as TarArchiveEntry?
+                }
+            }
+        }
+    }
+
+    @Test fun `works even without any javaagent dependencies`() {
+        val dependencies = """
+            runtimeOnly 'commons-lang:commons-lang:2.6'
+        """
+
+        // create the test project and run the tasks
+        val result = createAndBuildJavaagentProject(dependencies, listOf("jibBuildTar"))
+
+        // Verify the result
+        assertTrue(result.output.contains("Running extension: com.ryandens.javaagent.JavaagentJibExtension"))
+
+        // verify the agent was added to entrypoint
+        assertTrue(File(functionalTestDir, JIB_IMAGE).exists())
+        FileInputStream(File(functionalTestDir, JIB_IMAGE)).use { fis ->
+            ArchiveStreamFactory().createArchiveInputStream("tar", fis).use { ais ->
+                var entry = ais.nextEntry as TarArchiveEntry?
+                while (entry != null) {
+                    if ("config.json".equals(entry.name)) {
+                        val json = ais.readBytes().toString(Charsets.UTF_8)
+                        assertFalse(json.contains("-javaagent:/opt/jib-agents"))
                     }
                     entry = ais.nextEntry as TarArchiveEntry?
                 }

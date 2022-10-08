@@ -8,7 +8,6 @@ import org.gradle.api.internal.plugins.StartScriptTemplateBindingFactory
 import org.gradle.api.internal.plugins.UnixStartScriptGenerator
 import org.gradle.jvm.application.scripts.JavaAppStartScriptGenerationDetails
 import org.gradle.jvm.application.scripts.ScriptGenerator
-import java.io.File
 import java.io.Writer
 
 class JavaagentAwareStartScriptGenerator(
@@ -52,7 +51,16 @@ class JavaagentAwareStartScriptGenerator(
         }
 
         override fun write(str: String) {
-            val replace = str.replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar", javaagentConfiguration.get().asPath.split(":").map { jar -> "-javaagent:\$APP_HOME/agent-libs/${File(jar).name}" }.joinToString(" "))
+            val files = javaagentConfiguration.get().files
+            val replace = if (files.isEmpty()) {
+                // handles case gracefully where there is a trailing space that needs to be removed if ogther default jvm opts are supplied
+                str.replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar ", "").replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar", "")
+            } else {
+                str.replace(
+                    "-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar",
+                    javaagentConfiguration.get().files.joinToString(" ") { jar -> "-javaagent:\$APP_HOME/agent-libs/${jar.name}" }
+                )
+            }
             super.write(replace)
         }
     }

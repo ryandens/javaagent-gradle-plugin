@@ -18,7 +18,7 @@ then specify the javaagent you would like to attach in the dependencies block
 ```kotlin
 plugins {
     application
-    id("com.ryandens.javaagent-application") version "0.3.2"
+    id("com.ryandens.javaagent-application") version "0.4.0"
 }
 
 application {
@@ -48,7 +48,7 @@ would like to attach in the dependencies block.
 plugins {
     java
     id("com.google.cloud.tools.jib") version "3.1.4"
-    id("com.ryandens.javaagent-jib") version "0.3.2"
+    id("com.ryandens.javaagent-jib") version "0.4.0"
 }
 
 jib.container {
@@ -79,7 +79,7 @@ tasks.named<Test>("test") {
 }
 
 dependencies {
-    javaagent("io.opentelemetry.javaagent:opentelemetry-javaagent:1.11.1")
+    javaagent("io.opentelemetry.javaagent:opentelemetry-javaagent:1.11.1")  
     testJavaagent("com.ryandens.example:agent:1.0.0") // only attached to test task but ignored by other gradle plugins in this project.
 }
 ```
@@ -108,8 +108,8 @@ desired application distribution or execution method.
 ```kotlin
 plugins {
   application
-  id("com.ryandens.javaagent-otel-modification") version "0.3.2"
-  id("com.ryandens.javaagent-application") version "0.3.2"
+  id("com.ryandens.javaagent-otel-modification") version "0.4.0"
+  id("com.ryandens.javaagent-application") version "0.4.0"
 }
 
 dependencies {

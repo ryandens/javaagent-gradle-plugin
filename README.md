@@ -9,7 +9,7 @@
 A set of vendor-agnostic Gradle plugins to ease building Java applications that leverage instrumentation agents in 
 development and/or in production 
 
-## Javaagent Application Plugin usage
+## Application Plugin integration
 
 This Gradle plugin tightly integrates with the [Gradle application plugin](https://docs.gradle.org/current/userguide/application_plugin.html) 
 to make instrumenting your application build by Gradle easy! Simply register the `javaagent-application` plugin and 
@@ -35,7 +35,7 @@ by the `javaagent` Gradle configuration! In addition, the distributions created 
 ApplicationPlugin tasks include the javaagent JAR in the archive's dependency directory. Finally, the distribution 
 start scripts have been modified to automatically attach the agent via the command line `-javaagent` flag.
 
-### Jib integration
+## Jib integration
 
 [Jib](https://github.com/GoogleContainerTools/jib) is a build tool for containerizing Java applications without a Docker
 daemon. This project integrates with the [jib-gradle-plugin](https://github.com/GoogleContainerTools/jib/tree/master/jib-gradle-plugin)
@@ -60,6 +60,29 @@ dependencies {
 }
 ```
 
+## Java Test Task integration
+The Gradle Java Plugin creates a test task that launches a forked JVM from the build for testing purposes. The 
+`com.ryandens.javaagent-test` plugin automatically configures the jvm to be launched with the javaagents specified by 
+the `javaagent` configuration attached. This enables the use of runtime analysis via javaagents for projects. Common
+uses cases for this include collecting telemetry data from test runs or leveraging an Interactive Application Security
+Testing (IAST) product.
+
+
+```kotlin
+plugins {
+    java
+    id("com.ryandens.javaagent-test") version "0.4.0"
+}
+
+tasks.named<Test>("test") {
+  useJUnitPlatform()
+}
+
+dependencies {
+    javaagent("io.opentelemetry.javaagent:opentelemetry-javaagent:1.11.1")
+    testJavaagent("com.ryandens.example:agent:1.0.0") // only attached to test task but ignored by other gradle plugins in this project.
+}
+```
 
 ### OpenTelemetry Integration
 [OpenTelemetry](https://OpenTelemetry.io) is a set of tools that enable distributed tracing. 

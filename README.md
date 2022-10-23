@@ -9,6 +9,8 @@
 A set of vendor-agnostic Gradle plugins to ease building Java applications that leverage instrumentation agents in 
 development and/or in production 
 
+> The work on this software project is in no way associated with my employer nor with the role I'm having at my employer. Any requests for changes will be decided upon exclusively by myself based on my personal preferences. I maintain this project as much or as little as my spare time permits.
+
 ## Application Plugin integration
 
 This Gradle plugin tightly integrates with the [Gradle application plugin](https://docs.gradle.org/current/userguide/application_plugin.html) 

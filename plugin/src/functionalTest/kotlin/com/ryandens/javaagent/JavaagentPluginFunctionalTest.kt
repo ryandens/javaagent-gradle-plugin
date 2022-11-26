@@ -3,10 +3,12 @@ package com.ryandens.javaagent
 import org.gradle.internal.jvm.Jvm
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
+import org.gradle.testkit.runner.TaskOutcome
 import java.io.File
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -36,7 +38,8 @@ class JavaagentPluginFunctionalTest {
         """
 
         // create the test project and run the tasks
-        val result = createAndBuildJavaagentProject(dependencies, listOf("assemble", "run"))
+        createJavaagentProject(dependencies)
+        val result = runBuild(listOf("assemble", "run"))
 
         // Verify the result
         assertTrue(result.output.contains("Hello World!"))
@@ -48,11 +51,19 @@ class JavaagentPluginFunctionalTest {
         """
 
         // create the test project and run the tasks
-        val result = createAndBuildJavaagentProject(dependencies, listOf("assemble", "run"))
+        createJavaagentProject(dependencies)
+        val result = runBuild(listOf("--configuration-cache", "assemble", "run"))
 
         // Verify the result
         assertTrue(result.output.contains("Hello World!"))
         assertTrue(result.output.contains("Hello from my simple agent!"))
+        assertTrue(result.output.contains("Configuration cache entry stored."))
+
+        // verify configuration cache
+        val ccResult = runBuild(listOf("--configuration-cache", "assemble", "run"))
+        assertTrue(ccResult.output.contains("Hello World!"))
+        assertTrue(ccResult.output.contains("Hello from my simple agent!"))
+        assertTrue(ccResult.output.contains("Reusing configuration cache."))
     }
 
     @Test fun `can attach to test task`() {
@@ -63,11 +74,17 @@ class JavaagentPluginFunctionalTest {
         """
 
         // create the test project and run the tasks
-        val result = createAndBuildJavaagentProject(dependencies, listOf("assemble", "test"))
+        createJavaagentProject(dependencies)
+        val result = runBuild(listOf("--configuration-cache", "assemble", "test"))
 
         // Verify the result
         assertTrue(result.output.contains("Hello from my simple agent!"))
         assertTrue(result.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: $otelVersion"))
+
+        // verify configuration cache
+        val ccResult = runBuild(listOf("--configuration-cache", "assemble", "test"))
+        assertEquals(TaskOutcome.UP_TO_DATE, ccResult.task(":hello-world:test")?.outcome)
+        assertTrue(ccResult.output.contains("Reusing configuration cache."))
     }
 
     @Test fun `can attach two agents to application run task`() {
@@ -78,7 +95,8 @@ class JavaagentPluginFunctionalTest {
         """
 
         // create the test project and run the tasks
-        val result = createAndBuildJavaagentProject(dependencies, listOf("assemble", "run"))
+        createJavaagentProject(dependencies)
+        val result = runBuild(listOf("assemble", "run"))
 
         // Verify the result
         assertTrue(result.output.contains("Hello World!"))
@@ -92,7 +110,8 @@ class JavaagentPluginFunctionalTest {
         """
 
         // create the test project and run the tasks
-        val result = createAndBuildJavaagentProject(dependencies, listOf("build", "installDist", "execStartScript"))
+        createJavaagentProject(dependencies)
+        val result = runBuild(listOf("--configuration-cache", "build", "installDist", "execStartScript"))
 
         // verify the distribution was created properly
         val applicationDistribution = File(functionalTestDir, "hello-world/build/distributions/hello-world.tar")
@@ -120,11 +139,16 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
         // Verify the result
         assertTrue(result.output.contains("Hello World!"))
         assertTrue(result.output.contains("Hello from my simple agent!"))
+
+        // verify configuration cache
+        val ccResult = runBuild(listOf("--configuration-cache", "build", "installDist", "execStartScript"))
+        assertTrue(ccResult.output.contains("Reusing configuration cache."))
     }
 
     @Test fun `cat attach no agents to application distribution`() {
         // create the test project and run the tasks
-        val result = createAndBuildJavaagentProject("", listOf("build", "installDist", "execStartScript"))
+        createJavaagentProject("")
+        val result = runBuild(listOf("build", "installDist", "execStartScript"))
 
         // verify the distribution was created properly
         val applicationDistribution = File(functionalTestDir, "hello-world/build/distributions/hello-world.tar")
@@ -137,7 +161,7 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
         assertTrue(result.output.contains("Hello World!"))
     }
 
-    private fun createAndBuildJavaagentProject(dependencies: String, buildArgs: List<String>): BuildResult {
+    private fun createJavaagentProject(dependencies: String) {
 
         val helloWorldDir = File(functionalTestDir, "hello-world")
         File("src/functionalTest/resources/hello-world-project/").copyRecursively(helloWorldDir)
@@ -188,7 +212,9 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
                 }
             """
         )
+    }
 
+    private fun runBuild(buildArgs: List<String>): BuildResult {
         // Run the build
         val runner = GradleRunner.create()
         runner.forwardOutput()

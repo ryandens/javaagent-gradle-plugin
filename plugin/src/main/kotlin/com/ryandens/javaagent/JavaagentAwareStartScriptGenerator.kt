@@ -1,17 +1,17 @@
 package com.ryandens.javaagent
 
-import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Transformer
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.internal.plugins.DefaultTemplateBasedStartScriptGenerator
 import org.gradle.api.internal.plugins.StartScriptTemplateBindingFactory
 import org.gradle.api.internal.plugins.UnixStartScriptGenerator
+import org.gradle.api.provider.Provider
 import org.gradle.jvm.application.scripts.JavaAppStartScriptGenerationDetails
 import org.gradle.jvm.application.scripts.ScriptGenerator
+import java.io.File
 import java.io.Writer
 
 class JavaagentAwareStartScriptGenerator(
-    private val javaagentConfiguration: NamedDomainObjectProvider<Configuration>,
+    private val javaagentConfiguration: Provider<Set<File>>,
     private val inner: ScriptGenerator = DefaultTemplateBasedStartScriptGenerator(
         "\n", FakeTransformer(StartScriptTemplateBindingFactory.unix()), UnixStartScriptGenerator().template
     )
@@ -37,7 +37,7 @@ class JavaagentAwareStartScriptGenerator(
         }
     }
 
-    private class Fake(private val inner: Writer, private val javaagentConfiguration: NamedDomainObjectProvider<Configuration>,) : Writer() {
+    private class Fake(private val inner: Writer, private val javaagentFiles: Provider<Set<File>>,) : Writer() {
         override fun close() {
             inner.close()
         }
@@ -51,14 +51,14 @@ class JavaagentAwareStartScriptGenerator(
         }
 
         override fun write(str: String) {
-            val files = javaagentConfiguration.get().files
+            val files = javaagentFiles.get()
             val replace = if (files.isEmpty()) {
                 // handles case gracefully where there is a trailing space that needs to be removed if ogther default jvm opts are supplied
                 str.replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar ", "").replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar", "")
             } else {
                 str.replace(
                     "-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar",
-                    javaagentConfiguration.get().files.joinToString(" ") { jar -> "-javaagent:\$APP_HOME/agent-libs/${jar.name}" }
+                    javaagentFiles.get().joinToString(" ") { jar -> "-javaagent:\$APP_HOME/agent-libs/${jar.name}" }
                 )
             }
             super.write(replace)

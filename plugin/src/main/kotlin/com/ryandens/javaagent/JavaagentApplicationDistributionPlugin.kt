@@ -49,7 +49,7 @@ class JavaagentApplicationDistributionPlugin : Plugin<Project>, JavaagentPlugin 
             it.defaultJvmOpts = listOf("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar")
                 .plus(it.defaultJvmOpts ?: listOf())
             // custom start script generator that replaces the placeholder
-            it.unixStartScriptGenerator = JavaagentAwareStartScriptGenerator(javaagentConfiguration)
+            it.unixStartScriptGenerator = JavaagentAwareStartScriptGenerator(javaagentConfiguration.map { configuration -> configuration.files })
             // TODO build support for windows
             it.windowsStartScriptGenerator = WindowsStartScriptGenerator()
         }

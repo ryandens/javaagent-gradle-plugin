@@ -1,9 +1,9 @@
 plugins {
     `java-gradle-plugin`
     `maven-publish`
-    id("com.gradle.plugin-publish") version "0.20.0"
+    id("com.gradle.plugin-publish") version "1.1.0"
     id("org.jetbrains.kotlin.jvm") version "1.8.0-Beta"
-    id("nebula.maven-apache-license") version "18.3.0"
+    id("com.netflix.nebula.maven-apache-license") version "19.0.0"
 }
 
 repositories {

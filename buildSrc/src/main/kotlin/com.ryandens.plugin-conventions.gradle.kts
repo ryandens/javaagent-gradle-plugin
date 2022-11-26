@@ -15,9 +15,9 @@ repositories {
     gradlePluginPortal()
 }
 
-pluginBundle {
-    website = "https://www.ryandens.com"
-    vcsUrl = "https://github.com/ryandens/javaagent-gradle-plugin"
+gradlePlugin {
+    website.set("https://www.ryandens.com")
+    vcsUrl.set("https://github.com/ryandens/javaagent-gradle-plugin")
 }
 
 tasks {

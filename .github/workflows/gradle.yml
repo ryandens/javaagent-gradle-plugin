@@ -1,5 +1,9 @@
 name: "Validate"
-on: [pull_request]
+on:
+  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
   validation:
@@ -21,6 +25,8 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Execute Gradle build
         run: ./gradlew build

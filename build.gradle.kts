@@ -4,7 +4,7 @@ plugins {
 
 allprojects {
     group = "com.ryandens"
-    version = "0.4.1"
+    version = "0.4.2"
     apply<com.diffplug.gradle.spotless.SpotlessPlugin>()
 
     repositories {

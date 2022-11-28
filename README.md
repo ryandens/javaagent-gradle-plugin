@@ -20,7 +20,7 @@ then specify the javaagent you would like to attach in the dependencies block
 ```kotlin
 plugins {
     application
-    id("com.ryandens.javaagent-application") version "0.4.1"
+    id("com.ryandens.javaagent-application") version "0.4.2"
 }
 
 application {
@@ -50,7 +50,7 @@ would like to attach in the dependencies block.
 plugins {
     java
     id("com.google.cloud.tools.jib") version "3.1.4"
-    id("com.ryandens.javaagent-jib") version "0.4.1"
+    id("com.ryandens.javaagent-jib") version "0.4.2"
 }
 
 jib.container {
@@ -73,7 +73,7 @@ Testing (IAST) product.
 ```kotlin
 plugins {
     java
-    id("com.ryandens.javaagent-test") version "0.4.1"
+    id("com.ryandens.javaagent-test") version "0.4.2"
 }
 
 tasks.named<Test>("test") {
@@ -110,8 +110,8 @@ desired application distribution or execution method.
 ```kotlin
 plugins {
   application
-  id("com.ryandens.javaagent-otel-modification") version "0.4.1"
-  id("com.ryandens.javaagent-application") version "0.4.1"
+  id("com.ryandens.javaagent-otel-modification") version "0.4.2"
+  id("com.ryandens.javaagent-application") version "0.4.2"
 }
 
 dependencies {

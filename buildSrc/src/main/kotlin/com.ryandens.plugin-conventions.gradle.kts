@@ -22,14 +22,20 @@ gradlePlugin {
 
 tasks {
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.jvmTarget = "11"
         kotlinOptions.allWarningsAsErrors = true
     }
 }
 
+tasks.withType<JavaCompile> {
+    options.isDeprecation = true
+    options.release.set(11)
+}
+
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
 }
 
 // Add a source set for the functional test suite

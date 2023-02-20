@@ -5,7 +5,7 @@ plugins {
 tasks.jar {
     manifest {
         attributes(
-            "Premain-Class" to "com.ryandens.SimpleAgent"
+            "Premain-Class" to "com.ryandens.SimpleAgent",
         )
     }
 }

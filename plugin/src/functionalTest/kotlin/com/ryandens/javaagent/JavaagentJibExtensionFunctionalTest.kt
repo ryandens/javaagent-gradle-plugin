@@ -88,7 +88,6 @@ class JavaagentJibExtensionFunctionalTest {
     }
 
     private fun createAndBuildJavaagentProject(dependencies: String, buildArgs: List<String>): BuildResult {
-
         val helloWorldDir = File(functionalTestDir, "hello-world")
         File("src/functionalTest/resources/hello-world-project/").copyRecursively(helloWorldDir)
         File("../simple-agent/").copyRecursively(File(functionalTestDir, "simple-agent"))
@@ -98,7 +97,7 @@ class JavaagentJibExtensionFunctionalTest {
             rootProject.name = 'example'
             include('hello-world')
             include('simple-agent')
-            """
+            """,
         )
 
         helloWorldDir.resolve("build.gradle").writeText(
@@ -138,7 +137,7 @@ class JavaagentJibExtensionFunctionalTest {
                         image = "javaagent-hello-world"
                     }
                 }
-            """
+            """,
         )
 
         // Run the build

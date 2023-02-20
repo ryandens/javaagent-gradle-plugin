@@ -28,7 +28,7 @@ class JavaagentApplicationDistributionPlugin : Plugin<Project>, JavaagentPlugin 
 
     override fun applyAfterJavaagentSetup(
         project: Project,
-        javaagentConfiguration: NamedDomainObjectProvider<Configuration>
+        javaagentConfiguration: NamedDomainObjectProvider<Configuration>,
     ) {
         project.extensions.getByType(DistributionContainer::class.java).named(DistributionPlugin.MAIN_DISTRIBUTION_NAME)
             .configure { distribution ->

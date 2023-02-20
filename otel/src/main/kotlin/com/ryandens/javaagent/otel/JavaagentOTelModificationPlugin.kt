@@ -61,7 +61,7 @@ class JavaagentOTelModificationPlugin : Plugin<Project> {
                     resolvedOtelInstrumentation.files.map { instrumentationJar ->
                         project.zipTree(instrumentationJar)
                     }
-                }
+                },
             ) {
                 it.into("inst")
                 it.exclude("META-INF/MANIFEST.MF")

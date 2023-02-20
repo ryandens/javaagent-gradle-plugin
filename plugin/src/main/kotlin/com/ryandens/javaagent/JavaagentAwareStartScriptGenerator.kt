@@ -13,8 +13,10 @@ import java.io.Writer
 class JavaagentAwareStartScriptGenerator(
     private val javaagentConfiguration: Provider<Set<File>>,
     private val inner: ScriptGenerator = DefaultTemplateBasedStartScriptGenerator(
-        "\n", FakeTransformer(StartScriptTemplateBindingFactory.unix()), UnixStartScriptGenerator().template
-    )
+        "\n",
+        FakeTransformer(StartScriptTemplateBindingFactory.unix()),
+        UnixStartScriptGenerator().template,
+    ),
 ) : ScriptGenerator {
 
     override fun generateScript(details: JavaAppStartScriptGenerationDetails, destination: Writer) {
@@ -37,7 +39,7 @@ class JavaagentAwareStartScriptGenerator(
         }
     }
 
-    private class Fake(private val inner: Writer, private val javaagentFiles: Provider<Set<File>>,) : Writer() {
+    private class Fake(private val inner: Writer, private val javaagentFiles: Provider<Set<File>>) : Writer() {
         override fun close() {
             inner.close()
         }
@@ -58,7 +60,7 @@ class JavaagentAwareStartScriptGenerator(
             } else {
                 str.replace(
                     "-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar",
-                    javaagentFiles.get().joinToString(" ") { jar -> "-javaagent:\$APP_HOME/agent-libs/${jar.name}" }
+                    javaagentFiles.get().joinToString(" ") { jar -> "-javaagent:\$APP_HOME/agent-libs/${jar.name}" },
                 )
             }
             super.write(replace)

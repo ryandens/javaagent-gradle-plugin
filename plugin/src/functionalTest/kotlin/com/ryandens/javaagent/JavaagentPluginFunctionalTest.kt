@@ -162,7 +162,6 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
     }
 
     private fun createJavaagentProject(dependencies: String) {
-
         val helloWorldDir = File(functionalTestDir, "hello-world")
         File("src/functionalTest/resources/hello-world-project/").copyRecursively(helloWorldDir)
         File("../simple-agent/").copyRecursively(File(functionalTestDir, "simple-agent"))
@@ -172,7 +171,7 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
             rootProject.name = 'example'
             include('hello-world')
             include('simple-agent')
-            """
+            """,
         )
 
         helloWorldDir.resolve("build.gradle").writeText(
@@ -213,7 +212,7 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
                     $dependencies
                     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
                 }
-            """
+            """,
         )
     }
 

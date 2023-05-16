@@ -10,6 +10,7 @@ import com.google.cloud.tools.jib.gradle.BuildDockerTask
 import com.google.cloud.tools.jib.gradle.BuildImageTask
 import com.google.cloud.tools.jib.gradle.BuildTarTask
 import com.google.cloud.tools.jib.gradle.JibExtension
+import com.google.cloud.tools.jib.gradle.JibTask
 import com.google.cloud.tools.jib.gradle.extension.GradleData
 import com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger
@@ -87,19 +88,17 @@ class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
         ).forEach { jibTaskType ->
             project.tasks.withType(jibTaskType).configureEach { jibTask ->
                 run {
-                    println(jibTask)
+                    jibTask.getJibExtension(jibTask)?.pluginExtensions { extensionParametersSpec ->
+                        extensionParametersSpec.pluginExtension {
+                            it.implementation = "com.ryandens.javaagent.JavaagentJibExtension"
+                        }
+                    }
                     jibTask.dependsOn(copyAgents)
                 }
             }
         }
 
-        val jibExtension: JibExtension? = project.extensions.findByType(JibExtension::class.java)
 
-        jibExtension?.pluginExtensions { extensionParametersSpec ->
-            extensionParametersSpec.pluginExtension {
-                it.implementation = "com.ryandens.javaagent.JavaagentJibExtension"
-            }
-        }
 
         javaagentPathProvider = {
             javaagentConfiguration.get().files.map { File(destinationDirectory, it.name) }
@@ -108,3 +107,13 @@ class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
 
     private lateinit var javaagentPathProvider: () -> List<File>
 }
+
+private fun JibTask.getJibExtension(jibtask: JibTask) : JibExtension? {
+    when (jibtask) {
+        is BuildTarTask -> return jibtask.jib
+        is BuildImageTask -> return jibtask.jib
+        is BuildDockerTask -> return jibtask.jib
+    }
+    throw UnsupportedOperationException()
+}
+

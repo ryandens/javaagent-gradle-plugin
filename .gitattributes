@@ -1,0 +1,5 @@
+* text eol=lf
+
+# Vendored/binary files must not be line-ending normalized.
+*.jar binary
+gradlew.bat binary

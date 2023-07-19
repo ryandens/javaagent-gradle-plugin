@@ -5,6 +5,7 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import java.io.File
+import java.nio.file.Paths
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -191,10 +192,11 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
     }
 
     private fun createJavaagentProject(dependencies: String) {
-        File("src/functionalTest/resources/hello-world-project/").copyRecursively(helloWorldDir)
+        val helloWorldDir = File(functionalTestDir, "hello-world")
+        Paths.get("src", "functionalTest", "resources", "hello-world-project").toFile().copyRecursively(helloWorldDir)
         val simpleAgentTestDir = File(functionalTestDir, "simple-agent")
         val simpleAgentBuildScript = simpleAgentTestDir.resolve("build.gradle.kts")
-        File("../simple-agent/").copyRecursively(simpleAgentTestDir)
+        Paths.get("..", "simple-agent").toFile().copyRecursively(simpleAgentTestDir)
         simpleAgentBuildScript.writeText(
             simpleAgentBuildScript.readText().replace(
                 "id(\"com.ryandens.java-conventions\")\n",

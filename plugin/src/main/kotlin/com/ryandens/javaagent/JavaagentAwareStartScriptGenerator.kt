@@ -3,7 +3,6 @@ package com.ryandens.javaagent
 import org.gradle.api.Transformer
 import org.gradle.api.internal.plugins.DefaultTemplateBasedStartScriptGenerator
 import org.gradle.api.internal.plugins.StartScriptTemplateBindingFactory
-import org.gradle.api.internal.plugins.UnixStartScriptGenerator
 import org.gradle.api.provider.Provider
 import org.gradle.jvm.application.scripts.JavaAppStartScriptGenerationDetails
 import org.gradle.jvm.application.scripts.ScriptGenerator
@@ -12,18 +11,19 @@ import java.io.Writer
 
 class JavaagentAwareStartScriptGenerator(
     private val javaagentConfiguration: Provider<Set<File>>,
+    private val platform: Platform,
     private val inner: ScriptGenerator =
         DefaultTemplateBasedStartScriptGenerator(
-            "\n",
-            FakeTransformer(StartScriptTemplateBindingFactory.unix()),
-            UnixStartScriptGenerator().template,
+            platform.lineSeparator,
+            FakeTransformer(platform.templateBindingFactory),
+            platform.template,
         ),
 ) : ScriptGenerator {
     override fun generateScript(
         details: JavaAppStartScriptGenerationDetails,
         destination: Writer,
     ) {
-        inner.generateScript(details, Fake(destination, javaagentConfiguration))
+        inner.generateScript(details, Fake(destination, javaagentConfiguration, platform.pathSeparator))
     }
 
     private class FakeTransformer(
@@ -46,7 +46,8 @@ class JavaagentAwareStartScriptGenerator(
     private class Fake(
         private val inner: Writer,
         private val javaagentFiles: Provider<Set<File>>,
-    ) : Writer() {
+        private val pathSeparator: String,
+        ) : Writer() {
         override fun close() {
             inner.close()
         }
@@ -76,7 +77,9 @@ class JavaagentAwareStartScriptGenerator(
                 } else {
                     str.replace(
                         "-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar",
-                        javaagentFiles.get().joinToString(" ") { jar -> "-javaagent:\$APP_HOME/agent-libs/${jar.name}" },
+                        javaagentFiles.get().joinToString(
+                            " ",
+                        ) { jar -> "-javaagent:\$APP_HOME${pathSeparator}agent-libs${pathSeparator}${jar.name}" },
                     )
                 }
             super.write(replace)

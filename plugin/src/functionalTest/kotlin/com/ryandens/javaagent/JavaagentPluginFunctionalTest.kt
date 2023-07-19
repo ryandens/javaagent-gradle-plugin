@@ -5,6 +5,7 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import java.io.File
+import java.nio.file.Paths
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -163,8 +164,8 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
 
     private fun createJavaagentProject(dependencies: String) {
         val helloWorldDir = File(functionalTestDir, "hello-world")
-        File("src/functionalTest/resources/hello-world-project/").copyRecursively(helloWorldDir)
-        File("../simple-agent/").copyRecursively(File(functionalTestDir, "simple-agent"))
+        Paths.get("src", "functionalTest", "resources", "hello-world-project").toFile().copyRecursively(helloWorldDir)
+        Paths.get("..", "simple-agent").toFile().copyRecursively(File(functionalTestDir, "simple-agent"))
 
         functionalTestDir.resolve("settings.gradle").writeText(
             """

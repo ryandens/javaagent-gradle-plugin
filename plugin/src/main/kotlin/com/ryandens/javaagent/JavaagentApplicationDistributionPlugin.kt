@@ -6,7 +6,6 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.distribution.DistributionContainer
 import org.gradle.api.distribution.plugins.DistributionPlugin
-import org.gradle.api.internal.plugins.WindowsStartScriptGenerator
 import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.tasks.application.CreateStartScripts
 
@@ -52,14 +51,9 @@ class JavaagentApplicationDistributionPlugin :
                     .plus(it.defaultJvmOpts ?: listOf())
             it.inputs.files(javaagentConfiguration)
             // custom start script generator that replaces the placeholder
-            it.unixStartScriptGenerator =
-                JavaagentAwareStartScriptGenerator(
-                    javaagentConfiguration.map { configuration ->
-                        configuration.files
-                    },
-                )
-            // TODO build support for windows
-            it.windowsStartScriptGenerator = WindowsStartScriptGenerator()
+            val agentFiles = javaagentConfiguration.map { configuration -> configuration.files }
+            it.unixStartScriptGenerator = JavaagentAwareStartScriptGenerator(agentFiles, Platform.UNIX)
+            it.windowsStartScriptGenerator = JavaagentAwareStartScriptGenerator(agentFiles, Platform.WINDOWS)
         }
     }
 }

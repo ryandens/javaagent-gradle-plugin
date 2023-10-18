@@ -71,7 +71,7 @@ class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
         project: Project,
         javaagentConfiguration: NamedDomainObjectProvider<Configuration>,
     ) {
-        val destinationDirectory = File("${project.buildDir}/jib-agents/")
+        val destinationDirectory = project.layout.buildDirectory.dir("jib-agents")
         val copyAgents = project.tasks.register("copyAgentsToJibDir", Copy::class.java) {
             it.from(javaagentConfiguration)
             it.into(destinationDirectory)
@@ -92,7 +92,7 @@ class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
         }
 
         javaagentPathProvider = {
-            javaagentConfiguration.get().files.map { File(destinationDirectory, it.name) }
+            javaagentConfiguration.get().files.map { File(destinationDirectory.get().asFile, it.name) }
         }
     }
 

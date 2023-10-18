@@ -5,7 +5,6 @@ import com.ryandens.javaagent.JavaagentBasePlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.DuplicatesStrategy
-import java.io.File
 
 /**
  * Enables easy consumption of external extensions and instrumentation libraries by creating a new jar with extra
@@ -39,7 +38,7 @@ class JavaagentOTelModificationPlugin : Plugin<Project> {
         val extendedAgent = project.tasks.register("extendedAgent", ShadowJar::class.java) { jar ->
             jar.inputs.files(otelInstrumentation)
             jar.archiveFileName.set("extended-opentelemetry-javaagent.jar")
-            jar.destinationDirectory.set(File(project.buildDir, "agents"))
+            jar.destinationDirectory.set(project.layout.buildDirectory.dir("agents"))
             jar.mergeServiceFiles {
                 it.include("inst/META-INF/services/*")
             }

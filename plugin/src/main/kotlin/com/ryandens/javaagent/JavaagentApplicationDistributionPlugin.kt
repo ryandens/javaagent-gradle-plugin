@@ -48,6 +48,7 @@ class JavaagentApplicationDistributionPlugin : Plugin<Project>, JavaagentPlugin 
             // variable that corresponds to the distribution installation's home directory
             it.defaultJvmOpts = listOf("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar")
                 .plus(it.defaultJvmOpts ?: listOf())
+            it.inputs.files(javaagentConfiguration)
             // custom start script generator that replaces the placeholder
             it.unixStartScriptGenerator = JavaagentAwareStartScriptGenerator(javaagentConfiguration.map { configuration -> configuration.files })
             // TODO build support for windows

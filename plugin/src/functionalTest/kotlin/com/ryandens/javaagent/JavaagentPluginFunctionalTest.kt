@@ -22,10 +22,13 @@ class JavaagentPluginFunctionalTest {
 
     private lateinit var functionalTestDir: File
 
+    private lateinit var helloWorldDir: File
+
     @BeforeTest
     fun beforeEach() {
         functionalTestDir = File("build/functionalTest")
         functionalTestDir.mkdirs()
+        helloWorldDir = File(functionalTestDir, "hello-world")
     }
 
     @AfterTest
@@ -145,6 +148,25 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
         assertTrue(ccResult.output.contains("Reusing configuration cache."))
     }
 
+    @Test fun `can handle upgrade of agent with build cache`() {
+        createJavaagentProject(
+            """
+            javaagent 'io.opentelemetry.javaagent:opentelemetry-javaagent:1.30.0'
+            """.trimIndent(),
+        )
+
+        val firstBuild = runBuild(listOf("--build-cache", "build", "installDist", "execStartScript"))
+
+        assertTrue(firstBuild.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: 1.30.0"))
+
+        val buildScript = helloWorldDir.resolve("build.gradle")
+
+        // replace the agent version with a newer version
+        buildScript.writeText(buildScript.readText().replace("1.30.0", "1.31.0"))
+        val secondBuild = runBuild(listOf("--build-cache", "build", "installDist", "execStartScript"))
+        assertTrue(secondBuild.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: 1.31.0"))
+    }
+
     @Test fun `cat attach no agents to application distribution`() {
         // create the test project and run the tasks
         createJavaagentProject("")
@@ -162,7 +184,6 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
     }
 
     private fun createJavaagentProject(dependencies: String) {
-        val helloWorldDir = File(functionalTestDir, "hello-world")
         File("src/functionalTest/resources/hello-world-project/").copyRecursively(helloWorldDir)
         File("../simple-agent/").copyRecursively(File(functionalTestDir, "simple-agent"))
 

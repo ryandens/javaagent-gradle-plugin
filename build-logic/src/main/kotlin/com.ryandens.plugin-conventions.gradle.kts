@@ -32,17 +32,6 @@ tasks {
     }
 }
 
-tasks.withType<JavaCompile> {
-    options.isDeprecation = true
-    options.release.set(11)
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
-    }
-}
-
 // Add a source set for the functional test suite
 val functionalTestSourceSet =
     sourceSets.create("functionalTest") {

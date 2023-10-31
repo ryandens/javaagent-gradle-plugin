@@ -7,7 +7,6 @@ import org.gradle.api.Project
  * Creates javaagent configuration for usage in all plugins produced by this project
  */
 class JavaagentBasePlugin : Plugin<Project> {
-
     companion object {
         const val CONFIGURATION_NAME = "javaagent"
     }

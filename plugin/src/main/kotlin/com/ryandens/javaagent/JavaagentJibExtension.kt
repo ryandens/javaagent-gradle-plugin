@@ -24,7 +24,6 @@ import java.util.Optional
  */
 @ExperimentalStdlibApi
 class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
-
     override fun getExtraConfigType(): Optional<Class<Void>> {
         return Optional.empty()
     }
@@ -40,30 +39,34 @@ class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
         val entrypoint = checkNotNull(buildPlan.entrypoint)
         check(entrypoint.isNotEmpty())
 
-        val localAgentPaths = checkNotNull(
-            gradleData?.project?.plugins?.getPlugin(
-                JavaagentJibExtension::class.java,
-            )?.javaagentPathProvider?.invoke(),
-        )
+        val localAgentPaths =
+            checkNotNull(
+                gradleData?.project?.plugins?.getPlugin(
+                    JavaagentJibExtension::class.java,
+                )?.javaagentPathProvider?.invoke(),
+            )
 
         val planBuilder = buildPlan.toBuilder()
-        val newEntrypoint = buildList<String> {
-            addAll(entrypoint)
-            addAll(1, localAgentPaths.map { localAgentPath -> "-javaagent:/opt/jib-agents/${localAgentPath.name}" })
-        }
-        val javaagentFileEntries = localAgentPaths.map { localAgentPath ->
-            FileEntry(
-                localAgentPath.toPath(),
-                AbsoluteUnixPath.get("/opt/jib-agents/${localAgentPath.name}"),
-                FilePermissions.DEFAULT_FILE_PERMISSIONS,
-                FileEntriesLayer.DEFAULT_MODIFICATION_TIME,
-            )
-        }
+        val newEntrypoint =
+            buildList<String> {
+                addAll(entrypoint)
+                addAll(1, localAgentPaths.map { localAgentPath -> "-javaagent:/opt/jib-agents/${localAgentPath.name}" })
+            }
+        val javaagentFileEntries =
+            localAgentPaths.map { localAgentPath ->
+                FileEntry(
+                    localAgentPath.toPath(),
+                    AbsoluteUnixPath.get("/opt/jib-agents/${localAgentPath.name}"),
+                    FilePermissions.DEFAULT_FILE_PERMISSIONS,
+                    FileEntriesLayer.DEFAULT_MODIFICATION_TIME,
+                )
+            }
         val javaagentLayer = FileEntriesLayer.builder().setName("javaagent").setEntries(javaagentFileEntries).build()
-        val layers = buildList<LayerObject> {
-            add(javaagentLayer)
-            addAll(buildPlan.layers)
-        }
+        val layers =
+            buildList<LayerObject> {
+                add(javaagentLayer)
+                addAll(buildPlan.layers)
+            }
         return planBuilder.setEntrypoint(newEntrypoint).setLayers(layers).build()
     }
 
@@ -72,10 +75,11 @@ class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
         javaagentConfiguration: NamedDomainObjectProvider<Configuration>,
     ) {
         val destinationDirectory = project.layout.buildDirectory.dir("jib-agents")
-        val copyAgents = project.tasks.register("copyAgentsToJibDir", Copy::class.java) {
-            it.from(javaagentConfiguration)
-            it.into(destinationDirectory)
-        }
+        val copyAgents =
+            project.tasks.register("copyAgentsToJibDir", Copy::class.java) {
+                it.from(javaagentConfiguration)
+                it.into(destinationDirectory)
+            }
 
         listOf("jib", "jibDockerBuild", "jibBuildTar").forEach { jibTaskName ->
             project.tasks.named(jibTaskName) { jibTask ->

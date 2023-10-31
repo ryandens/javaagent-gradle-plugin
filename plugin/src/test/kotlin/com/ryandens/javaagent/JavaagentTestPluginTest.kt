@@ -10,7 +10,6 @@ import kotlin.test.assertEquals
  * A simple unit test for the 'com.ryandens.javaagent-test' plugin.
  */
 class JavaagentTestPluginTest {
-
     private lateinit var project: Project
 
     /**

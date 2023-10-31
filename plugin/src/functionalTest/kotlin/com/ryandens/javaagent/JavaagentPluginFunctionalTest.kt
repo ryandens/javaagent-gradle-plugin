@@ -19,7 +19,6 @@ import kotlin.test.assertTrue
  * `com.ryandens.javaagent-application-distribution` (via `com.ryandens.javaagent-application`)
  */
 class JavaagentPluginFunctionalTest {
-
     private lateinit var functionalTestDir: File
 
     private lateinit var helloWorldDir: File
@@ -82,7 +81,9 @@ class JavaagentPluginFunctionalTest {
 
         // Verify the result
         assertTrue(result.output.contains("Hello from my simple agent!"))
-        assertTrue(result.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: $otelVersion"))
+        assertTrue(
+            result.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: $otelVersion"),
+        )
 
         // verify configuration cache
         val ccResult = runBuild(listOf("--configuration-cache", "assemble", "test"))
@@ -104,7 +105,9 @@ class JavaagentPluginFunctionalTest {
         // Verify the result
         assertTrue(result.output.contains("Hello World!"))
         assertTrue(result.output.contains("Hello from my simple agent!"))
-        assertTrue(result.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: $otelVersion"))
+        assertTrue(
+            result.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: $otelVersion"),
+        )
     }
 
     @Test fun `can attach to application distribution`() {
@@ -157,14 +160,18 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
 
         val firstBuild = runBuild(listOf("--build-cache", "build", "installDist", "execStartScript"))
 
-        assertTrue(firstBuild.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: 1.30.0"))
+        assertTrue(
+            firstBuild.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: 1.30.0"),
+        )
 
         val buildScript = helloWorldDir.resolve("build.gradle")
 
         // replace the agent version with a newer version
         buildScript.writeText(buildScript.readText().replace("1.30.0", "1.31.0"))
         val secondBuild = runBuild(listOf("--build-cache", "build", "installDist", "execStartScript"))
-        assertTrue(secondBuild.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: 1.31.0"))
+        assertTrue(
+            secondBuild.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: 1.31.0"),
+        )
     }
 
     @Test fun `cat attach no agents to application distribution`() {

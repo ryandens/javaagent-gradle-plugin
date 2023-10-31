@@ -16,7 +16,6 @@ import org.gradle.api.tasks.application.CreateStartScripts
  * automatically include the `-javaagent` flag when running the distribution.
  */
 class JavaagentApplicationDistributionPlugin : Plugin<Project>, JavaagentPlugin {
-
     /**
      * Destination directory for dependencies as specified by the [ApplicationPlugin]
      */
@@ -46,11 +45,18 @@ class JavaagentApplicationDistributionPlugin : Plugin<Project>, JavaagentPlugin 
             // here. Instead, when we put in a placeholder String so that when we generate the start script we can
             // unescape the defaultJvmOpts String and replace directly replace our placeholder with the environment
             // variable that corresponds to the distribution installation's home directory
-            it.defaultJvmOpts = listOf("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar")
-                .plus(it.defaultJvmOpts ?: listOf())
+            it.defaultJvmOpts =
+                listOf("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar")
+                    .plus(it.defaultJvmOpts ?: listOf())
             it.inputs.files(javaagentConfiguration)
             // custom start script generator that replaces the placeholder
-            it.unixStartScriptGenerator = JavaagentAwareStartScriptGenerator(javaagentConfiguration.map { configuration -> configuration.files })
+            it.unixStartScriptGenerator =
+                JavaagentAwareStartScriptGenerator(
+                    javaagentConfiguration.map {
+                            configuration ->
+                        configuration.files
+                    },
+                )
             // TODO build support for windows
             it.windowsStartScriptGenerator = WindowsStartScriptGenerator()
         }

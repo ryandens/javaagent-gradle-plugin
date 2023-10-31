@@ -11,7 +11,6 @@ import org.gradle.api.tasks.JavaExec
  * Configures a project that leverages the [ApplicationPlugin] to easily integrate a javaagent into its tasks and outputs.
  */
 class JavaagentApplicationRunPlugin : Plugin<Project>, JavaagentPlugin {
-
     override fun dependentProjectPlugins(): Collection<Class<out Plugin<Project>>> {
         return setOf(ApplicationPlugin::class.java)
     }

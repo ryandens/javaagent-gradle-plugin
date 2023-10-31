@@ -18,7 +18,6 @@ private const val JIB_IMAGE = "hello-world/build/jib-image.tar"
  * A simple functional test for Jib extension
  */
 class JavaagentJibExtensionFunctionalTest {
-
     private lateinit var functionalTestDir: File
 
     @BeforeTest
@@ -87,7 +86,10 @@ class JavaagentJibExtensionFunctionalTest {
         }
     }
 
-    private fun createAndBuildJavaagentProject(dependencies: String, buildArgs: List<String>): BuildResult {
+    private fun createAndBuildJavaagentProject(
+        dependencies: String,
+        buildArgs: List<String>,
+    ): BuildResult {
         val helloWorldDir = File(functionalTestDir, "hello-world")
         File("src/functionalTest/resources/hello-world-project/").copyRecursively(helloWorldDir)
         val simpleAgentTestDir = File(functionalTestDir, "simple-agent")

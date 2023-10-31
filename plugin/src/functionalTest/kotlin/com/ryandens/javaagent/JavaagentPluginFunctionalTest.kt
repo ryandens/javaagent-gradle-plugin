@@ -185,7 +185,15 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
 
     private fun createJavaagentProject(dependencies: String) {
         File("src/functionalTest/resources/hello-world-project/").copyRecursively(helloWorldDir)
-        File("../simple-agent/").copyRecursively(File(functionalTestDir, "simple-agent"))
+        val simpleAgentTestDir = File(functionalTestDir, "simple-agent")
+        val simpleAgentBuildScript = simpleAgentTestDir.resolve("build.gradle.kts")
+        File("../simple-agent/").copyRecursively(simpleAgentTestDir)
+        simpleAgentBuildScript.writeText(
+            simpleAgentBuildScript.readText().replace(
+                "id(\"com.ryandens.java-conventions\")\n",
+                "",
+            ),
+        )
 
         functionalTestDir.resolve("settings.gradle").writeText(
             """

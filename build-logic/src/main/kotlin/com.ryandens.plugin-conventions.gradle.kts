@@ -1,6 +1,5 @@
 import org.gradle.kotlin.dsl.`java-gradle-plugin`
 import org.gradle.kotlin.dsl.`maven-publish`
-import org.gradle.kotlin.dsl.version
 
 plugins {
     `java-gradle-plugin`
@@ -45,8 +44,9 @@ java {
 }
 
 // Add a source set for the functional test suite
-val functionalTestSourceSet = sourceSets.create("functionalTest") {
-}
+val functionalTestSourceSet =
+    sourceSets.create("functionalTest") {
+    }
 
 gradlePlugin.testSourceSets(functionalTestSourceSet)
 configurations["functionalTestImplementation"].extendsFrom(configurations["testImplementation"])

@@ -3,7 +3,7 @@ name: "Publish release"
 on:
   push:
     tags:
-      - '(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
+      - '*.*.*'
 
 jobs:
   release-build:

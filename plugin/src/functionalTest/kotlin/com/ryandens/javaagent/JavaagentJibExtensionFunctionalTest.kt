@@ -90,7 +90,16 @@ class JavaagentJibExtensionFunctionalTest {
     private fun createAndBuildJavaagentProject(dependencies: String, buildArgs: List<String>): BuildResult {
         val helloWorldDir = File(functionalTestDir, "hello-world")
         File("src/functionalTest/resources/hello-world-project/").copyRecursively(helloWorldDir)
-        File("../simple-agent/").copyRecursively(File(functionalTestDir, "simple-agent"))
+        val simpleAgentTestDir = File(functionalTestDir, "simple-agent")
+        val simpleAgentBuildScript = simpleAgentTestDir.resolve("build.gradle.kts")
+        File("../simple-agent/").copyRecursively(simpleAgentTestDir)
+        // remove a constant from the above file
+        simpleAgentBuildScript.writeText(
+            simpleAgentBuildScript.readText().replace(
+                "id(\"com.ryandens.java-conventions\")\n",
+                "",
+            ),
+        )
 
         functionalTestDir.resolve("settings.gradle").writeText(
             """

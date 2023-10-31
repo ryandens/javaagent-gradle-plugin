@@ -1,5 +1,3 @@
-import com.diffplug.spotless.LineEnding
-
 plugins {
     id("com.diffplug.spotless")
     java
@@ -10,7 +8,6 @@ repositories {
 }
 
 spotless {
-    this.lineEndings = LineEnding.UNIX
     java {
         googleJavaFormat()
     }

@@ -9,7 +9,6 @@ import org.gradle.api.artifacts.Configuration
  * Mixin for [org.gradle.api.Plugin]s that rely on the [JavaagentBasePlugin]
  */
 interface JavaagentPlugin : Plugin<Project> {
-
     /**
      * Plugins that the implementing class expects to be applied before [applyAfterJavaagentSetup] runs. By default,
      * this returns an empty [Collection]
@@ -33,5 +32,8 @@ interface JavaagentPlugin : Plugin<Project> {
         applyAfterJavaagentSetup(project, javaagentConfiguration)
     }
 
-    fun applyAfterJavaagentSetup(project: Project, javaagentConfiguration: NamedDomainObjectProvider<Configuration>)
+    fun applyAfterJavaagentSetup(
+        project: Project,
+        javaagentConfiguration: NamedDomainObjectProvider<Configuration>,
+    )
 }

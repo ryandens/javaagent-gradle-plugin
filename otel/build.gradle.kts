@@ -16,7 +16,9 @@ gradlePlugin {
             id = "com.ryandens.javaagent-otel-modification"
             displayName = "OpenTelemetry Javaagent Plugin"
             description =
-                "Enables easy modification of OpenTelemetry javaagent distributions with 3rd party extensions or auto-instrumentation modules"
+                """
+                Enables easy modification of OpenTelemetry javaagent distributions with 3rd party extensions or auto-instrumentation modules
+                """.trimIndent()
             implementationClass = "com.ryandens.javaagent.otel.JavaagentOTelModificationPlugin"
             tags.set(listOf("otel", "instrumentation", "observability"))
         }

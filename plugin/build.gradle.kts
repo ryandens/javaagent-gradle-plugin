@@ -70,3 +70,8 @@ gradlePlugin {
         }
     }
 }
+
+tasks.functionalTest {
+    inputs.file(layout.projectDirectory.dir("../simple-agent/build.gradle.kts"))
+    inputs.files(layout.projectDirectory.dir("../simple-agent/src/"))
+}

@@ -1,4 +1,5 @@
 plugins {
+    id("com.ryandens.java-conventions")
     `java-library`
 }
 

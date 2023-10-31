@@ -8,11 +8,17 @@ plugins {
     id("com.gradle.plugin-publish")
     id("org.jetbrains.kotlin.jvm")
     id("com.netflix.nebula.maven-apache-license")
+    id("com.ryandens.java-conventions")
 }
 
 repositories {
-    mavenCentral()
     gradlePluginPortal()
+}
+
+spotless {
+    kotlin {
+        ktlint()
+    }
 }
 
 gradlePlugin {

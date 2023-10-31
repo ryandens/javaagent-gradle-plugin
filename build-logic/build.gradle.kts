@@ -1,5 +1,13 @@
 plugins {
     `kotlin-dsl`
+    id("com.diffplug.spotless") version "6.22.0"
+}
+
+spotless {
+    kotlinGradle {
+        target("*.gradle.kts", "src/main/kotlin/*.gradle.kts")
+        ktlint()
+    }
 }
 
 repositories {

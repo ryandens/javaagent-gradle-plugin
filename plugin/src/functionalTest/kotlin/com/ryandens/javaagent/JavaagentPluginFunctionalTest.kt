@@ -250,7 +250,7 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
                 task execStartScript(type: Exec) {
                     dependsOn('installDist')
                     inputs.files(layout.buildDirectory.dir('install'))
-                    workingDir '${helloWorldDir.canonicalPath + File.separator}build${File.separator}install${File.separator}hello-world${File.separator}bin${File.separator}'
+                    workingDir(layout.buildDirectory.dir('install').map { it.dir('hello-world').dir('bin') })
                     commandLine '.${File.separator}hello-world'
                     environment JAVA_HOME: "${Jvm.current().getJavaHome()}"
                 }

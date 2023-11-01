@@ -15,7 +15,10 @@ jobs:
       - uses: gradle/actions/wrapper-validation@v5
   build:
     name: "Javaagent Gradle Plugin Validation"
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v6.0.1
       - uses: actions/setup-java@v5.1.0

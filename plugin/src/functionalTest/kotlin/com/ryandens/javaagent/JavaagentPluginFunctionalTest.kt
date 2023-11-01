@@ -121,14 +121,14 @@ class JavaagentPluginFunctionalTest {
         val result = runBuild(listOf("--configuration-cache", "build", "installDist", "execStartScript"))
 
         // verify the distribution was created properly
-        val applicationDistribution = File(functionalTestDir, "hello-world/build/distributions/hello-world.tar")
+        val applicationDistribution = File(functionalTestDir, "hello-world${File.separator}build${File.separator}distributions${File.separator}hello-world.tar")
         assertTrue(applicationDistribution.exists())
 
         // verify the expected text was injected into the start script
         val expectedDefaultJavaOpts = """
 DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar -Xmx256m"
 """
-        val applicationDistributionScript = File(functionalTestDir, "hello-world/build/scripts/hello-world")
+        val applicationDistributionScript = File(functionalTestDir, "hello-world${File.separator}build${File.separator}scripts${File.separator}hello-world")
         assertTrue(applicationDistributionScript.readText().contains(expectedDefaultJavaOpts))
 
         /*
@@ -141,7 +141,7 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
          */
 
         // verify the agent was added to the /lib/ dir of the distribution
-        assertTrue(File(functionalTestDir, "hello-world/build/install/hello-world/agent-libs/simple-agent.jar").exists())
+        assertTrue(File(functionalTestDir, "hello-world${File.separator}build${File.separator}install${File.separator}hello-world${File.separator}agent-libs${File.separator}simple-agent.jar").exists())
 
         // Verify the result
         assertTrue(result.output.contains("Hello World!"))
@@ -181,13 +181,13 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
         val result = runBuild(listOf("build", "installDist", "execStartScript"))
 
         // verify the distribution was created properly
-        val applicationDistribution = File(functionalTestDir, "hello-world/build/distributions/hello-world.tar")
+        val applicationDistribution = File(functionalTestDir, "hello-world${File.separator}build${File.separator}distributions${File.separator}hello-world.tar")
         assertTrue(applicationDistribution.exists())
 
-        val applicationDistributionScript = File(functionalTestDir, "hello-world/build/scripts/hello-world")
+        val applicationDistributionScript = File(functionalTestDir, "hello-world${File.separator}build${File.separator}scripts${File.separator}hello-world")
         assertTrue(applicationDistributionScript.readText().contains("""DEFAULT_JVM_OPTS="-Xmx256m"""))
 
-        assertFalse(File(functionalTestDir, "hello-world/build/install/hello-world/agent-libs/").exists())
+        assertFalse(File(functionalTestDir, "hello-world${File.separator}build${File.separator}install${File.separator}hello-world${File.separator}agent-libs/").exists())
         assertTrue(result.output.contains("Hello World!"))
     }
 

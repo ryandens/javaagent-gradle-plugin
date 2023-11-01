@@ -26,7 +26,7 @@ class JavaagentPluginFunctionalTest {
 
     @BeforeTest
     fun beforeEach() {
-        functionalTestDir = File("build/functionalTest")
+        functionalTestDir = File("build", "functionalTest")
         functionalTestDir.mkdirs()
         helloWorldDir = File(functionalTestDir, "hello-world")
     }
@@ -234,11 +234,10 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
                 }
                 
                 task execStartScript(type: Exec) {
-                    inputs.files(fileTree('${helloWorldDir.canonicalPath}/build/install/') {
-                        builtBy tasks.named('installDist')
-                    })
-                    workingDir '${helloWorldDir.canonicalPath}/build/install/hello-world/bin/'
-                    commandLine './hello-world'
+                    dependsOn('installDist')
+                    inputs.files(layout.buildDirectory.dir('install'))
+                    workingDir '${helloWorldDir.canonicalPath + File.separator}build${File.separator}install${File.separator}hello-world${File.separator}bin${File.separator}'
+                    commandLine '.${File.separator}hello-world'
                     environment JAVA_HOME: "${Jvm.current().getJavaHome()}"
                 }
                 

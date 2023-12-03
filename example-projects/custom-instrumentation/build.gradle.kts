@@ -20,8 +20,9 @@ tasks.jar {
 }
 
 dependencies {
-  compileOnly("com.google.auto.service:auto-service-annotations:1.0.1")
-  annotationProcessor("com.google.auto.service:auto-service:1.1.1")
+  val autoServiceVersion = "1.1.1"
+  compileOnly("com.google.auto.service:auto-service-annotations:$autoServiceVersion")
+  annotationProcessor("com.google.auto.service:auto-service:$autoServiceVersion")
   val otelInstrumentationVersion = "1.13.1-alpha"
   muzzleBootstrap("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:$otelInstrumentationVersion")
   muzzleBootstrap("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:$otelInstrumentationVersion")

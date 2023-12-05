@@ -1,5 +1,5 @@
 [versions]
-spotless = "6.23.2"
+spotless = "6.23.3"
 
 [libraries]
 spotless = { module = "com.diffplug.spotless:com.diffplug.spotless.gradle.plugin", version.ref = "spotless" }

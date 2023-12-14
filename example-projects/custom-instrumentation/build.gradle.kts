@@ -2,7 +2,7 @@ plugins {
   id("com.ryandens.javaagent.example.java-library-conventions")
   id("io.opentelemetry.instrumentation.muzzle-check") version "1.13.1-alpha"
   id("io.opentelemetry.instrumentation.muzzle-generation") version "1.13.1-alpha"
-  id("com.github.johnrengelman.shadow") version "7.1.2"
+  id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 tasks.shadowJar {

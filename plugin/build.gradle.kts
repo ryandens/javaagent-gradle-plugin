@@ -28,7 +28,7 @@ dependencies {
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
-    testImplementation("org.apache.commons:commons-compress:1.22")
+    testImplementation("org.apache.commons:commons-compress:1.25.0")
 }
 
 gradlePlugin {

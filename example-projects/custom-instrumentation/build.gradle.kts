@@ -28,11 +28,11 @@ dependencies {
   muzzleBootstrap("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:$otelInstrumentationVersion")
   muzzleBootstrap("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-annotation-support:$otelInstrumentationVersion")
   muzzleBootstrap( "io.opentelemetry.instrumentation:opentelemetry-instrumentation-appender-api-internal:$otelInstrumentationVersion")
-  muzzleTooling("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:$otelInstrumentationVersion")
-  muzzleTooling("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:$otelInstrumentationVersion")
+  muzzleTooling("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:$otelInstrumentationVersion-alpha")
+  muzzleTooling("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:$otelInstrumentationVersion-alpha")
   // for some reason, when pulling this version value from the platform bom, a byte buddy task can't be created
-  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:$otelInstrumentationVersion")
-  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:$otelInstrumentationVersion")
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:$otelInstrumentationVersion-alpha")
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:$otelInstrumentationVersion-alpha")
   compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:$otelInstrumentationVersion")
 
 
@@ -41,5 +41,5 @@ dependencies {
     generation phase. These classes become part of the code that plugin inspects and traverses during
     references collection phase.
    */
-  add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:$otelInstrumentationVersion")
+  add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:$otelInstrumentationVersion-alpha")
 }

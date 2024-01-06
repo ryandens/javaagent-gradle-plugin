@@ -23,7 +23,7 @@ application {
   the implicit dependency (https://docs.gradle.org/7.4.2/userguide/validation_problems.html#implicit_dependency)
   due to an issue with the shadowJar plugin
 */
-setOf(tasks.distTar, tasks.distZip).forEach {
+setOf(tasks.distTar, tasks.distZip, tasks.startScripts).forEach {
   it.configure {
     dependsOn(tasks.extendedAgent)
   }

@@ -1,5 +1,6 @@
 package com.ryandens.javaagent
 
+import org.apache.commons.compress.archivers.ArchiveInputStream
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.gradle.testkit.runner.BuildResult
@@ -45,15 +46,17 @@ class JavaagentJibExtensionFunctionalTest {
 
         // verify the agent was added to entrypoint
         assertTrue(File(functionalTestDir, JIB_IMAGE).exists())
+
         FileInputStream(File(functionalTestDir, JIB_IMAGE)).use { fis ->
-            ArchiveStreamFactory().createArchiveInputStream("tar", fis).use { ais ->
-                var entry = ais.nextEntry as TarArchiveEntry?
+            ArchiveStreamFactory().createArchiveInputStream<ArchiveInputStream<TarArchiveEntry>>(ArchiveStreamFactory.TAR, fis).use {
+                    ais ->
+                var entry = ais.nextEntry
                 while (entry != null) {
-                    if ("config.json".equals(entry.name)) {
+                    if ("config.json" == entry.name) {
                         val json = ais.readBytes().toString(Charsets.UTF_8)
                         assertTrue(json.contains("-javaagent:/opt/jib-agents/simple-agent.jar"))
                     }
-                    entry = ais.nextEntry as TarArchiveEntry?
+                    entry = ais.nextEntry
                 }
             }
         }
@@ -73,14 +76,15 @@ class JavaagentJibExtensionFunctionalTest {
         // verify the agent was added to entrypoint
         assertTrue(File(functionalTestDir, JIB_IMAGE).exists())
         FileInputStream(File(functionalTestDir, JIB_IMAGE)).use { fis ->
-            ArchiveStreamFactory().createArchiveInputStream("tar", fis).use { ais ->
-                var entry = ais.nextEntry as TarArchiveEntry?
+            ArchiveStreamFactory().createArchiveInputStream<ArchiveInputStream<TarArchiveEntry>>(ArchiveStreamFactory.TAR, fis).use {
+                    ais ->
+                var entry = ais.nextEntry
                 while (entry != null) {
-                    if ("config.json".equals(entry.name)) {
+                    if ("config.json" == entry.name) {
                         val json = ais.readBytes().toString(Charsets.UTF_8)
                         assertFalse(json.contains("-javaagent:/opt/jib-agents"))
                     }
-                    entry = ais.nextEntry as TarArchiveEntry?
+                    entry = ais.nextEntry
                 }
             }
         }

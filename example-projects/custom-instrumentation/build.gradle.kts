@@ -23,7 +23,7 @@ dependencies {
   val autoServiceVersion = "1.1.1"
   compileOnly("com.google.auto.service:auto-service-annotations:$autoServiceVersion")
   annotationProcessor("com.google.auto.service:auto-service:$autoServiceVersion")
-  val otelInstrumentationVersion = "2.1.0"
+  val otelInstrumentationVersion = "2.2.0"
   muzzleBootstrap("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:$otelInstrumentationVersion")
   muzzleBootstrap("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:$otelInstrumentationVersion")
   muzzleBootstrap("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-annotation-support:$otelInstrumentationVersion")

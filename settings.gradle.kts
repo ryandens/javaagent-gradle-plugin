@@ -3,7 +3,7 @@ pluginManagement {
 }
 
 plugins {
-    id("com.gradle.enterprise") version "3.17.6"
+    id("com.gradle.enterprise") version "3.18"
 }
 
 rootProject.name = "javaagent-plugin"

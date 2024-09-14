@@ -1,5 +1,3 @@
-import com.gradle.develocity.agent.gradle.scan.BuildScanPublishingConfiguration.PublishingContext
-
 pluginManagement {
     includeBuild("build-logic")
 }

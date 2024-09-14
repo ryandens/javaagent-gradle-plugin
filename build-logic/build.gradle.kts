@@ -1,5 +1,6 @@
 plugins {
     `kotlin-dsl`
+    alias(buildlibs.plugins.reproducible.builds)
     alias(buildlibs.plugins.spotless)
 }
 
@@ -18,6 +19,7 @@ dependencies {
     implementation(buildlibs.plugin.publish)
     implementation(buildlibs.kotlin)
     implementation(buildlibs.nebula.apache.license)
+    implementation(buildlibs.reproducible.builds)
     implementation(buildlibs.spotless)
     implementation(buildlibs.sigstore)
 }

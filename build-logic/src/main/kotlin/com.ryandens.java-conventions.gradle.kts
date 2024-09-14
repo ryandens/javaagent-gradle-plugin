@@ -1,5 +1,6 @@
 plugins {
     id("com.diffplug.spotless")
+    id("org.gradlex.reproducible-builds")
     java
 }
 

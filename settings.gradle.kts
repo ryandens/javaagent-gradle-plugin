@@ -1,28 +1,27 @@
+import com.gradle.develocity.agent.gradle.scan.BuildScanPublishingConfiguration.PublishingContext
+
 pluginManagement {
     includeBuild("build-logic")
 }
 
 plugins {
-    id("com.gradle.enterprise") version "3.18.1"
+    id("com.gradle.develocity") version "3.18.1"
 }
 
 rootProject.name = "javaagent-plugin"
 include("plugin", "simple-agent", "otel")
 
-val isCI = System.getenv("CI") != null
+val isCI = providers.environmentVariable("CI").isPresent
 
-gradleEnterprise {
+develocity {
     buildScan {
-        termsOfServiceUrl = "https://gradle.com/terms-of-service"
-        termsOfServiceAgree = "yes"
-        isUploadInBackground = !isCI
-
+        termsOfUseUrl.set("https://gradle.com/help/legal-terms-of-use")
+        termsOfUseAgree.set("yes")
+        uploadInBackground.set(isCI)
         if (isCI) {
-            publishAlways()
-        }
-
-        capture {
-            isTaskInputFiles = true
+            publishing {
+                onlyIf { true }
+            }
         }
     }
 }

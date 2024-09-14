@@ -1,9 +1,12 @@
+import dev.sigstore.sign.tasks.SigstoreSignFilesTask
+import org.gradle.internal.extensions.stdlib.capitalized
 import org.gradle.kotlin.dsl.`java-gradle-plugin`
 import org.gradle.kotlin.dsl.`maven-publish`
 
 plugins {
     `java-gradle-plugin`
     `maven-publish`
+    id("dev.sigstore.sign")
     id("com.gradle.plugin-publish")
     id("org.jetbrains.kotlin.jvm")
     id("com.netflix.nebula.maven-apache-license")
@@ -18,6 +21,15 @@ spotless {
     kotlin {
         ktlint()
     }
+}
+
+tasks.publishPlugins {
+    dependsOn(
+        publishing.publications.map {
+                publication ->
+            tasks.named<SigstoreSignFilesTask>("sigstoreSign${publication.name.capitalized()}Publication")
+        },
+    )
 }
 
 gradlePlugin {

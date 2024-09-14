@@ -1,4 +1,5 @@
 [versions]
+reproducible-builds = "1.0"
 spotless = "6.25.0"
 
 [libraries]
@@ -6,7 +7,9 @@ spotless = { module = "com.diffplug.spotless:com.diffplug.spotless.gradle.plugin
 plugin-publish = { module = "com.gradle.plugin-publish:com.gradle.plugin-publish.gradle.plugin", version = "1.3.0"}
 kotlin = { module = "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin", version = "1.9.25" }
 nebula-apache-license = { module = "com.netflix.nebula.maven-apache-license:com.netflix.nebula.maven-apache-license.gradle.plugin", version = "21.1.0"}
+reproducible-builds = { module = "org.gradlex.reproducible-builds:org.gradlex.reproducible-builds.gradle.plugin", version.ref = "reproducible-builds" }
 sigstore = { module = "dev.sigstore.sign:dev.sigstore.sign.gradle.plugin", version = "1.0.0" }
 
 [plugins]
+reproducible-builds = { id = "org.gradlex.reproducible-builds", version.ref = "reproducible-builds" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

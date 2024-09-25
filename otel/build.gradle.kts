@@ -5,7 +5,7 @@ plugins {
 dependencies {
     implementation(project(":plugin"))
     implementation("gradle.plugin.com.github.johnrengelman:shadow:8.0.0")
-    testImplementation(platform("org.junit:junit-bom:5.11.0"))
+    testImplementation(platform("org.junit:junit-bom:5.11.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

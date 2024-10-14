@@ -6,7 +6,11 @@ plugins {
 
 dependencies {
   otel("io.opentelemetry.javaagent:opentelemetry-javaagent:2.8.0")
-  otelExtension("io.opentelemetry.contrib:opentelemetry-samplers:1.39.0-alpha")
+  otelExtension("com.google.cloud.opentelemetry:exporter-auto:0.33.0-alpha") {
+      artifact {
+          classifier = "shaded"
+      }
+  }
   otelInstrumentation(project(":custom-instrumentation", "shadow"))
 }
 

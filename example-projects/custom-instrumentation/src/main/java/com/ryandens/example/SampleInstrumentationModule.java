@@ -1,4 +1,4 @@
-package io.opentelemetry.javaagent.instrumentation.ryandens;
+package com.ryandens.example;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -16,5 +16,10 @@ public final class SampleInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Collections.singletonList(new SampleInstrumentation());
+  }
+
+  @Override
+  public boolean isHelperClass(String className) {
+    return className.contains("ryandens");
   }
 }

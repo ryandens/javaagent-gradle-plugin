@@ -1,10 +1,11 @@
 package com.ryandens.javaagent.otel
 
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.ryandens.javaagent.JavaagentBasePlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.DuplicatesStrategy
+import org.gradle.jvm.tasks.Jar
+import java.io.ByteArrayOutputStream
 
 /**
  * Enables easy consumption of external extensions and instrumentation libraries by creating a new jar with extra
@@ -39,15 +40,12 @@ class JavaagentOTelModificationPlugin : Plugin<Project> {
 
         project.plugins.apply(JavaagentBasePlugin::class.java)
         val extendedAgent =
-            project.tasks.register("extendedAgent", ShadowJar::class.java) { jar ->
+            project.tasks.register("extendedAgent", Jar::class.java) { jar ->
                 jar.inputs.files(otelInstrumentation)
                 jar.archiveFileName.set("extended-opentelemetry-javaagent.jar")
                 jar.destinationDirectory.set(project.layout.buildDirectory.dir("agents"))
-                jar.mergeServiceFiles {
-                    it.include("inst/META-INF/services/*")
-                }
                 jar.from(otel.map { project.zipTree(it.singleFile) })
-                jar.from(otelExtension) {
+                jar.from(otelExtension.map { it.singleFile }) {
                     it.into("extensions")
                 }
                 jar.manifest {
@@ -70,6 +68,20 @@ class JavaagentOTelModificationPlugin : Plugin<Project> {
                     it.exclude("META-INF/MANIFEST.MF")
                     it.rename("(^.*)\\.class\$", "\$1.classdata")
                     it.duplicatesStrategy = DuplicatesStrategy.INCLUDE
+                    it.eachFile { fileCopyDetails ->
+                        if (fileCopyDetails.name.startsWith("META-INF/services")) {
+                            val existingFile = fileCopyDetails.file
+                            if (existingFile.exists()) {
+                                // Append content from the existing file to the file being copied
+                                val existingContent = existingFile.readText()
+                                val newContent = ByteArrayOutputStream()
+                                fileCopyDetails.copyTo(newContent)
+                                newContent.write(System.lineSeparator().toByteArray())
+                                newContent.write(existingContent.toByteArray())
+                                fileCopyDetails.file.writeBytes(newContent.toByteArray())
+                            }
+                        }
+                    }
                 }
             }
         project.dependencies.add("javaagent", extendedAgent.map { project.files(it.outputs.files.singleFile) })

@@ -1,4 +1,4 @@
-package io.opentelemetry.javaagent.instrumentation.ryandens;
+package com.ryandens.example;
 
 
 import io.opentelemetry.api.trace.Span;

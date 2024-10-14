@@ -4,7 +4,6 @@ plugins {
 
 dependencies {
     implementation(project(":plugin"))
-    implementation("com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:8.3.3")
     testImplementation(platform("org.junit:junit-bom:5.11.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.jupiter:junit-jupiter-params")

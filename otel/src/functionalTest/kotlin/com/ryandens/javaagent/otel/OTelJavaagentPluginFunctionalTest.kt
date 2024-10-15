@@ -17,7 +17,7 @@ class OTelJavaagentPluginFunctionalTest {
         val runner = GradleRunner.create()
         runner.forwardOutput()
         runner.withPluginClasspath()
-        runner.withArguments("extendedAgent", "run")
+        runner.withArguments("mergeInstrumentationServiceFiles", "extendedAgent", "run")
         runner.withProjectDir(projectDir)
         runner.withDebug(true)
         val result = runner.build()
@@ -25,16 +25,14 @@ class OTelJavaagentPluginFunctionalTest {
         // Verify the result
         // TODO use testcontainers to start an otel fake backend and retrieve spans from it here to verify instrumentation worked
         assertTrue(result.output.contains("AgentInstaller - Installed 1 extension(s)"))
-        assertTrue(result.output.contains("InstrumentationLoader - Installed 1 instrumenter(s)"))
-        /* TOOD fix this
+        assertTrue(result.output.contains("InstrumentationLoader - Installed 254 instrumenter(s)"))
         assertTrue(
             result.output.contains(
-                "Applying instrumentation: sample [class io.opentelemetry.javaagent.instrumentation.ryandens.SampleInstrumentationModule]",
+                "Applying instrumentation: sample [class com.ryandens.example.SampleInstrumentationModule]",
             ),
         )
         assertTrue(result.output.contains("LoggingSpanExporter - 'iterative'")) // span name
         assertTrue(result.output.contains(" [tracer: FibonacciTracer:]")) // tracer name
-         */
         val agent = File(projectDir, "app/build/agents/extended-opentelemetry-javaagent.jar")
         assertTrue(agent.exists())
     }

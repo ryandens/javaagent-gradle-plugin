@@ -5,7 +5,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.jvm.tasks.Jar
-import java.io.ByteArrayOutputStream
 
 /**
  * Enables easy consumption of external extensions and instrumentation libraries by creating a new jar with extra
@@ -38,13 +37,23 @@ class JavaagentOTelModificationPlugin : Plugin<Project> {
                 it.isTransitive = false
             }
 
+        val mergeServiceFiles =
+            project.tasks.register("mergeInstrumentationServiceFiles", MergeServiceFiles::class.java) { mergeServiceFiles ->
+                mergeServiceFiles.dependsOn(otelInstrumentation)
+                mergeServiceFiles.inputFiles.from(project.files(otelInstrumentation, otel).map { jar -> project.zipTree(jar) })
+                mergeServiceFiles.outputDirectory.set(project.layout.buildDirectory.dir("merged-instrumentation-services"))
+            }
+
         project.plugins.apply(JavaagentBasePlugin::class.java)
         val extendedAgent =
             project.tasks.register("extendedAgent", Jar::class.java) { jar ->
                 jar.inputs.files(otelInstrumentation)
+                jar.dependsOn(mergeServiceFiles)
                 jar.archiveFileName.set("extended-opentelemetry-javaagent.jar")
                 jar.destinationDirectory.set(project.layout.buildDirectory.dir("agents"))
-                jar.from(otel.map { project.zipTree(it.singleFile) })
+                jar.from(otel.map { project.zipTree(it.singleFile) }) {
+                    it.exclude("inst/META-INF/services/**")
+                }
                 jar.from(otelExtension.map { it.singleFile }) {
                     it.into("extensions")
                 }
@@ -67,21 +76,12 @@ class JavaagentOTelModificationPlugin : Plugin<Project> {
                     it.into("inst")
                     it.exclude("META-INF/MANIFEST.MF")
                     it.rename("(^.*)\\.class\$", "\$1.classdata")
-                    it.duplicatesStrategy = DuplicatesStrategy.INCLUDE
-                    it.eachFile { fileCopyDetails ->
-                        if (fileCopyDetails.name.startsWith("META-INF/services")) {
-                            val existingFile = fileCopyDetails.file
-                            if (existingFile.exists()) {
-                                // Append content from the existing file to the file being copied
-                                val existingContent = existingFile.readText()
-                                val newContent = ByteArrayOutputStream()
-                                fileCopyDetails.copyTo(newContent)
-                                newContent.write(System.lineSeparator().toByteArray())
-                                newContent.write(existingContent.toByteArray())
-                                fileCopyDetails.file.writeBytes(newContent.toByteArray())
-                            }
-                        }
-                    }
+                    it.exclude("META-INF/services/**")
+                    it.exclude("inst/META-INF/services/**")
+                    it.duplicatesStrategy = DuplicatesStrategy.FAIL
+                }
+                jar.from(mergeServiceFiles.map { it.outputDirectory }) {
+                    it.into("inst")
                 }
             }
         project.dependencies.add("javaagent", extendedAgent.map { project.files(it.outputs.files.singleFile) })

@@ -39,7 +39,6 @@ public final class SampleInstrumentation implements TypeInstrumentation {
                                @Advice.Local("otelContext") Context context,
                                @Advice.Local("otelScope") Scope scope) {
       Context parentContext = Context.current();
-      // TODO helper classes don't seem to work for some reaso
       span = Singletons.INSTANCE.tracer.spanBuilder("iterative").setSpanKind(SpanKind.INTERNAL).setParent(parentContext).startSpan();
       context = parentContext.with(span);
       scope = context.makeCurrent();

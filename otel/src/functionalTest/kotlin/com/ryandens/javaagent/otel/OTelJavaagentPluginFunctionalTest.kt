@@ -25,7 +25,7 @@ class OTelJavaagentPluginFunctionalTest {
         // Verify the result
         // TODO use testcontainers to start an otel fake backend and retrieve spans from it here to verify instrumentation worked
         assertTrue(result.output.contains("AgentInstaller - Installed 1 extension(s)"))
-        assertTrue(result.output.contains("InstrumentationLoader - Installed 254 instrumenter(s)"))
+        assertTrue(result.output.contains("InstrumentationLoader - Installed 257 instrumenter(s)"))
         assertTrue(
             result.output.contains(
                 "Applying instrumentation: sample [class com.ryandens.example.SampleInstrumentationModule]",

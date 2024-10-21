@@ -25,6 +25,16 @@ gradlePlugin {
     }
 }
 
-tasks.named<Test>("functionalTest") {
+tasks.functionalTest {
     useJUnitPlatform()
+    inputs.file(layout.projectDirectory.file("../example-projects/buildSrc/build.gradle.kts"))
+    inputs.files(layout.projectDirectory.dir("../example-projects/buildSrc/src/"))
+
+    inputs.file(layout.projectDirectory.file("../example-projects/app/build.gradle.kts"))
+    inputs.files(layout.projectDirectory.dir("../example-projects/app/src/"))
+
+    inputs.file(layout.projectDirectory.file("../example-projects/custom-instrumentation/build.gradle.kts"))
+    inputs.files(layout.projectDirectory.dir("../example-projects/custom-instrumentation/src/"))
+
+    inputs.files(layout.projectDirectory.dir("../example-projects/gradle/"))
 }

@@ -8,14 +8,14 @@ import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.testing.Test
 
-class JavaagentTestPlugin : Plugin<Project>, JavaagentPlugin {
+class JavaagentTestPlugin :
+    Plugin<Project>,
+    JavaagentPlugin {
     companion object {
         const val CONFIGURATION_NAME = "testJavaagent"
     }
 
-    override fun dependentProjectPlugins(): Collection<Class<out Plugin<Project>>> {
-        return setOf(JavaPlugin::class.java)
-    }
+    override fun dependentProjectPlugins(): Collection<Class<out Plugin<Project>>> = setOf(JavaPlugin::class.java)
 
     override fun applyAfterJavaagentSetup(
         project: Project,
@@ -38,8 +38,7 @@ class JavaagentTestPlugin : Plugin<Project>, JavaagentPlugin {
             if (enabled.get()) {
                 JavaForkOptionsConfigurer.configureJavaForkOptions(
                     it,
-                    javaagentTestConfiguration.map {
-                            configuration ->
+                    javaagentTestConfiguration.map { configuration ->
                         configuration.files
                     },
                 )

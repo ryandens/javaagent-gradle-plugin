@@ -15,21 +15,23 @@ import org.gradle.api.tasks.application.CreateStartScripts
  * the [ApplicationPlugin] to include javaagents and configure the [ApplicationPlugin.TASK_START_SCRIPTS_NAME] to
  * automatically include the `-javaagent` flag when running the distribution.
  */
-class JavaagentApplicationDistributionPlugin : Plugin<Project>, JavaagentPlugin {
+class JavaagentApplicationDistributionPlugin :
+    Plugin<Project>,
+    JavaagentPlugin {
     /**
      * Destination directory for dependencies as specified by the [ApplicationPlugin]
      */
     private val destinationDirectory = "agent-libs"
 
-    override fun dependentProjectPlugins(): Collection<Class<out Plugin<Project>>> {
-        return setOf(ApplicationPlugin::class.java)
-    }
+    override fun dependentProjectPlugins(): Collection<Class<out Plugin<Project>>> = setOf(ApplicationPlugin::class.java)
 
     override fun applyAfterJavaagentSetup(
         project: Project,
         javaagentConfiguration: NamedDomainObjectProvider<Configuration>,
     ) {
-        project.extensions.getByType(DistributionContainer::class.java).named(DistributionPlugin.MAIN_DISTRIBUTION_NAME)
+        project.extensions
+            .getByType(DistributionContainer::class.java)
+            .named(DistributionPlugin.MAIN_DISTRIBUTION_NAME)
             .configure { distribution ->
                 distribution.contents { copy ->
                     copy.from(javaagentConfiguration) {
@@ -52,8 +54,7 @@ class JavaagentApplicationDistributionPlugin : Plugin<Project>, JavaagentPlugin 
             // custom start script generator that replaces the placeholder
             it.unixStartScriptGenerator =
                 JavaagentAwareStartScriptGenerator(
-                    javaagentConfiguration.map {
-                            configuration ->
+                    javaagentConfiguration.map { configuration ->
                         configuration.files
                     },
                 )

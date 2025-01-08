@@ -29,8 +29,9 @@ import javax.inject.Inject
 @CacheableTask
 abstract class MergeServiceFiles
     @Inject
-    constructor(private val fileSystemOperations: FileSystemOperations) :
-    DefaultTask() {
+    constructor(
+        private val fileSystemOperations: FileSystemOperations,
+    ) : DefaultTask() {
         @get:InputFiles
         @get:PathSensitive(PathSensitivity.RELATIVE)
         abstract val inputFiles: ConfigurableFileCollection
@@ -41,7 +42,8 @@ abstract class MergeServiceFiles
         @TaskAction
         fun execute() {
             val serviceFiles: Set<File> =
-                inputFiles.asFileTree.matching { f -> f.include("META-INF/services/**").include("inst/META-INF/services/**") }
+                inputFiles.asFileTree
+                    .matching { f -> f.include("META-INF/services/**").include("inst/META-INF/services/**") }
                     .files
             val outputDir: File = outputDirectory.get().dir("META-INF/services").asFile
             fileSystemOperations.delete {
@@ -49,7 +51,8 @@ abstract class MergeServiceFiles
             }
             outputDir.mkdirs()
             val perService: Map<String, List<File>> =
-                serviceFiles.stream()
+                serviceFiles
+                    .stream()
                     .collect(Collectors.groupingBy(File::getName))
             for ((serviceType, files) in perService) {
                 val mergedServiceFile = File(outputDir, serviceType)

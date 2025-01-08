@@ -22,7 +22,13 @@ class JavaagentTestPluginTest {
     }
 
     @Test fun `plugin adds jvm argument provider for javaagent`() {
-        assertEquals(1, project.tasks.named("test", org.gradle.api.tasks.testing.Test::class.java).get().jvmArgumentProviders.size)
+        assertEquals(
+            1,
+            project.tasks
+                .named("test", org.gradle.api.tasks.testing.Test::class.java)
+                .get()
+                .jvmArgumentProviders.size,
+        )
     }
 
     @Test fun `plugin javaagent test configuration can be disabled`() {
@@ -30,6 +36,12 @@ class JavaagentTestPluginTest {
             it.enabled.set(false)
         }
 
-        assertEquals(0, project.tasks.named("test", org.gradle.api.tasks.testing.Test::class.java).get().jvmArgumentProviders.size)
+        assertEquals(
+            0,
+            project.tasks
+                .named("test", org.gradle.api.tasks.testing.Test::class.java)
+                .get()
+                .jvmArgumentProviders.size,
+        )
     }
 }

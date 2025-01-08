@@ -13,9 +13,7 @@ interface JavaagentPlugin : Plugin<Project> {
      * Plugins that the implementing class expects to be applied before [applyAfterJavaagentSetup] runs. By default,
      * this returns an empty [Collection]
      */
-    fun dependentProjectPlugins(): Collection<Class<out Plugin<Project>>> {
-        return emptySet()
-    }
+    fun dependentProjectPlugins(): Collection<Class<out Plugin<Project>>> = emptySet()
 
     /**
      * Initial setup for any plugin that wants to configure a javaagent for a project, followed by delegating to the

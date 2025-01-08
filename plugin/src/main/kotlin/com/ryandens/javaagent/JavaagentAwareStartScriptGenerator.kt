@@ -26,8 +26,9 @@ class JavaagentAwareStartScriptGenerator(
         inner.generateScript(details, Fake(destination, javaagentConfiguration))
     }
 
-    private class FakeTransformer(private val inner: StartScriptTemplateBindingFactory) :
-        Transformer<MutableMap<String, String>, JavaAppStartScriptGenerationDetails> by inner {
+    private class FakeTransformer(
+        private val inner: StartScriptTemplateBindingFactory,
+    ) : Transformer<MutableMap<String, String>, JavaAppStartScriptGenerationDetails> by inner {
         override fun transform(`in`: JavaAppStartScriptGenerationDetails): MutableMap<String, String> {
             val result = inner.transform(`in`)
             val jvmOpts = result["defaultJvmOpts"] ?: ""
@@ -42,7 +43,10 @@ class JavaagentAwareStartScriptGenerator(
         }
     }
 
-    private class Fake(private val inner: Writer, private val javaagentFiles: Provider<Set<File>>) : Writer() {
+    private class Fake(
+        private val inner: Writer,
+        private val javaagentFiles: Provider<Set<File>>,
+    ) : Writer() {
         override fun close() {
             inner.close()
         }
@@ -64,10 +68,11 @@ class JavaagentAwareStartScriptGenerator(
             val replace =
                 if (files.isEmpty()) {
                     // handles case gracefully where there is a trailing space that needs to be removed if ogther default jvm opts are supplied
-                    str.replace(
-                        "-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar ",
-                        "",
-                    ).replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar", "")
+                    str
+                        .replace(
+                            "-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar ",
+                            "",
+                        ).replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar", "")
                 } else {
                     str.replace(
                         "-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar",

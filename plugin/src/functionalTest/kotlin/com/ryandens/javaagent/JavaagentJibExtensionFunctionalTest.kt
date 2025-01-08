@@ -48,8 +48,7 @@ class JavaagentJibExtensionFunctionalTest {
         assertTrue(File(functionalTestDir, JIB_IMAGE).exists())
 
         FileInputStream(File(functionalTestDir, JIB_IMAGE)).use { fis ->
-            ArchiveStreamFactory().createArchiveInputStream<ArchiveInputStream<TarArchiveEntry>>(ArchiveStreamFactory.TAR, fis).use {
-                    ais ->
+            ArchiveStreamFactory().createArchiveInputStream<ArchiveInputStream<TarArchiveEntry>>(ArchiveStreamFactory.TAR, fis).use { ais ->
                 var entry = ais.nextEntry
                 while (entry != null) {
                     if ("config.json" == entry.name) {
@@ -76,8 +75,7 @@ class JavaagentJibExtensionFunctionalTest {
         // verify the agent was added to entrypoint
         assertTrue(File(functionalTestDir, JIB_IMAGE).exists())
         FileInputStream(File(functionalTestDir, JIB_IMAGE)).use { fis ->
-            ArchiveStreamFactory().createArchiveInputStream<ArchiveInputStream<TarArchiveEntry>>(ArchiveStreamFactory.TAR, fis).use {
-                    ais ->
+            ArchiveStreamFactory().createArchiveInputStream<ArchiveInputStream<TarArchiveEntry>>(ArchiveStreamFactory.TAR, fis).use { ais ->
                 var entry = ais.nextEntry
                 while (entry != null) {
                     if ("config.json" == entry.name) {

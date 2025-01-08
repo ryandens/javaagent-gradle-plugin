@@ -23,10 +23,10 @@ import java.util.Optional
  * with the javaagent in it and a modified [ContainerBuildPlan.entrypoint] that specifies the `javaagent` flag.
  */
 @ExperimentalStdlibApi
-class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
-    override fun getExtraConfigType(): Optional<Class<Void>> {
-        return Optional.empty()
-    }
+class JavaagentJibExtension :
+    JibGradlePluginExtension<Void>,
+    JavaagentPlugin {
+    override fun getExtraConfigType(): Optional<Class<Void>> = Optional.empty()
 
     override fun extendContainerBuildPlan(
         buildPlan: ContainerBuildPlan?,
@@ -41,9 +41,13 @@ class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
 
         val localAgentPaths =
             checkNotNull(
-                gradleData?.project?.plugins?.getPlugin(
-                    JavaagentJibExtension::class.java,
-                )?.javaagentPathProvider?.invoke(),
+                gradleData
+                    ?.project
+                    ?.plugins
+                    ?.getPlugin(
+                        JavaagentJibExtension::class.java,
+                    )?.javaagentPathProvider
+                    ?.invoke(),
             )
 
         val planBuilder = buildPlan.toBuilder()
@@ -61,7 +65,12 @@ class JavaagentJibExtension : JibGradlePluginExtension<Void>, JavaagentPlugin {
                     FileEntriesLayer.DEFAULT_MODIFICATION_TIME,
                 )
             }
-        val javaagentLayer = FileEntriesLayer.builder().setName("javaagent").setEntries(javaagentFileEntries).build()
+        val javaagentLayer =
+            FileEntriesLayer
+                .builder()
+                .setName("javaagent")
+                .setEntries(javaagentFileEntries)
+                .build()
         val layers =
             buildList<LayerObject> {
                 add(javaagentLayer)

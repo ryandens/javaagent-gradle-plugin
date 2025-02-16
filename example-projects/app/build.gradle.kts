@@ -5,7 +5,7 @@ plugins {
 }
 
 dependencies {
-  otel("io.opentelemetry.javaagent:opentelemetry-javaagent:2.12.0")
+  otel("io.opentelemetry.javaagent:opentelemetry-javaagent:2.13.0")
   otelExtension("com.google.cloud.opentelemetry:exporter-auto:0.33.0-alpha") {
       artifact {
           classifier = "shaded"

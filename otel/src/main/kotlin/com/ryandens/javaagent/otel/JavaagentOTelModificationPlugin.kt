@@ -5,6 +5,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.jvm.tasks.Jar
+import java.io.File
 
 /**
  * Enables easy consumption of external extensions and instrumentation libraries by creating a new jar with extra
@@ -54,7 +55,11 @@ class JavaagentOTelModificationPlugin : Plugin<Project> {
                 jar.from(otel.map { project.zipTree(it.singleFile) }) {
                     it.exclude("inst/META-INF/services/**")
                 }
-                jar.from(otelExtension.map { it.singleFile }) {
+                jar.from(
+                    otelExtension.map { config ->
+                        if (!config.isEmpty) config.singleFile else emptyList<File>()
+                    },
+                ) {
                     it.into("extensions")
                 }
                 jar.manifest {

@@ -24,7 +24,7 @@ tasks.named<PluginUnderTestMetadata>("pluginUnderTestMetadata") {
 
 dependencies {
     plugin("com.google.cloud.tools:jib-gradle-plugin-extension-api:0.4.0")
-    plugin("com.google.cloud.tools.jib:com.google.cloud.tools.jib.gradle.plugin:3.4.4")
+    plugin("com.google.cloud.tools.jib:com.google.cloud.tools.jib.gradle.plugin:3.4.5")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")

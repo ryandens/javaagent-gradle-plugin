@@ -1,6 +1,6 @@
 [versions]
 reproducible-builds = "1.0"
-spotless = "7.0.2"
+spotless = "7.0.3"
 
 [libraries]
 spotless = { module = "com.diffplug.spotless:com.diffplug.spotless.gradle.plugin", version.ref = "spotless" }

@@ -26,7 +26,7 @@ This plugin enables you to quickly and easily resolve these constraints by addin
 ```kotlin
 plugins {
     java
-    id("com.ryandens.javaagent-application") version "0.9.0"
+    id("com.ryandens.javaagent-application") version "0.9.1"
 }
 
 dependencies {
@@ -47,7 +47,7 @@ then specify the javaagent you would like to attach in the dependencies block
 ```kotlin
 plugins {
     application
-    id("com.ryandens.javaagent-application") version "0.9.0"
+    id("com.ryandens.javaagent-application") version "0.9.1"
 }
 
 application {
@@ -77,7 +77,7 @@ would like to attach in the dependencies block.
 plugins {
     java
     id("com.google.cloud.tools.jib") version "3.1.4"
-    id("com.ryandens.javaagent-jib") version "0.9.0"
+    id("com.ryandens.javaagent-jib") version "0.9.1"
 }
 
 jib.container {
@@ -100,7 +100,7 @@ Testing (IAST) product.
 ```kotlin
 plugins {
     java
-    id("com.ryandens.javaagent-test") version "0.9.0"
+    id("com.ryandens.javaagent-test") version "0.9.1"
 }
 
 tasks.named<Test>("test") {
@@ -137,8 +137,8 @@ desired application distribution or execution method.
 ```kotlin
 plugins {
   application
-  id("com.ryandens.javaagent-otel-modification") version "0.9.0"
-  id("com.ryandens.javaagent-application") version "0.9.0"
+  id("com.ryandens.javaagent-otel-modification") version "0.9.1"
+  id("com.ryandens.javaagent-application") version "0.9.1"
 }
 
 dependencies {

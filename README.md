@@ -13,6 +13,31 @@ development and/or in production
 
 > The work on this software project is in no way associated with my employer nor with the role I'm having at my employer. Any requests for changes will be decided upon exclusively by myself based on my personal preferences. I maintain this project as much or as little as my spare time permits.
 
+## Mockito Example
+
+The Java community is quickly preparing for upcoming JDK restrictions that will improve the security and stability of the java community. One of these restrictions is the removal of the ability to self-attach javaagents.
+
+You may have come across this plugin because you encountered the following message in your build:
+> Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+
+This plugin enables you to quickly and easily resolve these constraints by adding the Mockito agent to your build as a javaagent, while maintaining compatability with the Gradle concepts such as up to date checks, test task caching, and configuration caching.
+
+
+```kotlin
+plugins {
+    java
+    id("com.ryandens.javaagent-application") version "0.9.0"
+}
+
+dependencies {
+    testImplementation(platform("org.mockito:mockito-bom:5.18.0"))
+    testImplementation("org.mockito:mockito-core")
+    testJavaagent("org.mockito:mockito-core")
+}
+```
+
+> ℹ️ **Note:** The [Javaagent Test Plugin](#java-test-task-integration) automatically resolves dependency versions for javaagents dependencies that did not request one from the test runtime classpath. 
+
 ## Application Plugin integration
 
 This Gradle plugin tightly integrates with the [Gradle application plugin](https://docs.gradle.org/current/userguide/application_plugin.html) 

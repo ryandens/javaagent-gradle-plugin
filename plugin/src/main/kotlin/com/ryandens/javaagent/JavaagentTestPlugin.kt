@@ -1,5 +1,6 @@
 package com.ryandens.javaagent
 
+import com.ryandens.javaagent.utils.JavaagentVersionUtil
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -27,6 +28,18 @@ class JavaagentTestPlugin :
                 // we expect javaagents to come as shaded JARs
                 it.isTransitive = false
                 it.extendsFrom(javaagentConfiguration.get())
+                it.resolutionStrategy { strategy ->
+                    strategy.eachDependency { dep ->
+                        if (dep.requested.version.isNullOrBlank()) {
+                            dep.useVersion(
+                                JavaagentVersionUtil.versionFromDependencyAndConfiguration(
+                                    dep.requested,
+                                    project.configurations.named("testRuntimeClasspath"),
+                                ),
+                            )
+                        }
+                    }
+                }
             }
 
         val extension = project.extensions.create("javaagentTest", JavaagentTestExtension::class.java)

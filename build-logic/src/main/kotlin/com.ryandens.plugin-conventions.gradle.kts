@@ -3,6 +3,7 @@ import org.gradle.internal.extensions.stdlib.capitalized
 import org.gradle.kotlin.dsl.`java-gradle-plugin`
 import org.gradle.kotlin.dsl.`maven-publish`
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     `java-gradle-plugin`
@@ -42,6 +43,7 @@ tasks {
         this.compilerOptions {
             jvmTarget = JvmTarget.JVM_11
             allWarningsAsErrors.set(true)
+            languageVersion.set(KotlinVersion.KOTLIN_2_0)
         }
     }
 }

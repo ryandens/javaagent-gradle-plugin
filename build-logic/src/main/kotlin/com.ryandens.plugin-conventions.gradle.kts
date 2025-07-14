@@ -65,8 +65,3 @@ tasks.check {
     // Run the functional tests as part of `check`
     dependsOn(functionalTest)
 }
-
-dependencies {
-    implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-}

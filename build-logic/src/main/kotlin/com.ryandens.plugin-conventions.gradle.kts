@@ -2,6 +2,7 @@ import dev.sigstore.sign.tasks.SigstoreSignFilesTask
 import org.gradle.internal.extensions.stdlib.capitalized
 import org.gradle.kotlin.dsl.`java-gradle-plugin`
 import org.gradle.kotlin.dsl.`maven-publish`
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     `java-gradle-plugin`
@@ -25,8 +26,7 @@ spotless {
 
 tasks.publishPlugins {
     dependsOn(
-        publishing.publications.map {
-                publication ->
+        publishing.publications.map { publication ->
             tasks.named<SigstoreSignFilesTask>("sigstoreSign${publication.name.capitalized()}Publication")
         },
     )
@@ -39,8 +39,10 @@ gradlePlugin {
 
 tasks {
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        kotlinOptions.jvmTarget = "11"
-        kotlinOptions.allWarningsAsErrors = true
+        this.compilerOptions {
+            jvmTarget = JvmTarget.JVM_11
+            allWarningsAsErrors.set(true)
+        }
     }
 }
 

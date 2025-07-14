@@ -9,7 +9,6 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier
  * Utility class for determining the version of a dependency in the javaagent configuration from other configurations
  */
 object JavaagentVersionUtil {
-
     /**
      * Determines the version of a dependency in the javaagent configuration from another configuration based on the
      * requested [ModuleVersionSelector] and the provided [NamedDomainObjectProvider] of [Configuration]s to search.

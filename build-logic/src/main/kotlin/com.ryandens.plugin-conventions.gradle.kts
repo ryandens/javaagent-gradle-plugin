@@ -44,6 +44,7 @@ tasks {
             jvmTarget = JvmTarget.JVM_11
             allWarningsAsErrors.set(true)
             languageVersion.set(KotlinVersion.KOTLIN_2_0)
+            apiVersion.set(KotlinVersion.KOTLIN_2_0)
         }
     }
 }

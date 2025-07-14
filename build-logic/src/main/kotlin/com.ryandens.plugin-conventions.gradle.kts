@@ -40,7 +40,7 @@ gradlePlugin {
 
 tasks {
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        this.compilerOptions {
+        compilerOptions {
             jvmTarget = JvmTarget.JVM_11
             allWarningsAsErrors.set(true)
             languageVersion.set(KotlinVersion.KOTLIN_2_0)

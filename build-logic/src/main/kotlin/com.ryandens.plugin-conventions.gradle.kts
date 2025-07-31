@@ -2,6 +2,8 @@ import dev.sigstore.sign.tasks.SigstoreSignFilesTask
 import org.gradle.internal.extensions.stdlib.capitalized
 import org.gradle.kotlin.dsl.`java-gradle-plugin`
 import org.gradle.kotlin.dsl.`maven-publish`
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     `java-gradle-plugin`
@@ -25,8 +27,7 @@ spotless {
 
 tasks.publishPlugins {
     dependsOn(
-        publishing.publications.map {
-                publication ->
+        publishing.publications.map { publication ->
             tasks.named<SigstoreSignFilesTask>("sigstoreSign${publication.name.capitalized()}Publication")
         },
     )
@@ -39,8 +40,12 @@ gradlePlugin {
 
 tasks {
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        kotlinOptions.jvmTarget = "11"
-        kotlinOptions.allWarningsAsErrors = true
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_11
+            allWarningsAsErrors.set(true)
+            languageVersion.set(KotlinVersion.KOTLIN_2_0)
+            apiVersion.set(KotlinVersion.KOTLIN_2_0)
+        }
     }
 }
 
@@ -62,9 +67,4 @@ val functionalTest by tasks.registering(Test::class) {
 tasks.check {
     // Run the functional tests as part of `check`
     dependsOn(functionalTest)
-}
-
-dependencies {
-    implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 }

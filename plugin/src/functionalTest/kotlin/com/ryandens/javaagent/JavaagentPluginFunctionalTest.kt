@@ -246,7 +246,10 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
                 
                 dependencies {
                     $dependencies
-                    testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
+                     testImplementation(platform("org.junit:junit-bom:5.11.2"))
+                     testImplementation("org.junit.jupiter:junit-jupiter")
+                     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+                     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
                 }
             """,
         )

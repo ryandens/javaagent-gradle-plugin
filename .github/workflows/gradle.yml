@@ -24,7 +24,7 @@ jobs:
           java-version: 17
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4.4.3
+        uses: gradle/actions/setup-gradle@v4.4.4
         with:
           cache-read-only: false
 

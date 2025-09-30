@@ -10,13 +10,13 @@ repositories {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
 tasks.withType<JavaCompile> {
     options.isDeprecation = true
-    options.release.set(11)
+    options.release.set(17)
 }
 
 spotless {

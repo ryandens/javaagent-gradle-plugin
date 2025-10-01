@@ -20,8 +20,11 @@ import org.gradle.process.JavaForkOptions;
  */
 public final class JavaForkOptionsConfigurer {
 
+  /** Prevent instantiation for utility class. */
+  private JavaForkOptionsConfigurer() {}
+
   /**
-   * Configures the provided {@link JavaForkOptions} to use the provided javaagents when laucnhing
+   * Configures the provided {@link JavaForkOptions} to use the provided javaagents when launching
    *
    * @param javaForkOptions to be configured
    * @param javaagentConfiguration files to be added as javaagents

@@ -16,7 +16,6 @@ import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.util.stream.Collectors
 import javax.inject.Inject
 
 /**
@@ -25,6 +24,9 @@ import javax.inject.Inject
  * Inspired by
  * [Micronaut](https://github.com/micronaut-projects/micronaut-gradle-plugin/blob/eb9d2b3ab4b3fc71379fc3c1c6df30de761576be/aot-plugin/src/main/java/io/micronaut/gradle/aot/MergeServiceFiles.java#L42)
  * in lieu of a built-in solution in Gradle as referenced [here](https://github.com/gradle/gradle/issues/18751).
+ *
+ * Service types and their contributing files are sorted before merging so that the task produces deterministic
+ * outputs, allowing Gradle's build cache to remain effective even when input file ordering differs across runs.
  */
 @CacheableTask
 abstract class MergeServiceFiles
@@ -51,9 +53,7 @@ abstract class MergeServiceFiles
             }
             outputDir.mkdirs()
             val perService: Map<String, List<File>> =
-                serviceFiles
-                    .stream()
-                    .collect(Collectors.groupingBy(File::getName))
+                serviceFiles.groupBy(File::getName).toSortedMap()
             for ((serviceType, files) in perService) {
                 val mergedServiceFile = File(outputDir, serviceType)
                 try {
@@ -63,7 +63,7 @@ abstract class MergeServiceFiles
                             StandardCharsets.UTF_8,
                         ),
                     ).use { wrt ->
-                        for (file in files) {
+                        for (file in files.sortedBy(File::getCanonicalPath)) {
                             Files.readAllLines(file.toPath()).forEach(wrt::println)
                         }
                     }

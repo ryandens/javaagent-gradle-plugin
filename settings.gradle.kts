@@ -3,24 +3,37 @@ pluginManagement {
 }
 
 plugins {
-    id("com.gradle.develocity") version "4.2.2"
-    id("org.gradle.toolchains.foojay-resolver-convention").version("1.0.0")
+    val enableDevelocity =
+        providers.gradleProperty("develocityEnabled")
+            .map(String::toBoolean)
+            .orElse(providers.environmentVariable("CI").map { it.equals("true", ignoreCase = true) })
+            .orElse(false)
+            .get()
+    val enableFoojayResolver =
+        providers.gradleProperty("foojayResolverEnabled")
+            .map(String::toBoolean)
+            .orElse(providers.environmentVariable("CI").map { it.equals("true", ignoreCase = true) })
+            .orElse(false)
+            .get()
+
+    if (enableDevelocity) {
+        id("com.gradle.develocity") version "4.2.2"
+    }
+    if (enableFoojayResolver) {
+        id("org.gradle.toolchains.foojay-resolver-convention").version("1.0.0")
+    }
 }
 
 rootProject.name = "javaagent-plugin"
 include("plugin", "simple-agent", "otel")
 
-val isCI = providers.environmentVariable("CI").isPresent
+val enableDevelocity =
+    providers.gradleProperty("develocityEnabled")
+        .map(String::toBoolean)
+        .orElse(providers.environmentVariable("CI").map { it.equals("true", ignoreCase = true) })
+        .orElse(false)
+        .get()
 
-develocity {
-    buildScan {
-        termsOfUseUrl.set("https://gradle.com/help/legal-terms-of-use")
-        termsOfUseAgree.set("yes")
-        uploadInBackground.set(isCI)
-        if (isCI) {
-            publishing {
-                onlyIf { true }
-            }
-        }
-    }
+if (enableDevelocity) {
+    apply(from = "gradle/develocity.settings.gradle.kts")
 }

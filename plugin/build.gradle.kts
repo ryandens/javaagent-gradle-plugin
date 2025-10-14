@@ -2,6 +2,12 @@ plugins {
     id("com.ryandens.plugin-conventions")
 }
 
+val enableJibSupport =
+    providers.gradleProperty("jibSupportEnabled")
+        .map(String::toBoolean)
+        .orElse(true)
+        .get()
+
 val plugin: Configuration by configurations.creating
 
 configurations {
@@ -23,12 +29,22 @@ tasks.named<PluginUnderTestMetadata>("pluginUnderTestMetadata") {
 }
 
 dependencies {
-    plugin("com.google.cloud.tools:jib-gradle-plugin-extension-api:0.4.0")
-    plugin("com.google.cloud.tools.jib:com.google.cloud.tools.jib.gradle.plugin:3.4.5")
+    if (enableJibSupport) {
+        plugin("com.google.cloud.tools:jib-gradle-plugin-extension-api:0.4.0")
+        plugin("com.google.cloud.tools.jib:com.google.cloud.tools.jib.gradle.plugin:3.4.5")
+    }
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
     testImplementation("org.apache.commons:commons-compress:1.28.0")
+}
+
+if (!enableJibSupport) {
+    extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension>("kotlin") {
+        sourceSets.named("main") {
+            kotlin.exclude("com/ryandens/javaagent/JavaagentJibExtension.kt")
+        }
+    }
 }
 
 gradlePlugin {
@@ -54,12 +70,14 @@ gradlePlugin {
             implementationClass = "com.ryandens.javaagent.JavaagentApplicationRunPlugin"
             tags.set(listOf("javaagent", "instrumentation", "application"))
         }
-        create("javaagentJibPlugin") {
-            id = "com.ryandens.javaagent-jib"
-            displayName = "Javaagent Jib Plugin"
-            description = "Automatically includes javaagents in OCI images created by Jib"
-            implementationClass = "com.ryandens.javaagent.JavaagentJibExtension"
-            tags.set(listOf("javaagent", "instrumentation", "docker", "jib"))
+        if (enableJibSupport) {
+            create("javaagentJibPlugin") {
+                id = "com.ryandens.javaagent-jib"
+                displayName = "Javaagent Jib Plugin"
+                description = "Automatically includes javaagents in OCI images created by Jib"
+                implementationClass = "com.ryandens.javaagent.JavaagentJibExtension"
+                tags.set(listOf("javaagent", "instrumentation", "docker", "jib"))
+            }
         }
         create("javaagentTestPlugin") {
             id = "com.ryandens.javaagent-test"

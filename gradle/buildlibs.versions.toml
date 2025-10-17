@@ -1,5 +1,5 @@
 [versions]
-reproducible-builds = "1.0"
+reproducible-builds = "1.1"
 spotless = "8.0.0"
 
 [libraries]

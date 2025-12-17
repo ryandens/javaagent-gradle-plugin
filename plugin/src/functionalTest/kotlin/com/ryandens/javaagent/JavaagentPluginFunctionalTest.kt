@@ -214,7 +214,7 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
         Paths.get("..", "simple-agent").toFile().copyRecursively(simpleAgentTestDir)
         simpleAgentBuildScript.writeText(
             simpleAgentBuildScript.readText().replace(
-                "id(\"com.ryandens.java-conventions\")\n",
+                "id(\"com.ryandens.java-conventions\")",
                 "",
             ),
         )

@@ -47,7 +47,7 @@ class JavaagentAwareStartScriptGenerator(
         private val inner: Writer,
         private val javaagentFiles: Provider<Set<File>>,
         private val pathSeparator: String,
-        ) : Writer() {
+    ) : Writer() {
         override fun close() {
             inner.close()
         }

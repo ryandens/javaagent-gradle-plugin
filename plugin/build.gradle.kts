@@ -22,10 +22,17 @@ tasks.named<PluginUnderTestMetadata>("pluginUnderTestMetadata") {
     dependsOn(tasks.processResources)
 }
 
+
+repositories {
+    google()
+}
+
 dependencies {
     plugin("com.google.cloud.tools:jib-gradle-plugin-extension-api:0.4.0")
     plugin("com.google.cloud.tools.jib:com.google.cloud.tools.jib.gradle.plugin:3.5.2")
 
+    testImplementation("com.android.application:com.android.application.gradle.plugin:8.13.2")
+    testImplementation("com.android.library:com.android.library.gradle.plugin:8.13.2")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
     testImplementation("org.apache.commons:commons-compress:1.28.0")
@@ -66,6 +73,13 @@ gradlePlugin {
             displayName = "Javaagent Test Plugin"
             description = "Automatically attaches javaagents to the Java Plugin Test tasks"
             implementationClass = "com.ryandens.javaagent.JavaagentTestPlugin"
+            tags.set(listOf("javaagent", "instrumentation", "test"))
+        }
+        create("javaagentTestAndroidPlugin") {
+            id = "com.ryandens.javaagent-test-android"
+            displayName = "Javaagent Test Plugin for Android"
+            description = "Automatically attaches javaagents to the Android UnitTest tasks"
+            implementationClass = "com.ryandens.javaagent.JavaagentTestAndroidPlugin"
             tags.set(listOf("javaagent", "instrumentation", "test"))
         }
     }

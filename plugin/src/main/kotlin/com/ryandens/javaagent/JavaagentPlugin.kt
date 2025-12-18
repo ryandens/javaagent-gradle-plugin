@@ -25,7 +25,9 @@ interface JavaagentPlugin : Plugin<Project> {
         // get configuration
         val javaagentConfiguration = project.configurations.named(JavaagentBasePlugin.CONFIGURATION_NAME)
         dependentProjectPlugins().forEach { pluginId ->
-            project.pluginManager.apply(pluginId)
+            if (project.pluginManager.hasPlugin(pluginId)) {
+                project.pluginManager.apply(pluginId)
+            }
         }
         applyAfterJavaagentSetup(project, javaagentConfiguration)
     }

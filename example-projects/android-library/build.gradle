@@ -1,0 +1,61 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+    alias(libs.plugins.kotlin.android)
+    id 'com.android.library'
+    id 'de.mannodermaus.android-junit5'
+    id 'com.ryandens.javaagent-test-android'
+}
+
+android {
+    defaultConfig {
+        minSdkVersion 36
+        targetSdkVersion 36
+        compileSdk = 36
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    namespace 'com.ryandens.javaagent.android.library.example'
+
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_17
+        }
+    }
+}
+
+dependencies {
+    implementation libs.core.ktx
+
+    testImplementation 'org.mockito:mockito-core:5.21.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.21.0'
+    testJavaagent      'org.mockito:mockito-core:5.21.0'
+    //region JUnit 6
+    testImplementation platform('org.junit:junit-bom:6.0.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter-params'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly    'org.junit.platform:junit-platform-launcher'
+    //endregion
+
+
+    androidTestImplementation 'org.mockito:mockito-android:5.21.0'
+    androidTestImplementation 'org.mockito:mockito-junit-jupiter:5.21.0'
+    //region JUnit 5 (Android cannot use JUnit 6)
+    androidTestImplementation 'org.junit.jupiter:junit-jupiter-params:5.14.1'
+    androidTestImplementation 'org.junit.jupiter:junit-jupiter-api:5.14.1'
+    androidTestImplementation 'org.junit.jupiter:junit-jupiter-engine:5.14.1'
+    //endregion
+}

@@ -3,3 +3,6 @@
 
 # Ignore Gradle build output directory
 build
+
+# Local configuration file (sdk path, etc)
+local.properties

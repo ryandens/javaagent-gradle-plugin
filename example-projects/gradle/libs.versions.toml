@@ -1,5 +1,10 @@
 [versions]
 otel = "2.23.0"
+kotlin = "2.2.0"
+coreKtx = "1.17.0"
 
 [libraries]
 otel-agent = { module = "io.opentelemetry.javaagent:opentelemetry-javaagent", version.ref = "otel" }
+core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+[plugins]
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

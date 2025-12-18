@@ -13,7 +13,7 @@ interface JavaagentPlugin : Plugin<Project> {
      * Plugins that the implementing class expects to be applied before [applyAfterJavaagentSetup] runs. By default,
      * this returns an empty [Collection]
      */
-    fun dependentProjectPlugins(): Collection<Class<out Plugin<Project>>> = emptySet()
+    fun dependentProjectPlugins(): Collection<String> = emptySet()
 
     /**
      * Initial setup for any plugin that wants to configure a javaagent for a project, followed by delegating to the
@@ -24,8 +24,8 @@ interface JavaagentPlugin : Plugin<Project> {
         project.pluginManager.apply(JavaagentBasePlugin::class.java)
         // get configuration
         val javaagentConfiguration = project.configurations.named(JavaagentBasePlugin.CONFIGURATION_NAME)
-        dependentProjectPlugins().forEach { pluginClass ->
-            project.pluginManager.apply(pluginClass)
+        dependentProjectPlugins().forEach { pluginId ->
+            project.pluginManager.apply(pluginId)
         }
         applyAfterJavaagentSetup(project, javaagentConfiguration)
     }

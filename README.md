@@ -5,6 +5,7 @@
 [![Javaagent Application Plugin](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com.ryandens/plugin/maven-metadata.xml.svg?label=Javaagent%20Application%20Plugin)](https://plugins.gradle.org/plugin/com.ryandens.javaagent-application)
 [![Javaagent Jib Plugin](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com.ryandens/plugin/maven-metadata.xml.svg?label=Javaagent%20Jib%20Plugin)](https://plugins.gradle.org/plugin/com.ryandens.javaagent-jib)
 [![Javaagent Test Plugin](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com.ryandens/plugin/maven-metadata.xml.svg?label=Javaagent%20Test%20Plugin)](https://plugins.gradle.org/plugin/com.ryandens.javaagent-test)
+[![Javaagent Test Android Plugin](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com.ryandens/plugin/maven-metadata.xml.svg?label=Javaagent%20Test%20Android%20Plugin)](https://plugins.gradle.org/plugin/com.ryandens.javaagent-test-android)
 [![Javaagent OTel Modification Plugin](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com.ryandens/plugin/maven-metadata.xml.svg?label=Javaagent%20OTel%20Modification%20Plugin)](https://plugins.gradle.org/plugin/com.ryandens.javaagent-otel-modification)
 
 
@@ -37,6 +38,32 @@ dependencies {
 ```
 
 > ℹ️ **Note:** The [Javaagent Test Plugin](#java-test-task-integration) automatically resolves dependency versions for javaagents dependencies that did not request one from the test runtime classpath. 
+
+## Android Example
+
+The most typical scenario when you'd need this plugin on Android is using Mockito in JUnit tests. 
+
+Simply apply plugin `javaagent-test-android` and add `testJavaagent` to your JUnit test dependencies just like you'd do with the regular Mockito:
+
+```kotlin
+plugins {
+    id("com.android.application")
+    id("com.ryandens.javaagent-test-android")
+}
+
+dependencies {
+    testImplementation(platform("org.mockito:mockito-bom:5.18.0"))
+    testImplementation("org.mockito:mockito-core")
+    testJavaagent("org.mockito:mockito-core")
+    
+    // Note that Android tests use Mockito-Android which does not require java agent
+    androidTestImplementation("org.mockito:mockito-android:5.21.0")
+    androidTestImplementation("org.mockito:mockito-junit-jupiter:5.21.0")
+}
+```
+
+Plugin `javaagent-test-android` supports both Application and Library type of Android project.
+
 
 ## Application Plugin integration
 

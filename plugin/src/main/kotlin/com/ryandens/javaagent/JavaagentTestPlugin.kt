@@ -16,7 +16,7 @@ class JavaagentTestPlugin :
         const val CONFIGURATION_NAME = "testJavaagent"
     }
 
-    override fun dependentProjectPlugins(): Collection<Class<out Plugin<Project>>> = setOf(JavaPlugin::class.java)
+    override fun dependentProjectPlugins(): Collection<String> = setOf("java")
 
     override fun applyAfterJavaagentSetup(
         project: Project,

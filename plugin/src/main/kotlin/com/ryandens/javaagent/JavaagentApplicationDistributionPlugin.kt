@@ -23,7 +23,7 @@ class JavaagentApplicationDistributionPlugin :
      */
     private val destinationDirectory = "agent-libs"
 
-    override fun dependentProjectPlugins(): Collection<Class<out Plugin<Project>>> = setOf(ApplicationPlugin::class.java)
+    override fun dependentProjectPlugins(): Collection<String> = setOf("application")
 
     override fun applyAfterJavaagentSetup(
         project: Project,

@@ -17,6 +17,7 @@ class JavaagentTestPluginTest {
      */
     @BeforeTest fun beforeEach() {
         project = ProjectBuilder.builder().build()
+        project.plugins.apply("java")
         project.plugins.apply("com.ryandens.javaagent-test")
         project.dependencies.add("javaagent", "io.opentelemetry.javaagent:opentelemetry-javaagent:1.11.1")
     }

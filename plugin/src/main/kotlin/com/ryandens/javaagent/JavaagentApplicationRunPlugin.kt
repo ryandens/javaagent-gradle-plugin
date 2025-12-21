@@ -13,7 +13,7 @@ import org.gradle.api.tasks.JavaExec
 class JavaagentApplicationRunPlugin :
     Plugin<Project>,
     JavaagentPlugin {
-    override fun dependentProjectPlugins(): Collection<Class<out Plugin<Project>>> = setOf(ApplicationPlugin::class.java)
+    override fun dependentProjectPlugins(): Collection<String> = setOf("application")
 
     override fun applyAfterJavaagentSetup(
         project: Project,

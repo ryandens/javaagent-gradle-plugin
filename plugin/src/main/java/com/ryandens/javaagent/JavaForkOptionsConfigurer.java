@@ -43,12 +43,12 @@ public final class JavaForkOptionsConfigurer {
                 .map(
                     file -> {
                       try {
-                          String path = file.getCanonicalPath();
-                          if (OperatingSystem.current().isWindows()) {
-                              // Don't let the spaces in the Windows path break the command line
-                              path = '"' + path + '"';
-                          }
-                          return "-javaagent:" + path;
+                        String path = file.getCanonicalPath();
+                        if (OperatingSystem.current().isWindows()) {
+                          // Don't let the spaces in the Windows path break the command line
+                          path = '"' + path + '"';
+                        }
+                        return "-javaagent:" + path;
                       } catch (IOException e) {
                         throw new UncheckedIOException(e);
                       }

@@ -1,5 +1,6 @@
 package com.ryandens.javaagent
 
+import org.apache.commons.text.StringEscapeUtils
 import org.gradle.internal.jvm.Jvm
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
@@ -213,7 +214,7 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
         Paths.get("..", "simple-agent").toFile().copyRecursively(simpleAgentTestDir)
         simpleAgentBuildScript.writeText(
             simpleAgentBuildScript.readText().replace(
-                "id(\"com.ryandens.java-conventions\")\n",
+                "id(\"com.ryandens.java-conventions\")",
                 "",
             ),
         )
@@ -226,6 +227,8 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
             """,
         )
 
+        val commandLine = StringEscapeUtils.escapeJava(""".${File.separator}hello-world""")
+        val javaHome = StringEscapeUtils.escapeJava(Jvm.current().getJavaHome().toString())
         helloWorldDir.resolve("build.gradle").writeText(
             """
                 plugins {
@@ -251,8 +254,8 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
                     dependsOn('installDist')
                     inputs.files(layout.buildDirectory.dir('install'))
                     workingDir(layout.buildDirectory.dir('install').map { it.dir('hello-world').dir('bin') })
-                    commandLine '.${File.separator}hello-world'
-                    environment JAVA_HOME: "${Jvm.current().getJavaHome()}"
+                    commandLine '$commandLine'
+                    environment JAVA_HOME: "$javaHome"
                 }
                 
                 test {

@@ -26,7 +26,7 @@ This plugin enables you to quickly and easily resolve these constraints by addin
 ```kotlin
 plugins {
     java
-    id("com.ryandens.javaagent-application") version "0.9.1"
+    id("com.ryandens.javaagent-test") version "0.9.1"
 }
 
 dependencies {

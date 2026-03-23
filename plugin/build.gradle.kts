@@ -1,3 +1,5 @@
+import org.gradle.plugin.compatibility.compatibility
+
 plugins {
     id("com.ryandens.plugin-conventions")
 }
@@ -39,6 +41,11 @@ gradlePlugin {
             description = "Automatically attaches javaagents to the Application Plugin run tasks and the main application distributions"
             implementationClass = "com.ryandens.javaagent.JavaagentApplicationPlugin"
             tags.set(listOf("javaagent", "instrumentation", "application"))
+            compatibility {
+                features {
+                    configurationCache = true
+                }
+            }
         }
         create("javaagentApplicationDistributionPlugin") {
             id = "com.ryandens.javaagent-application-distribution"
@@ -46,6 +53,11 @@ gradlePlugin {
             description = "Automatically attaches javaagents to the Application Plugin distributions"
             implementationClass = "com.ryandens.javaagent.JavaagentApplicationDistributionPlugin"
             tags.set(listOf("javaagent", "instrumentation", "application"))
+            compatibility {
+                features {
+                    configurationCache = true
+                }
+            }
         }
         create("javaagentApplicationRunPlugin") {
             id = "com.ryandens.javaagent-application-run"
@@ -53,6 +65,11 @@ gradlePlugin {
             description = "Automatically attaches javaagents to the Application Plugin run tasks"
             implementationClass = "com.ryandens.javaagent.JavaagentApplicationRunPlugin"
             tags.set(listOf("javaagent", "instrumentation", "application"))
+            compatibility {
+                features {
+                    configurationCache = true
+                }
+            }
         }
         create("javaagentJibPlugin") {
             id = "com.ryandens.javaagent-jib"
@@ -60,6 +77,11 @@ gradlePlugin {
             description = "Automatically includes javaagents in OCI images created by Jib"
             implementationClass = "com.ryandens.javaagent.JavaagentJibExtension"
             tags.set(listOf("javaagent", "instrumentation", "docker", "jib"))
+            compatibility {
+                features {
+                    configurationCache = true
+                }
+            }
         }
         create("javaagentTestPlugin") {
             id = "com.ryandens.javaagent-test"
@@ -67,6 +89,11 @@ gradlePlugin {
             description = "Automatically attaches javaagents to the Java Plugin Test tasks"
             implementationClass = "com.ryandens.javaagent.JavaagentTestPlugin"
             tags.set(listOf("javaagent", "instrumentation", "test"))
+            compatibility {
+                features {
+                    configurationCache = true
+                }
+            }
         }
     }
 }

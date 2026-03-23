@@ -18,6 +18,7 @@ repositories {
 dependencies {
     implementation(buildlibs.plugin.publish)
     implementation(buildlibs.kotlin)
+    implementation(buildlibs.gradle.compatibility.plugin)
     implementation(buildlibs.nebula.apache.license)
     implementation(buildlibs.reproducible.builds)
     implementation(buildlibs.spotless)

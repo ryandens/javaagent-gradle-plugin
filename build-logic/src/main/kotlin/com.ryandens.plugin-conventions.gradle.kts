@@ -25,6 +25,10 @@ spotless {
     }
 }
 
+dependencies {
+    testImplementation(gradleApi())
+}
+
 tasks.publishPlugins {
     dependsOn(
         publishing.publications.map { publication ->

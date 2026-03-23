@@ -1,3 +1,5 @@
+import org.gradle.plugin.compatibility.compatibility
+
 plugins {
     id("com.ryandens.plugin-conventions")
 }
@@ -21,6 +23,11 @@ gradlePlugin {
                 """.trimIndent()
             implementationClass = "com.ryandens.javaagent.otel.JavaagentOTelModificationPlugin"
             tags.set(listOf("otel", "instrumentation", "observability"))
+            compatibility {
+                features {
+                    configurationCache = true
+                }
+            }
         }
     }
 }

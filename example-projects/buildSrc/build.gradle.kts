@@ -12,6 +12,6 @@ dependencies {
     implementation("com.ryandens:plugin:0.11.0")
     */
     implementation("com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.4.1")
-    implementation("io.opentelemetry.instrumentation.muzzle-generation:io.opentelemetry.instrumentation.muzzle-generation.gradle.plugin:2.20.1-alpha")
-    implementation("io.opentelemetry.instrumentation.muzzle-check:io.opentelemetry.instrumentation.muzzle-check.gradle.plugin:2.20.1-alpha")
+    implementation("io.opentelemetry.instrumentation.muzzle-generation:io.opentelemetry.instrumentation.muzzle-generation.gradle.plugin:2.27.0-alpha")
+    implementation("io.opentelemetry.instrumentation.muzzle-check:io.opentelemetry.instrumentation.muzzle-check.gradle.plugin:2.27.0-alpha")
 }

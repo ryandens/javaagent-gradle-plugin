@@ -85,10 +85,20 @@ class JavaagentJibExtension :
                 it.into(destinationDirectory)
             }
 
-        listOf("jib", "jibDockerBuild", "jibBuildTar").forEach { jibTaskName ->
-            project.tasks.named(jibTaskName) { jibTask ->
-                jibTask.dependsOn(copyAgents)
+        if (project.pluginManager.hasPlugin("com.google.cloud.tools.jib")) {
+            listOf("jib", "jibDockerBuild", "jibBuildTar").forEach { jibTaskName ->
+                project.tasks.named(jibTaskName) { jibTask ->
+                    jibTask.dependsOn(copyAgents)
+                }
             }
+        } else if (project.pluginManager.hasPlugin("tel.schich.tinyjib")) {
+            listOf("tinyJibPublish", "tinyJibDocker", "tinyJibTar").forEach { jibTaskName ->
+                project.tasks.named(jibTaskName) { jibTask ->
+                    jibTask.dependsOn(copyAgents)
+                }
+            }
+        } else {
+            throw IllegalStateException("Should not be possible")
         }
 
         val jibExtension: JibExtension? = project.extensions.findByType(JibExtension::class.java)

@@ -1,6 +1,8 @@
 package com.ryandens.javaagent;
 
 import java.io.File;
+import javax.inject.Inject;
+import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.tasks.Input;
@@ -17,7 +19,16 @@ public class JibExtensionConfiguration {
 
   private final ListProperty<File> javaagentFiles;
 
-  /** Instantiated by Jib's plugin extension mechanism. */
+  /**
+   * Instantiated by Jib's plugin extension mechanism
+   *
+   * <p>Not compatible with configuration cache due to usage of Project at task execution time.
+   */
+  @Inject
+  public JibExtensionConfiguration(final Project project) {
+    this(project.getObjects());
+  }
+
   public JibExtensionConfiguration(final ObjectFactory objectFactory) {
     javaagentFiles = objectFactory.listProperty(File.class);
   }

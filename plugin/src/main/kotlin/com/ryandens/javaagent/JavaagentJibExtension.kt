@@ -100,7 +100,11 @@ class JavaagentJibExtension :
                     Action<JibExtensionConfiguration> { extensionConfiguration ->
                         extensionConfiguration.javaagentFiles.set(
                             project.provider {
-                                javaagentConfiguration.get().files.map { File(destinationDirectory.get().asFile, it.name) }.toList()
+                                javaagentConfiguration
+                                    .get()
+                                    .files
+                                    .map { File(destinationDirectory.get().asFile, it.name) }
+                                    .toList()
                             },
                         )
                     },

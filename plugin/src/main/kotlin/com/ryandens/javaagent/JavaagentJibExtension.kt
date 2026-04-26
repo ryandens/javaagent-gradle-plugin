@@ -10,6 +10,8 @@ import com.google.cloud.tools.jib.gradle.JibExtension
 import com.google.cloud.tools.jib.gradle.extension.GradleData
 import com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger
+import org.gradle.api.Action
+import org.gradle.api.GradleException
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -24,31 +26,24 @@ import java.util.Optional
  */
 @ExperimentalStdlibApi
 class JavaagentJibExtension :
-    JibGradlePluginExtension<Void>,
+    JibGradlePluginExtension<JibExtensionConfiguration>,
     JavaagentPlugin {
-    override fun getExtraConfigType(): Optional<Class<Void>> = Optional.empty()
+    override fun getExtraConfigType(): Optional<Class<JibExtensionConfiguration>> = Optional.of(JibExtensionConfiguration::class.java)
 
     override fun extendContainerBuildPlan(
-        buildPlan: ContainerBuildPlan?,
-        properties: MutableMap<String, String>?,
-        extraConfig: Optional<Void>?,
+        buildPlan: ContainerBuildPlan,
+        properties: MutableMap<String, String>,
+        extraConfig: Optional<JibExtensionConfiguration>,
         gradleData: GradleData?,
         logger: ExtensionLogger?,
     ): ContainerBuildPlan {
-        checkNotNull(buildPlan)
         val entrypoint = checkNotNull(buildPlan.entrypoint)
         check(entrypoint.isNotEmpty())
+        if (extraConfig.isEmpty) {
+            throw GradleException("Javaagent Jib plugin must be provided an extraConfig containing javaagent files to configure")
+        }
 
-        val localAgentPaths =
-            checkNotNull(
-                gradleData
-                    ?.project
-                    ?.plugins
-                    ?.getPlugin(
-                        JavaagentJibExtension::class.java,
-                    )?.javaagentPathProvider
-                    ?.invoke(),
-            )
+        val localAgentPaths = extraConfig.get().javaagentFiles.get()
 
         val planBuilder = buildPlan.toBuilder()
         val newEntrypoint =
@@ -90,24 +85,41 @@ class JavaagentJibExtension :
                 it.into(destinationDirectory)
             }
 
-        listOf("jib", "jibDockerBuild", "jibBuildTar").forEach { jibTaskName ->
-            project.tasks.named(jibTaskName) { jibTask ->
-                jibTask.dependsOn(copyAgents)
+        if (project.pluginManager.hasPlugin("com.google.cloud.tools.jib")) {
+            listOf("jib", "jibDockerBuild", "jibBuildTar").forEach { jibTaskName ->
+                project.tasks.named(jibTaskName) { jibTask ->
+                    jibTask.dependsOn(copyAgents)
+                }
             }
+        } else if (project.pluginManager.hasPlugin("tel.schich.tinyjib")) {
+            listOf("tinyJibPublish", "tinyJibDocker", "tinyJibTar").forEach { jibTaskName ->
+                project.tasks.named(jibTaskName) { jibTask ->
+                    jibTask.dependsOn(copyAgents)
+                }
+            }
+        } else {
+            throw IllegalStateException("Should not be possible")
         }
 
         val jibExtension: JibExtension? = project.extensions.findByType(JibExtension::class.java)
 
         jibExtension?.pluginExtensions { extensionParametersSpec ->
-            extensionParametersSpec.pluginExtension {
-                it.implementation = "com.ryandens.javaagent.JavaagentJibExtension"
+            extensionParametersSpec.pluginExtension { extension ->
+                extension.implementation = "com.ryandens.javaagent.JavaagentJibExtension"
+                extension.configuration(
+                    Action<JibExtensionConfiguration> { extensionConfiguration ->
+                        extensionConfiguration.javaagentFiles.set(
+                            project.provider {
+                                javaagentConfiguration
+                                    .get()
+                                    .files
+                                    .map { File(destinationDirectory.get().asFile, it.name) }
+                                    .toList()
+                            },
+                        )
+                    },
+                )
             }
         }
-
-        javaagentPathProvider = {
-            javaagentConfiguration.get().files.map { File(destinationDirectory.get().asFile, it.name) }
-        }
     }
-
-    private lateinit var javaagentPathProvider: () -> List<File>
 }

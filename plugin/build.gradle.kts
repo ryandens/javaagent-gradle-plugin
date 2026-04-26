@@ -71,18 +71,6 @@ gradlePlugin {
                 }
             }
         }
-        create("javaagentJibPlugin") {
-            id = "com.ryandens.javaagent-jib"
-            displayName = "Javaagent Jib Plugin"
-            description = "Automatically includes javaagents in OCI images created by Jib"
-            implementationClass = "com.ryandens.javaagent.JavaagentJibExtension"
-            tags.set(listOf("javaagent", "instrumentation", "docker", "jib"))
-            compatibility {
-                features {
-                    configurationCache = true
-                }
-            }
-        }
         create("javaagentTestPlugin") {
             id = "com.ryandens.javaagent-test"
             displayName = "Javaagent Test Plugin"

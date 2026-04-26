@@ -1,4 +1,4 @@
-package com.ryandens.javaagent
+package com.ryandens.javaagent.jib
 
 import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath
 import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan
@@ -10,6 +10,7 @@ import com.google.cloud.tools.jib.gradle.JibExtension
 import com.google.cloud.tools.jib.gradle.extension.GradleData
 import com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger
+import com.ryandens.javaagent.JavaagentPlugin
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.NamedDomainObjectProvider
@@ -105,7 +106,7 @@ class JavaagentJibExtension :
 
         jibExtension?.pluginExtensions { extensionParametersSpec ->
             extensionParametersSpec.pluginExtension { extension ->
-                extension.implementation = "com.ryandens.javaagent.JavaagentJibExtension"
+                extension.implementation = "com.ryandens.javaagent.jib.JavaagentJibExtension"
                 extension.configuration(
                     Action<JibExtensionConfiguration> { extensionConfiguration ->
                         extensionConfiguration.javaagentFiles.set(

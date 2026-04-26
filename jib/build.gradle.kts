@@ -30,6 +30,7 @@ tasks.named<PluginUnderTestMetadata>("pluginUnderTestMetadata") {
 dependencies {
     plugin("com.google.cloud.tools:jib-gradle-plugin-extension-api:0.4.0")
     plugin("com.google.cloud.tools.jib:com.google.cloud.tools.jib.gradle.plugin:3.5.3")
+    implementation(project(":plugin"))
     implementation(project(":jib-common"))
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -43,7 +44,7 @@ gradlePlugin {
             id = "com.ryandens.javaagent-jib"
             displayName = "Javaagent Jib Plugin"
             description = "Automatically includes javaagents in OCI images created by Jib"
-            implementationClass = "com.ryandens.javaagent.jib.JavaagentJibExtension"
+            implementationClass = "com.ryandens.javaagent.jib.JavaagentJibPlugin"
             tags.set(listOf("javaagent", "instrumentation", "docker", "jib"))
             compatibility {
                 features {

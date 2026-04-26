@@ -23,6 +23,8 @@ tasks.named<PluginUnderTestMetadata>("pluginUnderTestMetadata") {
     dependsOn(tasks.compileKotlin)
     dependsOn(tasks.compileJava)
     dependsOn(tasks.processResources)
+    dependsOn(":jib-common:jar")
+    dependsOn(":plugin:jar")
 }
 
 dependencies {

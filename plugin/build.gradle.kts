@@ -4,30 +4,7 @@ plugins {
     id("com.ryandens.plugin-conventions")
 }
 
-val plugin: Configuration by configurations.creating
-
-configurations {
-    compileOnly {
-        extendsFrom(plugin)
-    }
-    testImplementation {
-        extendsFrom(plugin)
-    }
-}
-
-tasks.named<PluginUnderTestMetadata>("pluginUnderTestMetadata") {
-    // adds dependencies with the plugin configuration to the plugin classpath
-    pluginClasspath.setFrom(pluginClasspath.plus(plugin.files))
-    // avoid warnings
-    dependsOn(tasks.compileKotlin)
-    dependsOn(tasks.compileJava)
-    dependsOn(tasks.processResources)
-}
-
 dependencies {
-    plugin("com.google.cloud.tools:jib-gradle-plugin-extension-api:0.4.0")
-    plugin("com.google.cloud.tools.jib:com.google.cloud.tools.jib.gradle.plugin:3.5.3")
-
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
     testImplementation("org.apache.commons:commons-compress:1.28.0")
@@ -65,18 +42,6 @@ gradlePlugin {
             description = "Automatically attaches javaagents to the Application Plugin run tasks"
             implementationClass = "com.ryandens.javaagent.JavaagentApplicationRunPlugin"
             tags.set(listOf("javaagent", "instrumentation", "application"))
-            compatibility {
-                features {
-                    configurationCache = true
-                }
-            }
-        }
-        create("javaagentJibPlugin") {
-            id = "com.ryandens.javaagent-jib"
-            displayName = "Javaagent Jib Plugin"
-            description = "Automatically includes javaagents in OCI images created by Jib"
-            implementationClass = "com.ryandens.javaagent.JavaagentJibExtension"
-            tags.set(listOf("javaagent", "instrumentation", "docker", "jib"))
             compatibility {
                 features {
                     configurationCache = true

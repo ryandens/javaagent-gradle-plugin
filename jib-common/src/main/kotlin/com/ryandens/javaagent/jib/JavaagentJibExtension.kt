@@ -1,4 +1,4 @@
-package com.ryandens.javaagent
+package com.ryandens.javaagent.jib
 
 import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath
 import com.google.cloud.tools.jib.api.buildplan.ContainerBuildPlan
@@ -6,17 +6,15 @@ import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer
 import com.google.cloud.tools.jib.api.buildplan.FileEntry
 import com.google.cloud.tools.jib.api.buildplan.FilePermissions
 import com.google.cloud.tools.jib.api.buildplan.LayerObject
-import com.google.cloud.tools.jib.gradle.JibExtension
 import com.google.cloud.tools.jib.gradle.extension.GradleData
 import com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger
-import org.gradle.api.Action
+import com.ryandens.javaagent.JavaagentPlugin
 import org.gradle.api.GradleException
 import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.tasks.Copy
-import java.io.File
 import java.util.Optional
 
 /**
@@ -28,6 +26,10 @@ import java.util.Optional
 class JavaagentJibExtension :
     JibGradlePluginExtension<JibExtensionConfiguration>,
     JavaagentPlugin {
+    companion object {
+        const val COPY_AGENTS_TASK_NAME = "copyAgentsToJibDir"
+    }
+
     override fun getExtraConfigType(): Optional<Class<JibExtensionConfiguration>> = Optional.of(JibExtensionConfiguration::class.java)
 
     override fun extendContainerBuildPlan(
@@ -80,7 +82,7 @@ class JavaagentJibExtension :
     ) {
         val destinationDirectory = project.layout.buildDirectory.dir("jib-agents")
         val copyAgents =
-            project.tasks.register("copyAgentsToJibDir", Copy::class.java) {
+            project.tasks.register(COPY_AGENTS_TASK_NAME, Copy::class.java) {
                 it.from(javaagentConfiguration)
                 it.into(destinationDirectory)
             }
@@ -99,27 +101,6 @@ class JavaagentJibExtension :
             }
         } else {
             throw IllegalStateException("Should not be possible")
-        }
-
-        val jibExtension: JibExtension? = project.extensions.findByType(JibExtension::class.java)
-
-        jibExtension?.pluginExtensions { extensionParametersSpec ->
-            extensionParametersSpec.pluginExtension { extension ->
-                extension.implementation = "com.ryandens.javaagent.JavaagentJibExtension"
-                extension.configuration(
-                    Action<JibExtensionConfiguration> { extensionConfiguration ->
-                        extensionConfiguration.javaagentFiles.set(
-                            project.provider {
-                                javaagentConfiguration
-                                    .get()
-                                    .files
-                                    .map { File(destinationDirectory.get().asFile, it.name) }
-                                    .toList()
-                            },
-                        )
-                    },
-                )
-            }
         }
     }
 }

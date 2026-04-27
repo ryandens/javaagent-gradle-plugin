@@ -1,5 +1,3 @@
-package com.ryandens.javaagent
-
 import org.apache.commons.compress.archivers.ArchiveInputStream
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
@@ -42,7 +40,7 @@ class JavaagentJibExtensionFunctionalTest {
         val result = createAndBuildJavaagentProject(dependencies, listOf("jibBuildTar"))
 
         // Verify the result
-        assertTrue(result.output.contains("Running extension: com.ryandens.javaagent.JavaagentJibExtension"))
+        assertTrue(result.output.contains("Running extension: com.ryandens.javaagent.jib.JavaagentJibExtension"))
 
         // verify the agent was added to entrypoint
         assertTrue(File(functionalTestDir, JIB_IMAGE).exists())
@@ -70,7 +68,7 @@ class JavaagentJibExtensionFunctionalTest {
         val result = createAndBuildJavaagentProject(dependencies, listOf("jibBuildTar"))
 
         // Verify the result
-        assertTrue(result.output.contains("Running extension: com.ryandens.javaagent.JavaagentJibExtension"))
+        assertTrue(result.output.contains("Running extension: com.ryandens.javaagent.jib.JavaagentJibExtension"))
 
         // verify the agent was added to entrypoint
         assertTrue(File(functionalTestDir, JIB_IMAGE).exists())

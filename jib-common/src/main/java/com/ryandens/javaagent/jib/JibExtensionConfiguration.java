@@ -1,4 +1,4 @@
-package com.ryandens.javaagent;
+package com.ryandens.javaagent.jib;
 
 import java.io.File;
 import javax.inject.Inject;
@@ -11,9 +11,8 @@ import org.gradle.api.tasks.Input;
  * Extra configuration for {@link JavaagentJibExtension}. Declares the javaagent files that should
  * be copied into the container image and referenced via {@code -javaagent} JVM flags.
  *
- * <p>Instances are created by Jib's plugin extension mechanism via {@link
- * org.gradle.api.model.ObjectFactory}, so this class must have a single-argument constructor
- * accepting {@link ObjectFactory}.
+ * <p>Instances are created by Jib's plugin extension mechanism via {@link ObjectFactory}, so this
+ * class must have a single-argument constructor accepting {@link ObjectFactory}.
  */
 public class JibExtensionConfiguration {
 

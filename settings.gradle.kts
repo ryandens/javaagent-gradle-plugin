@@ -8,7 +8,7 @@ plugins {
 }
 
 rootProject.name = "javaagent-plugin"
-include("plugin", "simple-agent", "otel")
+include("jib-common", "jib", "plugin", "simple-agent", "otel")
 
 val isCI = providers.environmentVariable("CI").isPresent
 

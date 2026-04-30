@@ -1,10 +1,12 @@
 package com.ryandens.javaagent
 
+import org.apache.commons.text.StringEscapeUtils
 import org.gradle.internal.jvm.Jvm
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import java.io.File
+import java.nio.file.Paths
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -25,7 +27,7 @@ class JavaagentPluginFunctionalTest {
 
     @BeforeTest
     fun beforeEach() {
-        functionalTestDir = File("build/functionalTest")
+        functionalTestDir = File("build", "functionalTest")
         functionalTestDir.mkdirs()
         helloWorldDir = File(functionalTestDir, "hello-world")
     }
@@ -120,14 +122,16 @@ class JavaagentPluginFunctionalTest {
         val result = runBuild(listOf("--configuration-cache", "build", "installDist", "execStartScript"))
 
         // verify the distribution was created properly
-        val applicationDistribution = File(functionalTestDir, "hello-world/build/distributions/hello-world.tar")
+        val applicationDistribution =
+            File(functionalTestDir, "hello-world${File.separator}build${File.separator}distributions${File.separator}hello-world.tar")
         assertTrue(applicationDistribution.exists())
 
         // verify the expected text was injected into the start script
         val expectedDefaultJavaOpts = """
 DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar -Xmx256m"
 """
-        val applicationDistributionScript = File(functionalTestDir, "hello-world/build/scripts/hello-world")
+        val applicationDistributionScript =
+            File(functionalTestDir, "hello-world${File.separator}build${File.separator}scripts${File.separator}hello-world")
         assertTrue(applicationDistributionScript.readText().contains(expectedDefaultJavaOpts))
 
         /*
@@ -140,7 +144,12 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
          */
 
         // verify the agent was added to the /lib/ dir of the distribution
-        assertTrue(File(functionalTestDir, "hello-world/build/install/hello-world/agent-libs/simple-agent.jar").exists())
+        assertTrue(
+            File(
+                functionalTestDir,
+                "hello-world/build/install/hello-world/agent-libs/simple-agent.jar".replace("/", File.separator),
+            ).exists(),
+        )
 
         // Verify the result
         assertTrue(result.output.contains("Hello World!"))
@@ -180,24 +189,32 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
         val result = runBuild(listOf("build", "installDist", "execStartScript"))
 
         // verify the distribution was created properly
-        val applicationDistribution = File(functionalTestDir, "hello-world/build/distributions/hello-world.tar")
+        val applicationDistribution =
+            File(functionalTestDir, "hello-world${File.separator}build${File.separator}distributions${File.separator}hello-world.tar")
         assertTrue(applicationDistribution.exists())
 
-        val applicationDistributionScript = File(functionalTestDir, "hello-world/build/scripts/hello-world")
+        val applicationDistributionScript =
+            File(functionalTestDir, "hello-world${File.separator}build${File.separator}scripts${File.separator}hello-world")
         assertTrue(applicationDistributionScript.readText().contains("""DEFAULT_JVM_OPTS="-Xmx256m"""))
 
-        assertFalse(File(functionalTestDir, "hello-world/build/install/hello-world/agent-libs/").exists())
+        assertFalse(
+            File(
+                functionalTestDir,
+                "hello-world${File.separator}build${File.separator}install${File.separator}hello-world${File.separator}agent-libs/",
+            ).exists(),
+        )
         assertTrue(result.output.contains("Hello World!"))
     }
 
     private fun createJavaagentProject(dependencies: String) {
-        File("src/functionalTest/resources/hello-world-project/").copyRecursively(helloWorldDir)
+        val helloWorldDir = File(functionalTestDir, "hello-world")
+        Paths.get("src", "functionalTest", "resources", "hello-world-project").toFile().copyRecursively(helloWorldDir)
         val simpleAgentTestDir = File(functionalTestDir, "simple-agent")
         val simpleAgentBuildScript = simpleAgentTestDir.resolve("build.gradle.kts")
-        File("../simple-agent/").copyRecursively(simpleAgentTestDir)
+        Paths.get("..", "simple-agent").toFile().copyRecursively(simpleAgentTestDir)
         simpleAgentBuildScript.writeText(
             simpleAgentBuildScript.readText().replace(
-                "id(\"com.ryandens.java-conventions\")\n",
+                "id(\"com.ryandens.java-conventions\")",
                 "",
             ),
         )
@@ -210,6 +227,8 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
             """,
         )
 
+        val commandLine = StringEscapeUtils.escapeJava(""".${File.separator}hello-world""")
+        val javaHome = StringEscapeUtils.escapeJava(Jvm.current().getJavaHome().toString())
         helloWorldDir.resolve("build.gradle").writeText(
             """
                 plugins {
@@ -232,12 +251,11 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
                 }
                 
                 task execStartScript(type: Exec) {
-                    inputs.files(fileTree('${helloWorldDir.canonicalPath}/build/install/') {
-                        builtBy tasks.named('installDist')
-                    })
-                    workingDir '${helloWorldDir.canonicalPath}/build/install/hello-world/bin/'
-                    commandLine './hello-world'
-                    environment JAVA_HOME: "${Jvm.current().getJavaHome()}"
+                    dependsOn('installDist')
+                    inputs.files(layout.buildDirectory.dir('install'))
+                    workingDir(layout.buildDirectory.dir('install').map { it.dir('hello-world').dir('bin') })
+                    commandLine '$commandLine'
+                    environment JAVA_HOME: "$javaHome"
                 }
                 
                 test {

@@ -47,8 +47,8 @@ tasks {
         compilerOptions {
             jvmTarget = JvmTarget.JVM_17
             allWarningsAsErrors.set(true)
-            languageVersion.set(KotlinVersion.KOTLIN_2_1)
-            apiVersion.set(KotlinVersion.KOTLIN_2_1)
+            languageVersion.set(KotlinVersion.KOTLIN_2_2)
+            apiVersion.set(KotlinVersion.KOTLIN_2_2)
         }
     }
 }

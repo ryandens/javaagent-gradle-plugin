@@ -49,6 +49,11 @@ tasks {
             allWarningsAsErrors.set(true)
             languageVersion.set(KotlinVersion.KOTLIN_2_1)
             apiVersion.set(KotlinVersion.KOTLIN_2_1)
+            // Pinning the language/API version to 2.1 (for Gradle plugin
+            // compatibility) is deprecated as of Kotlin 2.4 and emits a
+            // warning that fails the build under allWarningsAsErrors. Suppress
+            // just that version warning while keeping the pin intentional.
+            freeCompilerArgs.add("-Xsuppress-version-warnings")
         }
     }
 }

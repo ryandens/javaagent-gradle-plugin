@@ -1,4 +1,3 @@
-import org.gradle.kotlin.dsl.assign
 import org.gradle.plugin.compatibility.compatibility
 
 plugins {

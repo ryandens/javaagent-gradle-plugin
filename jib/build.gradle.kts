@@ -4,7 +4,12 @@ plugins {
     id("com.ryandens.plugin-conventions")
 }
 
-val plugin: Configuration = configurations.create("plugin")
+val plugin: Configuration =
+    configurations.create("plugin") {
+        isCanBeDeclared = true
+        isCanBeResolved = true
+        isCanBeConsumed = false
+    }
 
 configurations {
     compileOnly {

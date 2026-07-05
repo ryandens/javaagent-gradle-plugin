@@ -1,11 +1,15 @@
-import org.gradle.kotlin.dsl.assign
 import org.gradle.plugin.compatibility.compatibility
 
 plugins {
     id("com.ryandens.plugin-conventions")
 }
 
-val plugin: Configuration by configurations.creating
+val plugin: Configuration =
+    configurations.create("plugin") {
+        isCanBeDeclared = true
+        isCanBeResolved = true
+        isCanBeConsumed = false
+    }
 
 configurations {
     compileOnly {

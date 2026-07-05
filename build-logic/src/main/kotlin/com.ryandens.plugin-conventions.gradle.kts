@@ -63,10 +63,11 @@ configurations["functionalTestImplementation"].extendsFrom(configurations["testI
 configurations["functionalTestRuntimeOnly"].extendsFrom(configurations["testRuntimeOnly"])
 
 // Add a task to run the functional tests
-val functionalTest by tasks.registering(Test::class) {
-    testClassesDirs = functionalTestSourceSet.output.classesDirs
-    classpath = functionalTestSourceSet.runtimeClasspath
-}
+val functionalTest =
+    tasks.register<Test>("functionalTest") {
+        testClassesDirs = functionalTestSourceSet.output.classesDirs
+        classpath = functionalTestSourceSet.runtimeClasspath
+    }
 
 tasks.check {
     // Run the functional tests as part of `check`

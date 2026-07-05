@@ -4,7 +4,7 @@ plugins {
     id("com.ryandens.plugin-conventions")
 }
 
-val plugin: Configuration by configurations.creating
+val plugin: Configuration = configurations.create("plugin")
 
 configurations {
     compileOnly {

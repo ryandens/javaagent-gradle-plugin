@@ -81,13 +81,14 @@ class JavaagentPluginFunctionalTest {
 
         createJavaagentProject(dependencies)
 
-        // The run task adds the agent jars via a CommandLineArgumentProvider that is not a tracked input, so
-        // only an explicit task dependency makes Gradle schedule :simple-agent:jar before :hello-world:run.
-        // Without it the run task can launch with -javaagent:<jar> before that jar has been produced, failing
-        // with "Error opening zip file or JAR manifest missing" (the `can attach to application run task`
-        // test above reproduces that intermittently under parallel scheduling). --dry-run prints the task
-        // execution graph in order without running anything, so asserting the ordering here catches the
-        // regression deterministically, independent of scheduling timing.
+        // The run task adds the agent jars via a CommandLineArgumentProvider that is not itself a tracked
+        // input, so the plugin registers the javaagent configuration as a task input to make Gradle schedule
+        // :simple-agent:jar before :hello-world:run. Without that, the run task can launch with
+        // -javaagent:<jar> before that jar has been produced, failing with "Error opening zip file or JAR
+        // manifest missing" (the `can attach to application run task` test above reproduces that
+        // intermittently under parallel scheduling). --dry-run prints the task execution graph in order
+        // without running anything, so asserting the ordering here catches the regression deterministically,
+        // independent of scheduling timing.
         val result = runBuild(listOf("--dry-run", ":hello-world:run"))
 
         val agentJarIndex = result.output.indexOf(":simple-agent:jar")

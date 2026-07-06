@@ -89,6 +89,11 @@ class JavaagentOTelModificationPlugin : Plugin<Project> {
                     it.into("inst")
                 }
             }
-        project.dependencies.add("javaagent", extendedAgent.map { project.files(it.outputs.files.singleFile) })
+        // Add the extendedAgent output via the task provider (not extendedAgent.outputs.files.singleFile,
+        // which resolves to a plain File and loses provenance). project.files(TaskProvider) carries the
+        // producing task as a builtBy dependency, so consumers of the javaagent configuration that track it
+        // as an input — e.g. the run task in JavaagentApplicationRunPlugin — establish a dependency on
+        // :extendedAgent instead of failing Gradle's implicit-dependency validation.
+        project.dependencies.add("javaagent", project.files(extendedAgent))
     }
 }

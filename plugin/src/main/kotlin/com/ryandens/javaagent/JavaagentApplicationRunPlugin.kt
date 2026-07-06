@@ -23,17 +23,17 @@ class JavaagentApplicationRunPlugin :
         project.tasks.named(ApplicationPlugin.TASK_RUN_NAME, JavaExec::class.java).configure {
             // The agent jars are passed to the JVM via a CommandLineArgumentProvider (see
             // JavaForkOptionsConfigurer), which resolves the configuration's files at execution time but is
-            // not a tracked task input. Without an explicit dependency, Gradle establishes no ordering
-            // between the run task and the tasks that build the agent jars, so under parallel execution the
-            // run task can launch with -javaagent:<jar> before that jar has been produced, failing with
-            // "Error opening zip file or JAR manifest missing".
+            // not a tracked task input. Without registering the configuration as an input, Gradle
+            // establishes no ordering between the run task and the tasks that build the agent jars, so under
+            // parallel execution the run task can launch with -javaagent:<jar> before that jar has been
+            // produced, failing with "Error opening zip file or JAR manifest missing".
             //
-            // A Configuration is Buildable, so dependsOn adds the artifact-building task dependencies and
-            // fixes the ordering. Unlike inputs.files(...), it does NOT register the agent jars as tracked
-            // inputs, which avoids tripping Gradle's implicit-dependency validation for agent jars added to
-            // the configuration without a declared builtBy (e.g. the otel example's extendedAgent jar). The
-            // run task is never up-to-date, so input tracking would provide no benefit here anyway.
-            it.dependsOn(javaagentConfiguration)
+            // A Configuration is Buildable, so registering it as an input makes the run task depend on the
+            // tasks that build the agent jars, the same way JavaagentApplicationDistributionPlugin does for
+            // the start-script task. This requires every artifact added to the javaagent configuration to
+            // carry its producing-task dependency (builtBy); consumers that synthesize a plain File must
+            // preserve it (see the otel example's extendedAgent wiring).
+            it.inputs.files(javaagentConfiguration)
             JavaForkOptionsConfigurer.configureJavaForkOptions(it, javaagentConfiguration.map { configuration -> configuration.files })
         }
     }

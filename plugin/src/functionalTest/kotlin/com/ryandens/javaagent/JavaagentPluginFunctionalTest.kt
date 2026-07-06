@@ -2,6 +2,7 @@ package com.ryandens.javaagent
 
 import org.apache.commons.text.StringEscapeUtils
 import org.gradle.internal.jvm.Jvm
+import org.gradle.internal.os.OperatingSystem
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
@@ -24,6 +25,10 @@ class JavaagentPluginFunctionalTest {
     private lateinit var functionalTestDir: File
 
     private lateinit var helloWorldDir: File
+
+    private val isWindows = OperatingSystem.current().isWindows
+
+    private val scriptExtension = if (isWindows) ".bat" else ""
 
     @BeforeTest
     fun beforeEach() {
@@ -127,21 +132,17 @@ class JavaagentPluginFunctionalTest {
         assertTrue(applicationDistribution.exists())
 
         // verify the expected text was injected into the start script
-        val expectedDefaultJavaOpts = """
+        val applicationDistributionScript =
+            File(functionalTestDir, "hello-world${File.separator}build${File.separator}scripts${File.separator}hello-world$scriptExtension")
+        if (isWindows) {
+            val expectedWindowsDefaultJvmOpts = """set DEFAULT_JVM_OPTS="-javaagent:%APP_HOME%\agent-libs\simple-agent.jar" "-Xmx256m""""
+            assertTrue(applicationDistributionScript.readText().contains(expectedWindowsDefaultJvmOpts))
+        } else {
+            val expectedDefaultJavaOpts = """
 DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar -Xmx256m"
 """
-        val applicationDistributionScript =
-            File(functionalTestDir, "hello-world${File.separator}build${File.separator}scripts${File.separator}hello-world")
-        assertTrue(applicationDistributionScript.readText().contains(expectedDefaultJavaOpts))
-
-        /*
-         * TODO add support for windows
-         * val expectedWindowsDefaultJvmOpts = """
-DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
-"""
-        val applicationDistributionScript = File(functionalTestDir, "hello-world/build/scripts/hello-world.bat")
-        assertTrue(applicationDistributionScript.readText().contains(expectedWindowsDefaultJvmOpts))
-         */
+            assertTrue(applicationDistributionScript.readText().contains(expectedDefaultJavaOpts))
+        }
 
         // verify the agent was added to the /lib/ dir of the distribution
         assertTrue(
@@ -194,8 +195,12 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
         assertTrue(applicationDistribution.exists())
 
         val applicationDistributionScript =
-            File(functionalTestDir, "hello-world${File.separator}build${File.separator}scripts${File.separator}hello-world")
-        assertTrue(applicationDistributionScript.readText().contains("""DEFAULT_JVM_OPTS="-Xmx256m"""))
+            File(functionalTestDir, "hello-world${File.separator}build${File.separator}scripts${File.separator}hello-world$scriptExtension")
+        if (isWindows) {
+            assertTrue(applicationDistributionScript.readText().contains("""set DEFAULT_JVM_OPTS="-Xmx256m""""))
+        } else {
+            assertTrue(applicationDistributionScript.readText().contains("""DEFAULT_JVM_OPTS="-Xmx256m"""))
+        }
 
         assertFalse(
             File(
@@ -227,7 +232,7 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/lib/simple-agent.jar -Xmx256m"
             """,
         )
 
-        val commandLine = StringEscapeUtils.escapeJava(""".${File.separator}hello-world""")
+        val commandLine = StringEscapeUtils.escapeJava(""".${File.separator}hello-world$scriptExtension""")
         val javaHome = StringEscapeUtils.escapeJava(Jvm.current().getJavaHome().toString())
         helloWorldDir.resolve("build.gradle").writeText(
             """

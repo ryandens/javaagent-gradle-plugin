@@ -23,7 +23,7 @@ class JavaagentAwareStartScriptGenerator(
         details: JavaAppStartScriptGenerationDetails,
         destination: Writer,
     ) {
-        inner.generateScript(details, Fake(destination, javaagentConfiguration, platform.pathSeparator, platform.appHomeVar))
+        inner.generateScript(details, Fake(destination, javaagentConfiguration, platform.pathSeparator, platform.appHomeVar, platform))
     }
 
     private class FakeTransformer(
@@ -48,6 +48,7 @@ class JavaagentAwareStartScriptGenerator(
         private val javaagentFiles: Provider<Set<File>>,
         private val pathSeparator: String,
         private val appHomeVar: String,
+        private val platform: Platform,
     ) : Writer() {
         override fun close() {
             inner.close()
@@ -76,10 +77,14 @@ class JavaagentAwareStartScriptGenerator(
                             "",
                         ).replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar", "")
                 } else {
+                    // On Windows, each -javaagent option must be a separately quoted token,
+                    // so we use `" "` (close quote, space, open quote) as separator.
+                    // On Unix, all options can be space-separated within a single quoted string.
+                    val separator = if (platform == Platform.WINDOWS) "\" \"" else " "
                     str.replace(
                         "-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar",
                         javaagentFiles.get().joinToString(
-                            " ",
+                            separator,
                         ) { jar -> "-javaagent:${appHomeVar}${pathSeparator}agent-libs${pathSeparator}${jar.name}" },
                     )
                 }

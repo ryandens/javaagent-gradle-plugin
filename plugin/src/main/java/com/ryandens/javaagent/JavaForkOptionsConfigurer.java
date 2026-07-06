@@ -43,7 +43,13 @@ public final class JavaForkOptionsConfigurer {
                 // logic yields a name that appendToBootstrapClassLoaderSearch rejects with
                 // IllegalArgumentException. The distribution start scripts already use a plain,
                 // unresolved path, which works.
-                .map(file -> "-javaagent:" + file.getAbsolutePath())
+                .map(
+                    file -> {
+                      String arg = "-javaagent:" + file.getAbsolutePath();
+                      // TEMP diagnostic: print the exact -javaagent arg passed to the forked JVM
+                      System.err.println("DIAG_JAVAAGENT_ARG=[" + arg + "]");
+                      return arg;
+                    })
                 .collect(Collectors.toList());
           }
         });

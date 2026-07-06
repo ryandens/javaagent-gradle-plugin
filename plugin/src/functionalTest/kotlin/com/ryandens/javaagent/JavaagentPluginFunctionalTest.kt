@@ -74,6 +74,30 @@ class JavaagentPluginFunctionalTest {
         assertTrue(ccResult.output.contains("Reusing configuration cache."))
     }
 
+    @Test fun `run task depends on the tasks that build the javaagent artifacts`() {
+        val dependencies = """
+            javaagent project(':simple-agent')
+        """
+
+        createJavaagentProject(dependencies)
+
+        // The run task adds the agent jars via a CommandLineArgumentProvider that is not itself a tracked
+        // input, so the plugin registers the javaagent configuration as a task input to make Gradle schedule
+        // :simple-agent:jar before :hello-world:run. Without that, the run task can launch with
+        // -javaagent:<jar> before that jar has been produced, failing with "Error opening zip file or JAR
+        // manifest missing" (the `can attach to application run task` test above reproduces that
+        // intermittently under parallel scheduling). --dry-run prints the task execution graph in order
+        // without running anything, so asserting the ordering here catches the regression deterministically,
+        // independent of scheduling timing.
+        val result = runBuild(listOf("--dry-run", ":hello-world:run"))
+
+        val agentJarIndex = result.output.indexOf(":simple-agent:jar")
+        val runIndex = result.output.indexOf(":hello-world:run")
+        assertTrue(agentJarIndex >= 0, "expected :simple-agent:jar to be scheduled ahead of :hello-world:run")
+        assertTrue(runIndex >= 0, "expected :hello-world:run to be scheduled")
+        assertTrue(agentJarIndex < runIndex, "expected :simple-agent:jar to be scheduled before :hello-world:run")
+    }
+
     @Test fun `can attach to test task`() {
         // A real third-party javaagent used to verify the plugin attaches it and it logs its version banner.
         val otelVersion = "2.29.0"

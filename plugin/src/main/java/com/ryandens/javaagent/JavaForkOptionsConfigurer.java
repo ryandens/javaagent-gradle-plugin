@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.provider.Provider;
-import org.gradle.internal.os.OperatingSystem;
 import org.gradle.process.CommandLineArgumentProvider;
 import org.gradle.process.JavaForkOptions;
 
@@ -43,12 +42,14 @@ public final class JavaForkOptionsConfigurer {
                 .map(
                     file -> {
                       try {
-                        String path = file.getCanonicalPath();
-                        if (OperatingSystem.current().isWindows()) {
-                          // Don't let the spaces in the Windows path break the command line
-                          path = '"' + path + '"';
-                        }
-                        return "-javaagent:" + path;
+                        // Do not quote the path to guard against spaces. These arguments go
+                        // straight
+                        // to a forked JVM via ProcessBuilder (no shell), which already quotes
+                        // arguments containing spaces. Literal quotes would remain in the agent
+                        // path
+                        // and break agents that re-derive their own jar location, e.g. the
+                        // OpenTelemetry agent fails to append its bootstrap jar to the classloader.
+                        return "-javaagent:" + file.getCanonicalPath();
                       } catch (IOException e) {
                         throw new UncheckedIOException(e);
                       }

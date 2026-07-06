@@ -23,7 +23,7 @@ class JavaagentAwareStartScriptGenerator(
         details: JavaAppStartScriptGenerationDetails,
         destination: Writer,
     ) {
-        inner.generateScript(details, Fake(destination, javaagentConfiguration, platform.pathSeparator))
+        inner.generateScript(details, Fake(destination, javaagentConfiguration, platform.pathSeparator, platform.appHomeVar))
     }
 
     private class FakeTransformer(
@@ -47,6 +47,7 @@ class JavaagentAwareStartScriptGenerator(
         private val inner: Writer,
         private val javaagentFiles: Provider<Set<File>>,
         private val pathSeparator: String,
+        private val appHomeVar: String,
     ) : Writer() {
         override fun close() {
             inner.close()
@@ -79,7 +80,7 @@ class JavaagentAwareStartScriptGenerator(
                         "-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar",
                         javaagentFiles.get().joinToString(
                             " ",
-                        ) { jar -> "-javaagent:\$APP_HOME${pathSeparator}agent-libs${pathSeparator}${jar.name}" },
+                        ) { jar -> "-javaagent:${appHomeVar}${pathSeparator}agent-libs${pathSeparator}${jar.name}" },
                     )
                 }
             super.write(replace)

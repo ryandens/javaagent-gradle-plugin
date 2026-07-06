@@ -1,8 +1,6 @@
 package com.ryandens.javaagent;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -39,21 +37,13 @@ public final class JavaForkOptionsConfigurer {
           @Override
           public Iterable<String> asArguments() {
             return javaagentConfiguration.get().stream()
-                .map(
-                    file -> {
-                      try {
-                        // Do not quote the path to guard against spaces. These arguments go
-                        // straight
-                        // to a forked JVM via ProcessBuilder (no shell), which already quotes
-                        // arguments containing spaces. Literal quotes would remain in the agent
-                        // path
-                        // and break agents that re-derive their own jar location, e.g. the
-                        // OpenTelemetry agent fails to append its bootstrap jar to the classloader.
-                        return "-javaagent:" + file.getCanonicalPath();
-                      } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                      }
-                    })
+                // Use the absolute path rather than the canonical path. On Windows CI the Gradle
+                // caches live behind a symlink/junction, and getCanonicalPath() resolves it to a
+                // real path whose round-trip through the OpenTelemetry agent's own jar-location
+                // logic yields a name that appendToBootstrapClassLoaderSearch rejects with
+                // IllegalArgumentException. The distribution start scripts already use a plain,
+                // unresolved path, which works.
+                .map(file -> "-javaagent:" + file.getAbsolutePath())
                 .collect(Collectors.toList());
           }
         });

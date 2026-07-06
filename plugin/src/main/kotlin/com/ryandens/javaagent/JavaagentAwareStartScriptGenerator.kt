@@ -80,12 +80,16 @@ class JavaagentAwareStartScriptGenerator(
             val files = javaagentFiles.get()
             val replace =
                 if (files.isEmpty()) {
-                    // handles case gracefully where there is a trailing space that needs to be removed if ogther default jvm opts are supplied
+                    // Remove the placeholder opt when there are no agents. On Windows each opt is its own quoted token
+                    // (`"-javaagent:...PLACEHOLDER.jar" "-Xmx256m"`), so the surrounding quotes and trailing space must
+                    // be stripped too; on Unix the opts are collapsed into a single quoted string
+                    // (`"-javaagent:...PLACEHOLDER.jar -Xmx256m"`), so only the unquoted placeholder and its trailing
+                    // space are removed. The trailing-space variants run first to avoid leaving a dangling separator.
                     str
-                        .replace(
-                            "-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar ",
-                            "",
-                        ).replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar", "")
+                        .replace("\"-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar\" ", "")
+                        .replace("\"-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar\"", "")
+                        .replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar ", "")
+                        .replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar", "")
                 } else {
                     // On Windows, each -javaagent option must be a separately quoted token,
                     // so we use `" "` (close quote, space, open quote) as separator.

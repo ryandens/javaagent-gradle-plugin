@@ -91,7 +91,9 @@ class JavaagentJibExtensionFunctionalTest {
         buildArgs: List<String>,
     ): BuildResult {
         val helloWorldDir = File(functionalTestDir, "hello-world")
-        File("src${File.separator}functionalTest${File.separator}resources${File.separator}hello-world-project").copyRecursively(helloWorldDir)
+        File(
+            "src${File.separator}functionalTest${File.separator}resources${File.separator}hello-world-project",
+        ).copyRecursively(helloWorldDir)
         val simpleAgentTestDir = File(functionalTestDir, "simple-agent")
         val simpleAgentBuildScript = simpleAgentTestDir.resolve("build.gradle.kts")
         File("..${File.separator}simple-agent").copyRecursively(simpleAgentTestDir)

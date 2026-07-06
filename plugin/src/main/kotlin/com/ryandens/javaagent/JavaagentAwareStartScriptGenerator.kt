@@ -15,7 +15,7 @@ class JavaagentAwareStartScriptGenerator(
     private val inner: ScriptGenerator =
         DefaultTemplateBasedStartScriptGenerator(
             platform.lineSeparator,
-            FakeTransformer(platform.templateBindingFactory),
+            FakeTransformer(platform.templateBindingFactory, platform),
             platform.template,
         ),
 ) : ScriptGenerator {
@@ -28,6 +28,7 @@ class JavaagentAwareStartScriptGenerator(
 
     private class FakeTransformer(
         private val inner: StartScriptTemplateBindingFactory,
+        private val platform: Platform,
     ) : Transformer<MutableMap<String, String>, JavaAppStartScriptGenerationDetails> by inner {
         override fun transform(`in`: JavaAppStartScriptGenerationDetails): MutableMap<String, String> {
             val result = inner.transform(`in`)
@@ -38,7 +39,16 @@ class JavaagentAwareStartScriptGenerator(
                 } else {
                     jvmOpts
                 }
-            result["defaultJvmOpts"] = trimmedJvmOpts.replace("\" \"", " ")
+            // On Unix the individually-quoted JVM opts are collapsed into a single space-separated string, which the
+            // shell then word-splits back apart when the unquoted $DEFAULT_JVM_OPTS is expanded. On Windows the batch
+            // script does not word-split inside quotes, so each opt must remain its own quoted token; collapsing them
+            // would glue e.g. `-Xmx256m` onto the `-javaagent:` path and produce an invalid argument.
+            result["defaultJvmOpts"] =
+                if (platform == Platform.WINDOWS) {
+                    trimmedJvmOpts
+                } else {
+                    trimmedJvmOpts.replace("\" \"", " ")
+                }
             return result
         }
     }

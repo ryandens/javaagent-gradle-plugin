@@ -21,6 +21,10 @@ class JavaagentApplicationRunPlugin :
     ) {
         // configure the run task to use the `javaagent` flag pointing to the dependency stored in the local Maven repository
         project.tasks.named(ApplicationPlugin.TASK_RUN_NAME, JavaExec::class.java).configure {
+            // Register the configuration as an input so the run task depends on the tasks that build the
+            // javaagent artifacts (a Configuration is Buildable). Without this the agent jar can be launched
+            // via -javaagent before it has been produced, failing with "Error opening zip file".
+            it.inputs.files(javaagentConfiguration)
             JavaForkOptionsConfigurer.configureJavaForkOptions(it, javaagentConfiguration.map { configuration -> configuration.files })
         }
     }

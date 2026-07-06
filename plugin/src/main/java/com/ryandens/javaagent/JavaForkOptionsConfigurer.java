@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.provider.Provider;
-import org.gradle.internal.os.OperatingSystem;
 import org.gradle.process.CommandLineArgumentProvider;
 import org.gradle.process.JavaForkOptions;
 
@@ -43,12 +42,7 @@ public final class JavaForkOptionsConfigurer {
                 .map(
                     file -> {
                       try {
-                        String path = file.getCanonicalPath();
-                        if (OperatingSystem.current().isWindows()) {
-                          // Don't let the spaces in the Windows path break the command line
-                          path = '"' + path + '"';
-                        }
-                        return "-javaagent:" + path;
+                        return "-javaagent:" + file.getCanonicalPath();
                       } catch (IOException e) {
                         throw new UncheckedIOException(e);
                       }

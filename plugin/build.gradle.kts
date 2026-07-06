@@ -67,4 +67,8 @@ gradlePlugin {
 tasks.functionalTest {
     inputs.file(layout.projectDirectory.dir("../simple-agent/build.gradle.kts"))
     inputs.files(layout.projectDirectory.dir("../simple-agent/src/"))
+    testLogging {
+        showStandardStreams = true
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
 }

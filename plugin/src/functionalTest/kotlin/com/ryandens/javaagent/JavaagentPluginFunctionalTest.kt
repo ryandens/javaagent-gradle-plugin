@@ -76,7 +76,10 @@ class JavaagentPluginFunctionalTest {
     }
 
     @Test fun `can attach to test task`() {
-        val otelVersion = "1.11.1"
+        // Use an OpenTelemetry agent recent enough to load correctly on Windows. Older releases (e.g. 1.11.1)
+        // throw IllegalArgumentException from appendToBootstrapClassLoaderSearch on Windows and never log their
+        // version banner, which this test asserts on.
+        val otelVersion = "1.30.0"
         val dependencies = """
             javaagent project(':simple-agent')
             testJavaagent 'io.opentelemetry.javaagent:opentelemetry-javaagent:$otelVersion'
@@ -99,7 +102,10 @@ class JavaagentPluginFunctionalTest {
     }
 
     @Test fun `can attach two agents to application run task`() {
-        val otelVersion = "1.11.1"
+        // Use an OpenTelemetry agent recent enough to load correctly on Windows. Older releases (e.g. 1.11.1)
+        // throw IllegalArgumentException from appendToBootstrapClassLoaderSearch on Windows and never log their
+        // version banner, which this test asserts on.
+        val otelVersion = "1.30.0"
         val dependencies = """
             javaagent project(':simple-agent')
             javaagent 'io.opentelemetry.javaagent:opentelemetry-javaagent:$otelVersion'

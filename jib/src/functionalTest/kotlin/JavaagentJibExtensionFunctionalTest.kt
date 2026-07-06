@@ -91,14 +91,16 @@ class JavaagentJibExtensionFunctionalTest {
         buildArgs: List<String>,
     ): BuildResult {
         val helloWorldDir = File(functionalTestDir, "hello-world")
-        File("src/functionalTest/resources/hello-world-project/").copyRecursively(helloWorldDir)
+        File(
+            "src${File.separator}functionalTest${File.separator}resources${File.separator}hello-world-project",
+        ).copyRecursively(helloWorldDir)
         val simpleAgentTestDir = File(functionalTestDir, "simple-agent")
         val simpleAgentBuildScript = simpleAgentTestDir.resolve("build.gradle.kts")
-        File("../simple-agent/").copyRecursively(simpleAgentTestDir)
+        File("..${File.separator}simple-agent").copyRecursively(simpleAgentTestDir)
         // remove a constant from the above file
         simpleAgentBuildScript.writeText(
             simpleAgentBuildScript.readText().replace(
-                "id(\"com.ryandens.java-conventions\")\n",
+                "id(\"com.ryandens.java-conventions\")",
                 "",
             ),
         )

@@ -8,9 +8,10 @@ import org.gradle.api.resources.TextResource
 enum class Platform(
     val lineSeparator: String,
     val pathSeparator: String,
+    val appHomeVar: String,
     val templateBindingFactory: StartScriptTemplateBindingFactory,
     val template: TextResource,
 ) {
-    UNIX("\n", "/", StartScriptTemplateBindingFactory.unix(), UnixStartScriptGenerator().template),
-    WINDOWS("\r\n", "\\", StartScriptTemplateBindingFactory.windows(), WindowsStartScriptGenerator().template),
+    UNIX("\n", "/", "\$APP_HOME", StartScriptTemplateBindingFactory.unix(), UnixStartScriptGenerator().template),
+    WINDOWS("\r\n", "\\", "%APP_HOME%", StartScriptTemplateBindingFactory.windows(), WindowsStartScriptGenerator().template),
 }

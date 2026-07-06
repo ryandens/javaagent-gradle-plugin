@@ -79,7 +79,7 @@ class JavaagentPluginFunctionalTest {
         // Use an OpenTelemetry agent recent enough to load correctly on Windows. Older releases (e.g. 1.11.1)
         // throw IllegalArgumentException from appendToBootstrapClassLoaderSearch on Windows and never log their
         // version banner, which this test asserts on.
-        val otelVersion = "1.30.0"
+        val otelVersion = "2.29.0"
         val dependencies = """
             javaagent project(':simple-agent')
             testJavaagent 'io.opentelemetry.javaagent:opentelemetry-javaagent:$otelVersion'
@@ -105,7 +105,7 @@ class JavaagentPluginFunctionalTest {
         // Use an OpenTelemetry agent recent enough to load correctly on Windows. Older releases (e.g. 1.11.1)
         // throw IllegalArgumentException from appendToBootstrapClassLoaderSearch on Windows and never log their
         // version banner, which this test asserts on.
-        val otelVersion = "1.30.0"
+        val otelVersion = "2.29.0"
         val dependencies = """
             javaagent project(':simple-agent')
             javaagent 'io.opentelemetry.javaagent:opentelemetry-javaagent:$otelVersion'
@@ -170,23 +170,23 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar -Xmx256m
     @Test fun `can handle upgrade of agent with build cache`() {
         createJavaagentProject(
             """
-            javaagent 'io.opentelemetry.javaagent:opentelemetry-javaagent:1.30.0'
+            javaagent 'io.opentelemetry.javaagent:opentelemetry-javaagent:2.28.0'
             """.trimIndent(),
         )
 
         val firstBuild = runBuild(listOf("--build-cache", "build", "installDist", "execStartScript"))
 
         assertTrue(
-            firstBuild.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: 1.30.0"),
+            firstBuild.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: 2.28.0"),
         )
 
         val buildScript = helloWorldDir.resolve("build.gradle")
 
         // replace the agent version with a newer version
-        buildScript.writeText(buildScript.readText().replace("1.30.0", "1.31.0"))
+        buildScript.writeText(buildScript.readText().replace("2.28.0", "2.29.0"))
         val secondBuild = runBuild(listOf("--build-cache", "build", "installDist", "execStartScript"))
         assertTrue(
-            secondBuild.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: 1.31.0"),
+            secondBuild.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: 2.29.0"),
         )
     }
 

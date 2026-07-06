@@ -76,9 +76,7 @@ class JavaagentPluginFunctionalTest {
     }
 
     @Test fun `can attach to test task`() {
-        // Use an OpenTelemetry agent recent enough to load correctly on Windows. Older releases (e.g. 1.11.1)
-        // throw IllegalArgumentException from appendToBootstrapClassLoaderSearch on Windows and never log their
-        // version banner, which this test asserts on.
+        // A real third-party javaagent used to verify the plugin attaches it and it logs its version banner.
         val otelVersion = "2.29.0"
         val dependencies = """
             javaagent project(':simple-agent')
@@ -102,9 +100,7 @@ class JavaagentPluginFunctionalTest {
     }
 
     @Test fun `can attach two agents to application run task`() {
-        // Use an OpenTelemetry agent recent enough to load correctly on Windows. Older releases (e.g. 1.11.1)
-        // throw IllegalArgumentException from appendToBootstrapClassLoaderSearch on Windows and never log their
-        // version banner, which this test asserts on.
+        // A real third-party javaagent used to verify the plugin attaches it and it logs its version banner.
         val otelVersion = "2.29.0"
         val dependencies = """
             javaagent project(':simple-agent')
@@ -299,6 +295,20 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar -Xmx256m
         runner.withPluginClasspath()
         runner.withArguments(buildArgs)
         runner.withProjectDir(functionalTestDir)
+        if (isWindows) {
+            // Keep the TestKit Gradle home short. Its default lives under the deeply nested
+            // build/tmp/functionalTest/work/.gradle-test-kit, which pushes cached agent jars -- e.g. the
+            // OpenTelemetry javaagent at caches/modules-2/files-2.1/.../<sha1>/opentelemetry-javaagent-<ver>.jar
+            // -- past Windows' 260-character MAX_PATH. The JVM's native appendToBootstrapClassLoaderSearch
+            // then rejects the path with IllegalArgumentException and the agent fails to install. Rooting the
+            // TestKit home at the drive root keeps the full agent jar path comfortably within the limit.
+            val driveRoot =
+                functionalTestDir.absoluteFile
+                    .toPath()
+                    .root
+                    .toFile()
+            runner.withTestKitDir(File(driveRoot, "gtk"))
+        }
         return runner.build()
     }
 }

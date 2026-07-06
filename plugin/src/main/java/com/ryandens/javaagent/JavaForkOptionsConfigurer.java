@@ -1,6 +1,8 @@
 package com.ryandens.javaagent;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -37,18 +39,13 @@ public final class JavaForkOptionsConfigurer {
           @Override
           public Iterable<String> asArguments() {
             return javaagentConfiguration.get().stream()
-                // Use the absolute path rather than the canonical path. On Windows CI the Gradle
-                // caches live behind a symlink/junction, and getCanonicalPath() resolves it to a
-                // real path whose round-trip through the OpenTelemetry agent's own jar-location
-                // logic yields a name that appendToBootstrapClassLoaderSearch rejects with
-                // IllegalArgumentException. The distribution start scripts already use a plain,
-                // unresolved path, which works.
                 .map(
                     file -> {
-                      String arg = "-javaagent:" + file.getAbsolutePath();
-                      // TEMP diagnostic: print the exact -javaagent arg passed to the forked JVM
-                      System.err.println("DIAG_JAVAAGENT_ARG=[" + arg + "]");
-                      return arg;
+                      try {
+                        return "-javaagent:" + file.getCanonicalPath();
+                      } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                      }
                     })
                 .collect(Collectors.toList());
           }

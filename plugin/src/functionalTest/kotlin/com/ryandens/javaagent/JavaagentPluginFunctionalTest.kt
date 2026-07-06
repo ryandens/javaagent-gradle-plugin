@@ -232,7 +232,15 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar -Xmx256m
             """,
         )
 
-        val commandLine = StringEscapeUtils.escapeJava(""".${File.separator}hello-world$scriptExtension""")
+        // On Windows a `.bat` file is not a directly executable image, so it cannot be launched via
+        // ProcessBuilder/CreateProcess (which is what Gradle's Exec task uses). It must be run through the
+        // command interpreter instead, e.g. `cmd /c hello-world.bat`.
+        val execCommandLine =
+            if (isWindows) {
+                "'cmd', '/c', 'hello-world.bat'"
+            } else {
+                "'./hello-world'"
+            }
         val javaHome = StringEscapeUtils.escapeJava(Jvm.current().getJavaHome().toString())
         helloWorldDir.resolve("build.gradle").writeText(
             """
@@ -259,7 +267,7 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar -Xmx256m
                     dependsOn('installDist')
                     inputs.files(layout.buildDirectory.dir('install'))
                     workingDir(layout.buildDirectory.dir('install').map { it.dir('hello-world').dir('bin') })
-                    commandLine '$commandLine'
+                    commandLine $execCommandLine
                     environment JAVA_HOME: "$javaHome"
                 }
                 

@@ -1,6 +1,5 @@
 package com.ryandens.javaagent
 
-import org.apache.commons.text.StringEscapeUtils
 import org.gradle.internal.jvm.Jvm
 import org.gradle.internal.os.OperatingSystem
 import org.gradle.testkit.runner.BuildResult
@@ -243,7 +242,14 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar -Xmx256m
             } else {
                 "'./hello-world'"
             }
-        val javaHome = StringEscapeUtils.escapeJava(Jvm.current().getJavaHome().toString())
+        // Escape backslashes and quotes so a Windows JAVA_HOME embeds cleanly in the generated Groovy string literal.
+        val javaHome =
+            Jvm
+                .current()
+                .getJavaHome()
+                .toString()
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
         helloWorldDir.resolve("build.gradle").writeText(
             """
                 plugins {

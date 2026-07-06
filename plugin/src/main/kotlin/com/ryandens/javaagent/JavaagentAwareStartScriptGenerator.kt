@@ -15,7 +15,7 @@ class JavaagentAwareStartScriptGenerator(
     private val inner: ScriptGenerator =
         DefaultTemplateBasedStartScriptGenerator(
             platform.lineSeparator,
-            FakeTransformer(platform.templateBindingFactory, platform),
+            FakeTransformer(platform.templateBindingFactory, platform.defaultJvmOptsMapper),
             platform.template,
         ),
 ) : ScriptGenerator {
@@ -23,12 +23,15 @@ class JavaagentAwareStartScriptGenerator(
         details: JavaAppStartScriptGenerationDetails,
         destination: Writer,
     ) {
-        inner.generateScript(details, Fake(destination, javaagentConfiguration, platform.pathSeparator, platform.appHomeVar, platform))
+        inner.generateScript(
+            details,
+            Fake(destination, javaagentConfiguration, platform.pathSeparator, platform.appHomeVar, platform.agentArgSeparator),
+        )
     }
 
     private class FakeTransformer(
         private val inner: StartScriptTemplateBindingFactory,
-        private val platform: Platform,
+        private val defaultJvmOptsMapper: (String) -> String,
     ) : Transformer<MutableMap<String, String>, JavaAppStartScriptGenerationDetails> by inner {
         override fun transform(`in`: JavaAppStartScriptGenerationDetails): MutableMap<String, String> {
             val result = inner.transform(`in`)
@@ -39,16 +42,7 @@ class JavaagentAwareStartScriptGenerator(
                 } else {
                     jvmOpts
                 }
-            // On Unix the individually-quoted JVM opts are collapsed into a single space-separated string, which the
-            // shell then word-splits back apart when the unquoted $DEFAULT_JVM_OPTS is expanded. On Windows the batch
-            // script does not word-split inside quotes, so each opt must remain its own quoted token; collapsing them
-            // would glue e.g. `-Xmx256m` onto the `-javaagent:` path and produce an invalid argument.
-            result["defaultJvmOpts"] =
-                if (platform == Platform.WINDOWS) {
-                    trimmedJvmOpts
-                } else {
-                    trimmedJvmOpts.replace("\" \"", " ")
-                }
+            result["defaultJvmOpts"] = defaultJvmOptsMapper(trimmedJvmOpts)
             return result
         }
     }
@@ -58,7 +52,7 @@ class JavaagentAwareStartScriptGenerator(
         private val javaagentFiles: Provider<Set<File>>,
         private val pathSeparator: String,
         private val appHomeVar: String,
-        private val platform: Platform,
+        private val agentArgSeparator: String,
     ) : Writer() {
         override fun close() {
             inner.close()
@@ -76,6 +70,14 @@ class JavaagentAwareStartScriptGenerator(
             inner.write(cbuf, off, len)
         }
 
+        /**
+         * Rewrites the javaagent placeholder that the templated `defaultJvmOpts` injects into the rendered start
+         * script. When the configuration resolves to one or more agents, the single placeholder is replaced by one
+         * `-javaagent:` option per agent, each pointing at the distribution's `agent-libs` directory (joined with
+         * the platform's [agentArgSeparator]). When there are no agents, the placeholder together with its
+         * surrounding quoting and trailing space is stripped out. Text that does not contain the placeholder is
+         * written through unchanged.
+         */
         override fun write(str: String) {
             val files = javaagentFiles.get()
             val replace =
@@ -91,15 +93,11 @@ class JavaagentAwareStartScriptGenerator(
                         .replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar ", "")
                         .replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar", "")
                 } else {
-                    // On Windows, each -javaagent option must be a separately quoted token,
-                    // so we use `" "` (close quote, space, open quote) as separator.
-                    // On Unix, all options can be space-separated within a single quoted string.
-                    val separator = if (platform == Platform.WINDOWS) "\" \"" else " "
                     str.replace(
                         "-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar",
-                        javaagentFiles.get().joinToString(
-                            separator,
-                        ) { jar -> "-javaagent:${appHomeVar}${pathSeparator}agent-libs${pathSeparator}${jar.name}" },
+                        files.joinToString(
+                            agentArgSeparator,
+                        ) { jar -> "-javaagent:$appHomeVar${pathSeparator}agent-libs$pathSeparator${jar.name}" },
                     )
                 }
             super.write(replace)

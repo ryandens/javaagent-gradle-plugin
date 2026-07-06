@@ -16,6 +16,7 @@ jobs:
   build:
     name: "Javaagent Gradle Plugin Validation"
     strategy:
+      fail-fast: false
       matrix:
         platform: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.platform }}

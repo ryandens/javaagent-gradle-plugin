@@ -1,7 +1,9 @@
 package com.ryandens.javaagent.jib
 
 import com.google.cloud.tools.jib.gradle.JibExtension
+import com.ryandens.javaagent.AgentOptionsResolver
 import com.ryandens.javaagent.JavaagentBasePlugin
+import com.ryandens.javaagent.JavaagentExtension
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -20,6 +22,10 @@ class JavaagentJibPlugin : Plugin<Project> {
         project.pluginManager.apply(JavaagentJibExtension::class.java)
 
         val javaagentConfiguration = project.configurations.named(JavaagentBasePlugin.CONFIGURATION_NAME)
+
+        val javaagentExtension = project.extensions.getByType(JavaagentExtension::class.java)
+        val optionsByFileName =
+            AgentOptionsResolver.optionsByFileName(javaagentConfiguration.get(), javaagentExtension.agentOptions)
 
         val destinationDirectory =
             project.tasks
@@ -44,6 +50,7 @@ class JavaagentJibPlugin : Plugin<Project> {
                                     .toList()
                             },
                         )
+                        extensionConfiguration.agentOptions.set(optionsByFileName)
                     },
                 )
             }

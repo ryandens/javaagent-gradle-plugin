@@ -6,5 +6,8 @@ public final class SimpleAgent {
 
   public static void premain(final String args, final Instrumentation instrumentation) {
     System.out.println("Hello from my simple agent!");
+    if (args != null) {
+      System.out.println("Simple agent args: " + args);
+    }
   }
 }

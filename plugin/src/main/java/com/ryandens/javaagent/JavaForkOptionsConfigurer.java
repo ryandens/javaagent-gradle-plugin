@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.provider.Provider;
@@ -28,9 +29,13 @@ public final class JavaForkOptionsConfigurer {
    *
    * @param javaForkOptions to be configured
    * @param javaagentConfiguration files to be added as javaagents
+   * @param optionsByFileName options to append after {@code =}, keyed by agent file name (see
+   *     {@link AgentOptionsResolver})
    */
   public static void configureJavaForkOptions(
-      JavaForkOptions javaForkOptions, Provider<Set<File>> javaagentConfiguration) {
+      JavaForkOptions javaForkOptions,
+      Provider<Set<File>> javaagentConfiguration,
+      Provider<Map<String, String>> optionsByFileName) {
     final List<CommandLineArgumentProvider> list = new ArrayList<>();
 
     //noinspection Convert2Lambda
@@ -38,11 +43,14 @@ public final class JavaForkOptionsConfigurer {
         new CommandLineArgumentProvider() {
           @Override
           public Iterable<String> asArguments() {
+            final Map<String, String> options = optionsByFileName.get();
             return javaagentConfiguration.get().stream()
                 .map(
                     file -> {
                       try {
-                        return "-javaagent:" + file.getCanonicalPath();
+                        final String options0 = options.get(file.getName());
+                        final String suffix = options0 == null ? "" : "=" + options0;
+                        return "-javaagent:" + file.getCanonicalPath() + suffix;
                       } catch (IOException e) {
                         throw new UncheckedIOException(e);
                       }

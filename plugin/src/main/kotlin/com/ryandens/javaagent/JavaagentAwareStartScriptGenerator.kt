@@ -82,12 +82,16 @@ class JavaagentAwareStartScriptGenerator(
             val files = javaagentFiles.get()
             val replace =
                 if (files.isEmpty()) {
-                    // Remove the placeholder opt when there are no agents. On Windows each opt is its own quoted token
-                    // (`"-javaagent:...PLACEHOLDER.jar" "-Xmx256m"`), so the surrounding quotes and trailing space must
-                    // be stripped too; on Unix the opts are collapsed into a single quoted string
-                    // (`"-javaagent:...PLACEHOLDER.jar -Xmx256m"`), so only the unquoted placeholder and its trailing
-                    // space are removed. The trailing-space variants run first to avoid leaving a dangling separator.
+                    // Remove the placeholder opt when there are no agents. Each opt is its own quoted token: on Unix
+                    // the quotes are backslash-escaped inside the outer-quoted value
+                    // (`"\"-javaagent:...PLACEHOLDER.jar\" \"-Xmx256m\""`), on Windows they are literal
+                    // (`"-javaagent:...PLACEHOLDER.jar" "-Xmx256m"`). Strip the placeholder token together with its
+                    // surrounding quotes and trailing separator. The trailing-space variants run first to avoid
+                    // leaving a dangling separator; the escaped variants run before the bare ones so the leading `\`
+                    // is not orphaned.
                     str
+                        .replace("\\\"-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar\\\" ", "")
+                        .replace("\\\"-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar\\\"", "")
                         .replace("\"-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar\" ", "")
                         .replace("\"-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar\"", "")
                         .replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar ", "")

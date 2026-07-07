@@ -163,8 +163,10 @@ class JavaagentPluginFunctionalTest {
             val expectedWindowsDefaultJvmOpts = """set DEFAULT_JVM_OPTS="-javaagent:%APP_HOME%\agent-libs\simple-agent.jar" "-Xmx256m""""
             assertTrue(applicationDistributionScript.readText().contains(expectedWindowsDefaultJvmOpts))
         } else {
+            // Each option is its own backslash-escaped quoted token inside the outer-quoted value, so the
+            // launcher never word-splits an option (including ones whose value has a space) -- see issue #95.
             val expectedDefaultJavaOpts = """
-DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar -Xmx256m"
+DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-Xmx256m\""
 """
             assertTrue(applicationDistributionScript.readText().contains(expectedDefaultJavaOpts))
         }
@@ -184,6 +186,29 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar -Xmx256m
         // verify configuration cache
         val ccResult = runBuild(listOf("--configuration-cache", "build", "installDist", "execStartScript"))
         assertTrue(ccResult.output.contains("Reusing configuration cache."))
+    }
+
+    @Test fun `preserves applicationDefaultJvmArgs containing spaces in application distribution`() {
+        // Regression test for https://github.com/ryandens/javaagent-gradle-plugin/issues/95: applying the
+        // plugin must not drop or mangle the JVM args a consumer configures via `applicationDefaultJvmArgs`.
+        // A value containing a space (`-Dgreeting=hello world`) is the sharp edge: the generated start script
+        // must keep each option as its own quoted token so the shell does not word-split "hello world" into
+        // two arguments. HelloWorld echoes the `greeting` system property back so we can assert end-to-end
+        // that the argument actually reaches the JVM intact.
+        val dependencies = """
+            javaagent project(':simple-agent')
+        """
+
+        createJavaagentProject(dependencies, applicationDefaultJvmArgs = "['-Dgreeting=hello world', '-Xmx256m']")
+        val result = runBuild(listOf("build", "installDist", "execStartScript"))
+
+        // the agent is still attached
+        assertTrue(result.output.contains("Hello from my simple agent!"))
+        // and the space-containing default JVM arg survived intact rather than being word-split
+        assertTrue(
+            result.output.contains("greeting=[hello world]"),
+            "expected the space-containing applicationDefaultJvmArg to reach the JVM as a single argument, but the run output was:\n${result.output}",
+        )
     }
 
     @Test fun `can handle upgrade of agent with build cache`() {
@@ -224,7 +249,9 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar -Xmx256m
         if (isWindows) {
             assertTrue(applicationDistributionScript.readText().contains("""set DEFAULT_JVM_OPTS="-Xmx256m""""))
         } else {
-            assertTrue(applicationDistributionScript.readText().contains("""DEFAULT_JVM_OPTS="-Xmx256m"""))
+            // With no agents, the placeholder token is stripped but the remaining option keeps its own
+            // backslash-escaped quotes inside the outer-quoted value: DEFAULT_JVM_OPTS="\"-Xmx256m\""
+            assertTrue(applicationDistributionScript.readText().contains("DEFAULT_JVM_OPTS=\"\\\"-Xmx256m\\\"\""))
         }
 
         assertFalse(
@@ -236,7 +263,10 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar -Xmx256m
         assertTrue(result.output.contains("Hello World!"))
     }
 
-    private fun createJavaagentProject(dependencies: String) {
+    private fun createJavaagentProject(
+        dependencies: String,
+        applicationDefaultJvmArgs: String = "['-Xmx256m']",
+    ) {
         val helloWorldDir = File(functionalTestDir, "hello-world")
         Paths.get("src", "functionalTest", "resources", "hello-world-project").toFile().copyRecursively(helloWorldDir)
         val simpleAgentTestDir = File(functionalTestDir, "simple-agent")
@@ -288,7 +318,7 @@ DEFAULT_JVM_OPTS="-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar -Xmx256m
                 
                 application {
                     mainClass = 'com.ryandens.HelloWorld'
-                    applicationDefaultJvmArgs = ['-Xmx256m']
+                    applicationDefaultJvmArgs = $applicationDefaultJvmArgs
                 }
                 
                 run {

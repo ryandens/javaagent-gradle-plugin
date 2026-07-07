@@ -12,16 +12,22 @@ enum class Platform(
     val templateBindingFactory: StartScriptTemplateBindingFactory,
     val template: TextResource,
     /**
-     * Separator placed between multiple `-javaagent` options. On Windows each option must remain its own
-     * quoted token (`" "` = close quote, space, open quote); on Unix the options share a single quoted string,
-     * so a plain space suffices.
+     * Separator placed between multiple `-javaagent` options. On both platforms each option must remain its
+     * own quoted token so the launcher never word-splits a path (or any other option) on internal spaces. On
+     * Windows the tokens are literally double-quoted (`" "` = close quote, space, open quote); on Unix the
+     * whole `DEFAULT_JVM_OPTS` value is itself wrapped in double quotes so `$APP_HOME` expands, so the inner
+     * per-option quotes are backslash-escaped (`\" \"` = escaped close quote, space, escaped open quote).
      */
     val agentArgSeparator: String,
     /**
-     * Normalizes the template's rendered `defaultJvmOpts`. On Unix the individually quoted options are
-     * collapsed into a single space-separated string that the shell word-splits back apart when the unquoted
-     * `$DEFAULT_JVM_OPTS` is expanded; on Windows the batch script does not word-split inside quotes, so each
-     * option must stay its own quoted token and the value is left unchanged.
+     * Normalizes the template's rendered `defaultJvmOpts`. On Windows the batch script does not word-split
+     * inside quotes, so each option stays its own literally-quoted token and the value is left unchanged. On
+     * Unix the value is wrapped in an outer pair of double quotes -- required so the embedded `$APP_HOME` in a
+     * `-javaagent:` path is expanded when the assignment runs -- and each option's own double quotes are
+     * backslash-escaped so they survive into the value. That keeps every option a distinct quoted token that
+     * the launcher's `xargs` pass parses back out intact, including options whose value contains spaces (e.g.
+     * `-Dgreeting=hello world`). Collapsing the per-option quotes into a single quoted string would let the
+     * shell word-split those values apart -- see issue #95.
      */
     val defaultJvmOptsMapper: (String) -> String,
 ) {
@@ -31,8 +37,8 @@ enum class Platform(
         "\$APP_HOME",
         StartScriptTemplateBindingFactory.unix(),
         UnixStartScriptGenerator().template,
-        " ",
-        { it.replace("\" \"", " ") },
+        "\\\" \\\"",
+        { "\"" + it.replace("\"", "\\\"") + "\"" },
     ),
     WINDOWS(
         "\r\n",

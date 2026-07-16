@@ -33,7 +33,7 @@ tasks.named<PluginUnderTestMetadata>("pluginUnderTestMetadata") {
 
 dependencies {
     plugin("com.google.cloud.tools:jib-gradle-plugin-extension-api:0.4.0")
-    plugin("com.google.cloud.tools.jib:com.google.cloud.tools.jib.gradle.plugin:3.5.3")
+    plugin("com.google.cloud.tools.jib:com.google.cloud.tools.jib.gradle.plugin:3.5.4")
     implementation(project(":plugin"))
     implementation(project(":jib-common"))
 

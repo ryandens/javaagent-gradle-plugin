@@ -11,7 +11,7 @@ dependencies {
     implementation("com.ryandens:otel:0.11.0")
     implementation("com.ryandens:plugin:0.11.0")
     */
-    implementation("com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.5.1")
+    implementation("com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.6.0")
     implementation("io.opentelemetry.instrumentation.muzzle-generation:io.opentelemetry.instrumentation.muzzle-generation.gradle.plugin:2.29.0-alpha")
     implementation("io.opentelemetry.instrumentation.muzzle-check:io.opentelemetry.instrumentation.muzzle-check.gradle.plugin:2.29.0-alpha")
 }

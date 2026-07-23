@@ -284,9 +284,10 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
             assertTrue(applicationDistributionScript.readText().contains(expectedWindowsDefaultJvmOpts))
         } else {
             // The option string rides inside the agent's own backslash-escaped quoted token -- see issue #95.
+            // Option values are wrapped in single quotes to prevent shell injection (issue #50).
             val expectedDefaultJavaOpts =
                 """
-DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar=12345:config.yaml\" \"-Xmx256m\""
+DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar='12345:config.yaml'\" \"-Xmx256m\""
 """
             assertTrue(applicationDistributionScript.readText().contains(expectedDefaultJavaOpts))
         }

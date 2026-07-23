@@ -12,6 +12,7 @@ import java.io.Writer
 class JavaagentAwareStartScriptGenerator(
     private val javaagentConfiguration: Provider<Set<File>>,
     private val platform: Platform,
+    private val optionsByFilePath: Provider<Map<String, String>>,
     private val inner: ScriptGenerator =
         DefaultTemplateBasedStartScriptGenerator(
             platform.lineSeparator,
@@ -25,7 +26,15 @@ class JavaagentAwareStartScriptGenerator(
     ) {
         inner.generateScript(
             details,
-            Fake(destination, javaagentConfiguration, platform.pathSeparator, platform.appHomeVar, platform.agentArgSeparator),
+            Fake(
+                destination,
+                javaagentConfiguration,
+                platform.pathSeparator,
+                platform.appHomeVar,
+                platform.agentArgSeparator,
+                optionsByFilePath,
+                platform,
+            ),
         )
     }
 
@@ -53,6 +62,8 @@ class JavaagentAwareStartScriptGenerator(
         private val pathSeparator: String,
         private val appHomeVar: String,
         private val agentArgSeparator: String,
+        private val optionsByFilePath: Provider<Map<String, String>>,
+        private val platform: Platform,
     ) : Writer() {
         override fun close() {
             inner.close()
@@ -69,6 +80,17 @@ class JavaagentAwareStartScriptGenerator(
         ) {
             inner.write(cbuf, off, len)
         }
+
+        /**
+         * Escapes a javaagent option value for safe inclusion in shell scripts.
+         * - For Unix: wraps in single quotes, escaping internal single quotes with '\''
+         * - For Windows: doubles percent signs to prevent variable expansion
+         */
+        private fun escapeOptionValue(value: String): String =
+            when (platform) {
+                Platform.UNIX -> "'" + value.replace("'", "'\\''") + "'"
+                Platform.WINDOWS -> value.replace("%", "%%")
+            }
 
         /**
          * Rewrites the javaagent placeholder that the templated `defaultJvmOpts` injects into the rendered start
@@ -97,11 +119,15 @@ class JavaagentAwareStartScriptGenerator(
                         .replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar ", "")
                         .replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar", "")
                 } else {
+                    val options = optionsByFilePath.get()
                     str.replace(
                         "-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar",
                         files.joinToString(
                             agentArgSeparator,
-                        ) { jar -> "-javaagent:$appHomeVar${pathSeparator}agent-libs$pathSeparator${jar.name}" },
+                        ) { jar ->
+                            val suffix = options[jar.canonicalPath]?.let { "=" + escapeOptionValue(it) } ?: ""
+                            "-javaagent:$appHomeVar${pathSeparator}agent-libs$pathSeparator${jar.name}$suffix"
+                        },
                     )
                 }
             super.write(replace)

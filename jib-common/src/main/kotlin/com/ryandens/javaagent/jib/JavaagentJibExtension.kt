@@ -46,7 +46,7 @@ class JavaagentJibExtension :
         }
 
         val localAgentPaths = extraConfig.get().javaagentFiles.get()
-        val agentOptions = extraConfig.get().agentOptions.get()
+        val agentOptions = extraConfig.get().agentOptions.getOrElse(emptyMap())
 
         val planBuilder = buildPlan.toBuilder()
         val newEntrypoint =

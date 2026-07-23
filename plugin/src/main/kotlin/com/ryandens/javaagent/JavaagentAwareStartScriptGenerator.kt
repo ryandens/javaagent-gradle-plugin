@@ -12,7 +12,7 @@ import java.io.Writer
 class JavaagentAwareStartScriptGenerator(
     private val javaagentConfiguration: Provider<Set<File>>,
     private val platform: Platform,
-    private val optionsByFileName: Provider<Map<String, String>>,
+    private val optionsByFilePath: Provider<Map<String, String>>,
     private val inner: ScriptGenerator =
         DefaultTemplateBasedStartScriptGenerator(
             platform.lineSeparator,
@@ -32,7 +32,7 @@ class JavaagentAwareStartScriptGenerator(
                 platform.pathSeparator,
                 platform.appHomeVar,
                 platform.agentArgSeparator,
-                optionsByFileName,
+                optionsByFilePath,
             ),
         )
     }
@@ -61,7 +61,7 @@ class JavaagentAwareStartScriptGenerator(
         private val pathSeparator: String,
         private val appHomeVar: String,
         private val agentArgSeparator: String,
-        private val optionsByFileName: Provider<Map<String, String>>,
+        private val optionsByFilePath: Provider<Map<String, String>>,
     ) : Writer() {
         override fun close() {
             inner.close()
@@ -106,13 +106,13 @@ class JavaagentAwareStartScriptGenerator(
                         .replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar ", "")
                         .replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar", "")
                 } else {
-                    val options = optionsByFileName.get()
+                    val options = optionsByFilePath.get()
                     str.replace(
                         "-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar",
                         files.joinToString(
                             agentArgSeparator,
                         ) { jar ->
-                            val suffix = options[jar.name]?.let { "=$it" } ?: ""
+                            val suffix = options[jar.canonicalPath]?.let { "=$it" } ?: ""
                             "-javaagent:$appHomeVar${pathSeparator}agent-libs$pathSeparator${jar.name}$suffix"
                         },
                     )

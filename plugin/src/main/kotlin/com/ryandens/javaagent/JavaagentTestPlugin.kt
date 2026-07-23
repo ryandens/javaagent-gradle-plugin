@@ -47,8 +47,8 @@ class JavaagentTestPlugin :
         val enabled = calculateEnabled(project, extension)
 
         val javaagentExtension = project.extensions.getByType(JavaagentExtension::class.java)
-        val optionsByFileName =
-            AgentOptionsResolver.optionsByFileName(javaagentTestConfiguration.get(), javaagentExtension.agentOptions)
+        val optionsByFilePath =
+            AgentOptionsResolver.optionsByFilePath(javaagentTestConfiguration.get(), javaagentExtension.agentOptions)
 
         // configure the run task to use the `javaagent` flag pointing to the dependency stored in the local Maven repository
         project.tasks.named(JavaPlugin.TEST_TASK_NAME, Test::class.java).configure {
@@ -59,7 +59,7 @@ class JavaagentTestPlugin :
                     javaagentTestConfiguration.map { configuration ->
                         configuration.files
                     },
-                    optionsByFileName,
+                    optionsByFilePath,
                 )
             }
         }

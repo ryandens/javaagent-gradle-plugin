@@ -29,13 +29,13 @@ public final class JavaForkOptionsConfigurer {
    *
    * @param javaForkOptions to be configured
    * @param javaagentConfiguration files to be added as javaagents
-   * @param optionsByFileName options to append after {@code =}, keyed by agent file name (see
+   * @param optionsByFilePath options to append after {@code =}, keyed by agent file path (see
    *     {@link AgentOptionsResolver})
    */
   public static void configureJavaForkOptions(
       JavaForkOptions javaForkOptions,
       Provider<Set<File>> javaagentConfiguration,
-      Provider<Map<String, String>> optionsByFileName) {
+      Provider<Map<String, String>> optionsByFilePath) {
     final List<CommandLineArgumentProvider> list = new ArrayList<>();
 
     //noinspection Convert2Lambda
@@ -43,12 +43,12 @@ public final class JavaForkOptionsConfigurer {
         new CommandLineArgumentProvider() {
           @Override
           public Iterable<String> asArguments() {
-            final Map<String, String> options = optionsByFileName.get();
+            final Map<String, String> options = optionsByFilePath.get();
             return javaagentConfiguration.get().stream()
                 .map(
                     file -> {
                       try {
-                        final String options0 = options.get(file.getName());
+                        final String options0 = options.get(file.getCanonicalPath());
                         final String suffix = options0 == null ? "" : "=" + options0;
                         return "-javaagent:" + file.getCanonicalPath() + suffix;
                       } catch (IOException e) {

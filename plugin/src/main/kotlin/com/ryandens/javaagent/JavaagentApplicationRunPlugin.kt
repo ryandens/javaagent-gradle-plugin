@@ -20,8 +20,8 @@ class JavaagentApplicationRunPlugin :
         javaagentConfiguration: NamedDomainObjectProvider<Configuration>,
     ) {
         val extension = project.extensions.getByType(JavaagentExtension::class.java)
-        val optionsByFileName =
-            AgentOptionsResolver.optionsByFileName(javaagentConfiguration.get(), extension.agentOptions)
+        val optionsByFilePath =
+            AgentOptionsResolver.optionsByFilePath(javaagentConfiguration.get(), extension.agentOptions)
         // configure the run task to use the `javaagent` flag pointing to the dependency stored in the local Maven repository
         project.tasks.named(ApplicationPlugin.TASK_RUN_NAME, JavaExec::class.java).configure {
             // The agent jars are passed to the JVM via a CommandLineArgumentProvider (see
@@ -41,7 +41,7 @@ class JavaagentApplicationRunPlugin :
             JavaForkOptionsConfigurer.configureJavaForkOptions(
                 it,
                 javaagentConfiguration.map { configuration -> configuration.files },
-                optionsByFileName,
+                optionsByFilePath,
             )
         }
     }

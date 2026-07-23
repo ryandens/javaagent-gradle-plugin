@@ -31,8 +31,8 @@ class JavaagentApplicationDistributionPlugin :
         javaagentConfiguration: NamedDomainObjectProvider<Configuration>,
     ) {
         val extension = project.extensions.getByType(JavaagentExtension::class.java)
-        val optionsByFileName =
-            AgentOptionsResolver.optionsByFileName(javaagentConfiguration.get(), extension.agentOptions)
+        val optionsByFilePath =
+            AgentOptionsResolver.optionsByFilePath(javaagentConfiguration.get(), extension.agentOptions)
 
         project.extensions
             .getByType(DistributionContainer::class.java)
@@ -59,8 +59,8 @@ class JavaagentApplicationDistributionPlugin :
             it.inputs.property("agentOptions", extension.agentOptions)
             // custom start script generator that replaces the placeholder
             val agentFiles: Provider<Set<File>> = javaagentConfiguration.map { configuration -> configuration.files }
-            it.unixStartScriptGenerator = JavaagentAwareStartScriptGenerator(agentFiles, Platform.UNIX, optionsByFileName)
-            it.windowsStartScriptGenerator = JavaagentAwareStartScriptGenerator(agentFiles, Platform.WINDOWS, optionsByFileName)
+            it.unixStartScriptGenerator = JavaagentAwareStartScriptGenerator(agentFiles, Platform.UNIX, optionsByFilePath)
+            it.windowsStartScriptGenerator = JavaagentAwareStartScriptGenerator(agentFiles, Platform.WINDOWS, optionsByFilePath)
         }
     }
 }

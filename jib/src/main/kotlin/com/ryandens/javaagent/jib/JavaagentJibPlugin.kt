@@ -24,8 +24,8 @@ class JavaagentJibPlugin : Plugin<Project> {
         val javaagentConfiguration = project.configurations.named(JavaagentBasePlugin.CONFIGURATION_NAME)
 
         val javaagentExtension = project.extensions.getByType(JavaagentExtension::class.java)
-        val optionsByFileName =
-            AgentOptionsResolver.optionsByFileName(javaagentConfiguration.get(), javaagentExtension.agentOptions)
+        val optionsByFilePath =
+            AgentOptionsResolver.optionsByFilePath(javaagentConfiguration.get(), javaagentExtension.agentOptions)
 
         val destinationDirectory =
             project.tasks
@@ -50,7 +50,7 @@ class JavaagentJibPlugin : Plugin<Project> {
                                     .toList()
                             },
                         )
-                        extensionConfiguration.agentOptions.set(optionsByFileName)
+                        extensionConfiguration.agentOptions.set(optionsByFilePath)
                     },
                 )
             }

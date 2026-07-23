@@ -31,5 +31,8 @@ jobs:
         with:
           cache-read-only: false
 
+      - name: Setup TestLens
+        uses: testlens-app/setup-testlens@v1
+
       - name: Execute Gradle build
         run: ${{ matrix.platform == 'windows-latest' && '.\gradlew.bat' || './gradlew' }} build

@@ -46,12 +46,19 @@ class JavaagentJibExtension :
         }
 
         val localAgentPaths = extraConfig.get().javaagentFiles.get()
+        val agentOptions = extraConfig.get().agentOptions.getOrElse(emptyMap())
 
         val planBuilder = buildPlan.toBuilder()
         val newEntrypoint =
             buildList<String> {
                 addAll(entrypoint)
-                addAll(1, localAgentPaths.map { localAgentPath -> "-javaagent:/opt/jib-agents/${localAgentPath.name}" })
+                addAll(
+                    1,
+                    localAgentPaths.map { localAgentPath ->
+                        val suffix = agentOptions[localAgentPath.name]?.let { "=$it" } ?: ""
+                        "-javaagent:/opt/jib-agents/${localAgentPath.name}$suffix"
+                    },
+                )
             }
         val javaagentFileEntries =
             localAgentPaths.map { localAgentPath ->

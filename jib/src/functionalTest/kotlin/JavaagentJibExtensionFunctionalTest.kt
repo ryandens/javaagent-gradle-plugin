@@ -59,6 +59,41 @@ class JavaagentJibExtensionFunctionalTest {
         }
     }
 
+    @Test fun `can pass agent options to jib entrypoint`() {
+        val dependencies = """
+            javaagent project(':simple-agent')
+            runtimeOnly 'commons-lang:commons-lang:2.6'
+        """
+
+        val result =
+            createAndBuildJavaagentProject(
+                dependencies,
+                listOf("jibBuildTar"),
+                extraBuildScript =
+                    """
+                    javaagent {
+                        agentOptions.put(':simple-agent', '12345:config.yaml')
+                    }
+                    """,
+            )
+
+        assertTrue(result.output.contains("Running extension: com.ryandens.javaagent.jib.JavaagentJibExtension"))
+        assertTrue(File(functionalTestDir, JIB_IMAGE).exists())
+
+        FileInputStream(File(functionalTestDir, JIB_IMAGE)).use { fis ->
+            ArchiveStreamFactory().createArchiveInputStream<ArchiveInputStream<TarArchiveEntry>>(ArchiveStreamFactory.TAR, fis).use { ais ->
+                var entry = ais.nextEntry
+                while (entry != null) {
+                    if ("config.json" == entry.name) {
+                        val json = ais.readBytes().toString(Charsets.UTF_8)
+                        assertTrue(json.contains("-javaagent:/opt/jib-agents/simple-agent.jar=12345:config.yaml"))
+                    }
+                    entry = ais.nextEntry
+                }
+            }
+        }
+    }
+
     @Test fun `works even without any javaagent dependencies`() {
         val dependencies = """
             runtimeOnly 'commons-lang:commons-lang:2.6'
@@ -89,6 +124,7 @@ class JavaagentJibExtensionFunctionalTest {
     private fun createAndBuildJavaagentProject(
         dependencies: String,
         buildArgs: List<String>,
+        extraBuildScript: String = "",
     ): BuildResult {
         val helloWorldDir = File(functionalTestDir, "hello-world")
         File(
@@ -150,6 +186,8 @@ class JavaagentJibExtensionFunctionalTest {
                         image = "javaagent-hello-world"
                     }
                 }
+
+                $extraBuildScript
             """,
         )
 

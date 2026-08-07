@@ -10,7 +10,7 @@ dependencies {
     constraints {
         // Define dependency versions as constraints
     }
-    testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
 }
 
 tasks.named<Test>("test") {

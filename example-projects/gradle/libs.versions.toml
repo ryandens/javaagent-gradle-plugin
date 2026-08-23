@@ -1,5 +1,5 @@
 [versions]
-otel = "2.30.0"
+otel = "2.31.1"
 
 [libraries]
 otel-agent = { module = "io.opentelemetry.javaagent:opentelemetry-javaagent", version.ref = "otel" }

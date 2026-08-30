@@ -30,6 +30,10 @@ class JavaagentApplicationDistributionPlugin :
         project: Project,
         javaagentConfiguration: NamedDomainObjectProvider<Configuration>,
     ) {
+        val extension = project.extensions.getByType(JavaagentExtension::class.java)
+        val optionsByFilePath =
+            AgentOptionsResolver.optionsByFilePath(javaagentConfiguration.get(), extension.agentOptions)
+
         project.extensions
             .getByType(DistributionContainer::class.java)
             .named(DistributionPlugin.MAIN_DISTRIBUTION_NAME)
@@ -52,10 +56,11 @@ class JavaagentApplicationDistributionPlugin :
                 listOf("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar")
                     .plus(it.defaultJvmOpts ?: listOf())
             it.inputs.files(javaagentConfiguration)
+            it.inputs.property("agentOptions", extension.agentOptions)
             // custom start script generator that replaces the placeholder
             val agentFiles: Provider<Set<File>> = javaagentConfiguration.map { configuration -> configuration.files }
-            it.unixStartScriptGenerator = JavaagentAwareStartScriptGenerator(agentFiles, Platform.UNIX)
-            it.windowsStartScriptGenerator = JavaagentAwareStartScriptGenerator(agentFiles, Platform.WINDOWS)
+            it.unixStartScriptGenerator = JavaagentAwareStartScriptGenerator(agentFiles, Platform.UNIX, optionsByFilePath)
+            it.windowsStartScriptGenerator = JavaagentAwareStartScriptGenerator(agentFiles, Platform.WINDOWS, optionsByFilePath)
         }
     }
 }

@@ -5,6 +5,7 @@ import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.MapProperty;
 import org.gradle.api.tasks.Input;
 
 /**
@@ -17,6 +18,8 @@ import org.gradle.api.tasks.Input;
 public class JibExtensionConfiguration {
 
   private final ListProperty<File> javaagentFiles;
+
+  private final MapProperty<String, String> agentOptions;
 
   /**
    * Instantiated by Jib's plugin extension mechanism
@@ -40,6 +43,7 @@ public class JibExtensionConfiguration {
    */
   public JibExtensionConfiguration(final ObjectFactory objectFactory) {
     javaagentFiles = objectFactory.listProperty(File.class);
+    agentOptions = objectFactory.mapProperty(String.class, String.class);
   }
 
   /**
@@ -51,5 +55,15 @@ public class JibExtensionConfiguration {
   @Input
   ListProperty<File> getJavaagentFiles() {
     return javaagentFiles;
+  }
+
+  /**
+   * Returns the agent options keyed by agent file name. When an agent's file name has an entry
+   * here, the corresponding value is appended to its {@code -javaagent} flag as {@code =<options>}.
+   * Package-private: intended to be accessed only by {@link JavaagentJibExtension}.
+   */
+  @Input
+  MapProperty<String, String> getAgentOptions() {
+    return agentOptions;
   }
 }

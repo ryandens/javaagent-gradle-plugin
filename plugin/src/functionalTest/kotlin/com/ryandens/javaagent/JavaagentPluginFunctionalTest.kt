@@ -211,6 +211,91 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
         )
     }
 
+    @Test fun `can pass agent options to application run task`() {
+        val dependencies = """
+            javaagent project(':simple-agent')
+        """
+
+        createJavaagentProject(
+            dependencies,
+            extraBuildScript =
+                """
+                javaagent {
+                    agentOptions.put(':simple-agent', '12345:config.yaml')
+                }
+                """,
+        )
+        val result = runBuild(listOf("assemble", "run"))
+
+        assertTrue(result.output.contains("Hello World!"))
+        assertTrue(result.output.contains("Hello from my simple agent!"))
+        // the simple agent echoes the agentArgs it was launched with (the `=<options>` portion)
+        assertTrue(result.output.contains("Simple agent args: 12345:config.yaml"))
+    }
+
+    @Test fun `passes agent options only to the agent they are keyed to`() {
+        // Two agents declared, but options only keyed to the project agent. The other agent must not receive them.
+        val otelVersion = "2.29.0"
+        val dependencies = """
+            javaagent project(':simple-agent')
+            javaagent 'io.opentelemetry.javaagent:opentelemetry-javaagent:$otelVersion'
+        """
+
+        createJavaagentProject(
+            dependencies,
+            extraBuildScript =
+                """
+                javaagent {
+                    agentOptions.put(':simple-agent', '12345:config.yaml')
+                }
+                """,
+        )
+        val result = runBuild(listOf("assemble", "run"))
+
+        assertTrue(result.output.contains("Hello World!"))
+        assertTrue(result.output.contains("Simple agent args: 12345:config.yaml"))
+        // the OpenTelemetry agent still installs; it simply receives no options
+        assertTrue(
+            result.output.contains("io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: $otelVersion"),
+        )
+    }
+
+    @Test fun `can pass agent options to application distribution start script`() {
+        val dependencies = """
+            javaagent project(':simple-agent')
+        """
+
+        createJavaagentProject(
+            dependencies,
+            extraBuildScript =
+                """
+                javaagent {
+                    agentOptions.put(':simple-agent', '12345:config.yaml')
+                }
+                """,
+        )
+        val result = runBuild(listOf("--configuration-cache", "build", "installDist", "execStartScript"))
+
+        val applicationDistributionScript =
+            File(functionalTestDir, "hello-world${File.separator}build${File.separator}scripts${File.separator}hello-world$scriptExtension")
+        if (isWindows) {
+            val expectedWindowsDefaultJvmOpts =
+                """set DEFAULT_JVM_OPTS="-javaagent:%APP_HOME%\agent-libs\simple-agent.jar=12345:config.yaml" "-Xmx256m""""
+            assertTrue(applicationDistributionScript.readText().contains(expectedWindowsDefaultJvmOpts))
+        } else {
+            // The option string rides inside the agent's own backslash-escaped quoted token -- see issue #95.
+            // Option values are wrapped in single quotes to prevent shell injection (issue #50).
+            val expectedDefaultJavaOpts =
+                """
+DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar='12345:config.yaml'\" \"-Xmx256m\""
+"""
+            assertTrue(applicationDistributionScript.readText().contains(expectedDefaultJavaOpts))
+        }
+
+        // Verify the option was actually applied at runtime
+        assertTrue(result.output.contains("Simple agent args: 12345:config.yaml"))
+    }
+
     @Test fun `can handle upgrade of agent with build cache`() {
         createJavaagentProject(
             """
@@ -266,6 +351,7 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
     private fun createJavaagentProject(
         dependencies: String,
         applicationDefaultJvmArgs: String = "['-Xmx256m']",
+        extraBuildScript: String = "",
     ) {
         val helloWorldDir = File(functionalTestDir, "hello-world")
         Paths.get("src", "functionalTest", "resources", "hello-world-project").toFile().copyRecursively(helloWorldDir)
@@ -344,6 +430,8 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
                      testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
                      testRuntimeOnly("org.junit.platform:junit-platform-launcher")
                 }
+
+                $extraBuildScript
             """,
         )
     }

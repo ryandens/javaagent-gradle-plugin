@@ -64,6 +64,38 @@ by the `javaagent` Gradle configuration! In addition, the distributions created 
 ApplicationPlugin tasks include the javaagent JAR in the archive's dependency directory. Finally, the distribution 
 start scripts have been modified to automatically attach the agent via the command line `-javaagent` flag.
 
+## Passing options to javaagents
+
+Some javaagents accept options via the `-javaagent:<jar>=<options>` form of the flag (see the
+[`java.lang.instrument` documentation](https://docs.oracle.com/en/java/javase/21/docs/api/java.instrument/java/lang/instrument/package-summary.html#starting-an-agent-from-the-command-line-interface-heading)).
+For example, the [Prometheus JMX Exporter](https://github.com/prometheus/jmx_exporter) agent is configured as
+`-javaagent:jmx_prometheus_javaagent.jar=12345:config.yaml`.
+
+Use the `javaagent` extension to associate options with an agent. Options are keyed by the dependency
+coordinate you declared, so they are independent of the resolved jar file name and survive version bumps:
+
+* module dependencies are keyed by `group:name` (the version is intentionally excluded)
+* project dependencies are keyed by their project path, e.g. `:my-agent`
+
+```kotlin
+plugins {
+    application
+    id("com.ryandens.javaagent-application") version "0.11.0"
+}
+
+dependencies {
+    javaagent("io.prometheus.jmx:jmx_prometheus_javaagent:0.20.0")
+}
+
+javaagent {
+    agentOptions.put("io.prometheus.jmx:jmx_prometheus_javaagent", "12345:config.yaml")
+}
+```
+
+The same options are applied consistently across every context this plugin configures: the application `run`
+task, the application distribution start scripts, the `test` task, and jib container entrypoints. Agents without
+a matching entry are attached without an options suffix, exactly as before.
+
 ## Jib integration
 
 [Jib](https://github.com/GoogleContainerTools/jib) is a build tool for containerizing Java applications without a Docker

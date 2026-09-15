@@ -24,7 +24,7 @@ jobs:
       - uses: actions/setup-java@v6.0.1
         with:
           distribution: temurin
-          java-version: 25
+          java-version: 25.0.4+101.0.LTS
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6.3.0

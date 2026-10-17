@@ -16,6 +16,7 @@ jobs:
   build:
     name: "Javaagent Gradle Plugin Validation"
     strategy:
+      fail-fast: false
       matrix:
         platform: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
@@ -45,3 +46,14 @@ jobs:
 
       - name: Validate Android Gradle Plugin 8 compatibility
         run: ${{ matrix.platform == 'windows-latest' && '.\gradlew.bat' || './gradlew' }} :android:functionalTest -PandroidTestAgpVersion=8.13.2
+
+      - name: Upload Android test reports
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: android-test-reports-${{ matrix.platform }}
+          path: |
+            android/build/reports/tests/functionalTest/
+            android/build/test-results/functionalTest/
+          if-no-files-found: ignore
+          retention-days: 7

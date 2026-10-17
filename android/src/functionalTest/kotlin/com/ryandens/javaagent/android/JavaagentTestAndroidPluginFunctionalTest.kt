@@ -150,7 +150,7 @@ class JavaagentTestAndroidPluginFunctionalTest {
         assertTrue(result.output.contains("Fixture agent: 2.0=android-options"))
         assertFalse(result.output.contains("Fixture agent: 1.0=shared-options"))
         val cached = runBuild(*arguments.toTypedArray())
-        assertTrue(cached.output.contains("Reusing configuration cache."))
+        assertTrue(cached.output.contains("Reusing configuration cache."), cached.output)
         assertEquals(TaskOutcome.UP_TO_DATE, cached.task(":android-module:testDemoDebugUnitTest")?.outcome)
         assertEquals(TaskOutcome.UP_TO_DATE, cached.task(":android-module:testDemoStagingUnitTest")?.outcome)
         module.resolve("build").deleteRecursively()

@@ -2,8 +2,6 @@ package com.ryandens.javaagent.jib
 
 import com.google.cloud.tools.jib.gradle.JibExtension
 import com.ryandens.javaagent.AgentOptionsResolver
-import com.ryandens.javaagent.JavaagentBasePlugin
-import com.ryandens.javaagent.JavaagentExtension
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -21,11 +19,10 @@ class JavaagentJibPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.pluginManager.apply(JavaagentJibExtension::class.java)
 
-        val javaagentConfiguration = project.configurations.named(JavaagentBasePlugin.CONFIGURATION_NAME)
+        val javaagentConfiguration = project.configurations.named(JavaagentJibExtension.CONFIGURATION_NAME)
 
-        val javaagentExtension = project.extensions.getByType(JavaagentExtension::class.java)
         val optionsByFilePath =
-            AgentOptionsResolver.optionsByFilePath(javaagentConfiguration.get(), javaagentExtension.agentOptions)
+            AgentOptionsResolver.optionsByFilePath(javaagentConfiguration.get())
         // Transform to file-name keyed map for the Jib extension, which looks up by the copied file's name
         val optionsByFileName =
             optionsByFilePath.map { pathMap ->

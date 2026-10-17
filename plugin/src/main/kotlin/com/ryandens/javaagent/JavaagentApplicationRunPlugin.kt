@@ -13,15 +13,20 @@ import org.gradle.api.tasks.JavaExec
 class JavaagentApplicationRunPlugin :
     Plugin<Project>,
     JavaagentPlugin {
+    companion object {
+        const val CONFIGURATION_NAME = "runJavaagent"
+    }
+
     override fun dependentProjectPlugins(): Collection<String> = setOf("application")
 
     override fun applyAfterJavaagentSetup(
         project: Project,
         javaagentConfiguration: NamedDomainObjectProvider<Configuration>,
     ) {
-        val extension = project.extensions.getByType(JavaagentExtension::class.java)
+        val runJavaagentConfiguration =
+            JavaagentBasePlugin.targetConfiguration(project, CONFIGURATION_NAME, javaagentConfiguration)
         val optionsByFilePath =
-            AgentOptionsResolver.optionsByFilePath(javaagentConfiguration.get(), extension.agentOptions)
+            AgentOptionsResolver.optionsByFilePath(runJavaagentConfiguration.get())
         // configure the run task to use the `javaagent` flag pointing to the dependency stored in the local Maven repository
         project.tasks.named(ApplicationPlugin.TASK_RUN_NAME, JavaExec::class.java).configure {
             // The agent jars are passed to the JVM via a CommandLineArgumentProvider (see
@@ -36,11 +41,11 @@ class JavaagentApplicationRunPlugin :
             // the start-script task. This requires every artifact added to the javaagent configuration to
             // carry its producing-task dependency (builtBy); consumers that synthesize a plain File must
             // preserve it (see the otel example's extendedAgent wiring).
-            it.inputs.files(javaagentConfiguration)
-            it.inputs.property("agentOptions", extension.agentOptions)
+            it.inputs.files(runJavaagentConfiguration)
+            it.inputs.property("agentOptions", optionsByFilePath)
             JavaForkOptionsConfigurer.configureJavaForkOptions(
                 it,
-                javaagentConfiguration.map { configuration -> configuration.files },
+                runJavaagentConfiguration.map { configuration -> configuration.files },
                 optionsByFilePath,
             )
         }

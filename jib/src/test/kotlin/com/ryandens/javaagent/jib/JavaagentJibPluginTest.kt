@@ -7,6 +7,7 @@ import com.google.cloud.tools.jib.gradle.JibExtension
 import org.gradle.testfixtures.ProjectBuilder
 import kotlin.test.Test
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -22,6 +23,11 @@ class JavaagentJibPluginTest {
 
         // Verify the result
         assertNotNull(project.configurations.findByName("javaagent"))
+        assertNotNull(project.configurations.findByName("jibJavaagent"))
+        assertNull(project.configurations.findByName("runJavaagent"))
+        assertNull(project.configurations.findByName("distributionJavaagent"))
+        assertNull(project.configurations.findByName("testJavaagent"))
+        assertNull(project.extensions.findByName("javaagent"))
 
         val ext = project.extensions.getByType(JibExtension::class.java)
         assertTrue(ext.pluginExtensions.get().any { it.implementation == "com.ryandens.javaagent.jib.JavaagentJibExtension" })

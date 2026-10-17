@@ -71,30 +71,59 @@ Some javaagents accept options via the `-javaagent:<jar>=<options>` form of the 
 For example, the [Prometheus JMX Exporter](https://github.com/prometheus/jmx_exporter) agent is configured as
 `-javaagent:jmx_prometheus_javaagent.jar=12345:config.yaml`.
 
-Use the `javaagent` extension to associate options with an agent. Options are keyed by the dependency
-coordinate you declared, so they are independent of the resolved jar file name and survive version bumps:
+Agent options belong to dependency declarations. Each plugin provides a configuration for its own
+execution or packaging context:
 
-* module dependencies are keyed by `group:name` (the version is intentionally excluded)
-* project dependencies are keyed by their project path, e.g. `:my-agent`
+| Plugin | Dependency configuration | Used by |
+| --- | --- | --- |
+| `com.ryandens.javaagent-application-run` | `runJavaagent` | Local application `run` |
+| `com.ryandens.javaagent-test` | `testJavaagent` | Java `test` |
+| `com.ryandens.javaagent-application-distribution` | `distributionJavaagent` | `installDist`, `distTar`, and `distZip` launchers |
+| `com.ryandens.javaagent-jib` | `jibJavaagent` | Jib container image entrypoints |
+
+The `com.ryandens.javaagent-application` convenience plugin applies both application plugins and
+provides both `runJavaagent` and `distributionJavaagent`. Apply only the plugins needed for your
+project; each registers its own configuration.
+
+In Kotlin DSL, import `agentOptions` and set it on each dependency:
 
 ```kotlin
+import com.ryandens.javaagent.agentOptions
+
 plugins {
     application
     id("com.ryandens.javaagent-application") version "0.11.0"
+    id("com.ryandens.javaagent-test") version "0.11.0"
+    id("com.google.cloud.tools.jib") version "3.5.3"
+    id("com.ryandens.javaagent-jib") version "0.11.0"
 }
 
 dependencies {
-    javaagent("io.prometheus.jmx:jmx_prometheus_javaagent:0.20.0")
-}
-
-javaagent {
-    agentOptions.put("io.prometheus.jmx:jmx_prometheus_javaagent", "12345:config.yaml")
+    runJavaagent("io.prometheus.jmx:jmx_prometheus_javaagent:0.20.0") {
+        agentOptions = "12345:config/local.yaml"
+    }
+    testJavaagent("io.prometheus.jmx:jmx_prometheus_javaagent:0.20.0") {
+        agentOptions = "12346:config/test.yaml"
+    }
+    distributionJavaagent("io.prometheus.jmx:jmx_prometheus_javaagent:0.20.0") {
+        agentOptions = "12345:config/distribution.yaml"
+    }
+    jibJavaagent("io.prometheus.jmx:jmx_prometheus_javaagent:0.20.0") {
+        agentOptions = "12345:/etc/agent/container.yaml"
+    }
 }
 ```
 
-The same options are applied consistently across every context this plugin configures: the application `run`
-task, the application distribution start scripts, the `test` task, and jib container entrypoints. Agents without
-a matching entry are attached without an options suffix, exactly as before.
+Agents declared only in a plugin's configuration are included only in that context. Project
+dependencies work the same way, for example `runJavaagent(project(":my-agent")) { agentOptions = "..." }`.
+Tar, zip, and installed distributions share options because they package the same generated launchers.
+
+The existing `javaagent` dependency configuration is shared: declarations there are inherited by each
+plugin-specific configuration. Use it when the same agent and options should apply to every enabled
+context. Options explicitly set on a plugin-specific declaration override inherited options for that
+resolved agent. An empty string overrides inherited options with an empty options suffix. Conflicting
+options on two direct declarations of the same resolved agent fail with an error. Agents without
+configured options are attached without an options suffix.
 
 ## Jib integration
 

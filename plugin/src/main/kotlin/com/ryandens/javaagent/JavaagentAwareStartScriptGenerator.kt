@@ -83,13 +83,23 @@ class JavaagentAwareStartScriptGenerator(
 
         /**
          * Escapes a javaagent option value for safe inclusion in shell scripts.
-         * - For Unix: wraps in single quotes, escaping internal single quotes with '\''
+         * - For Unix: escapes the xargs token, then the outer double-quoted shell assignment
          * - For Windows: doubles percent signs to prevent variable expansion
          */
         private fun escapeOptionValue(value: String): String =
             when (platform) {
-                Platform.UNIX -> "'" + value.replace("'", "'\\''") + "'"
-                Platform.WINDOWS -> value.replace("%", "%%")
+                Platform.UNIX -> {
+                    value
+                        .replace("\"", "\"\\\"\"")
+                        .replace("\\", "\\\\")
+                        .replace("\"", "\\\"")
+                        .replace("$", "\\$")
+                        .replace("`", "\\`")
+                }
+
+                Platform.WINDOWS -> {
+                    value.replace("%", "%%")
+                }
             }
 
         /**

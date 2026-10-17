@@ -9,6 +9,7 @@ import com.google.cloud.tools.jib.api.buildplan.LayerObject
 import com.google.cloud.tools.jib.gradle.extension.GradleData
 import com.google.cloud.tools.jib.gradle.extension.JibGradlePluginExtension
 import com.google.cloud.tools.jib.plugins.extension.ExtensionLogger
+import com.ryandens.javaagent.JavaagentBasePlugin
 import com.ryandens.javaagent.JavaagentPlugin
 import org.gradle.api.GradleException
 import org.gradle.api.NamedDomainObjectProvider
@@ -28,6 +29,7 @@ class JavaagentJibExtension :
     JavaagentPlugin {
     companion object {
         const val COPY_AGENTS_TASK_NAME = "copyAgentsToJibDir"
+        const val CONFIGURATION_NAME = "jibJavaagent"
     }
 
     override fun getExtraConfigType(): Optional<Class<JibExtensionConfiguration>> = Optional.of(JibExtensionConfiguration::class.java)
@@ -87,10 +89,12 @@ class JavaagentJibExtension :
         project: Project,
         javaagentConfiguration: NamedDomainObjectProvider<Configuration>,
     ) {
+        val jibJavaagentConfiguration =
+            JavaagentBasePlugin.targetConfiguration(project, CONFIGURATION_NAME, javaagentConfiguration)
         val destinationDirectory = project.layout.buildDirectory.dir("jib-agents")
         val copyAgents =
             project.tasks.register(COPY_AGENTS_TASK_NAME, Copy::class.java) {
-                it.from(javaagentConfiguration)
+                it.from(jibJavaagentConfiguration)
                 it.into(destinationDirectory)
             }
 

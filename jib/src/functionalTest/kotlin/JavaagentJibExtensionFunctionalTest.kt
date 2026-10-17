@@ -61,7 +61,9 @@ class JavaagentJibExtensionFunctionalTest {
 
     @Test fun `can pass agent options to jib entrypoint`() {
         val dependencies = """
-            javaagent project(':simple-agent')
+            jibJavaagent(project(':simple-agent')) {
+                attributes { attribute(com.ryandens.javaagent.AgentOptions.OPTIONS, '12345:config.yaml') }
+            }
             runtimeOnly 'commons-lang:commons-lang:2.6'
         """
 
@@ -69,12 +71,6 @@ class JavaagentJibExtensionFunctionalTest {
             createAndBuildJavaagentProject(
                 dependencies,
                 listOf("jibBuildTar"),
-                extraBuildScript =
-                    """
-                    javaagent {
-                        agentOptions.put(':simple-agent', '12345:config.yaml')
-                    }
-                    """,
             )
 
         assertTrue(result.output.contains("Running extension: com.ryandens.javaagent.jib.JavaagentJibExtension"))
@@ -92,6 +88,55 @@ class JavaagentJibExtensionFunctionalTest {
                 }
             }
         }
+    }
+
+    @Test fun `can pass dependency scoped options to jib entrypoint`() {
+        createAndBuildJavaagentProject(
+            "",
+            listOf("jibBuildTar"),
+            kotlinBuildScript =
+                """
+                import com.ryandens.javaagent.agentOptions
+
+                plugins {
+                    application
+                    id("com.google.cloud.tools.jib")
+                    id("com.ryandens.javaagent-jib")
+                    id("com.ryandens.javaagent-application")
+                }
+                application { mainClass.set("com.ryandens.HelloWorld") }
+                dependencies {
+                    runJavaagent(project(":simple-agent")) { agentOptions = "local-only-options" }
+                    distributionJavaagent(project(":simple-agent")) { agentOptions = "distribution-only-options" }
+                    jibJavaagent(project(":simple-agent")) {
+                        agentOptions = "12345:dependency-config.yaml"
+                    }
+                }
+                jib {
+                    from { image = "scratch" }
+                    to { image = "javaagent-hello-world" }
+                    container { mainClass = "com.ryandens.HelloWorld" }
+                }
+                """,
+        )
+
+        var foundConfiguration = false
+        FileInputStream(File(functionalTestDir, JIB_IMAGE)).use { fis ->
+            ArchiveStreamFactory().createArchiveInputStream<ArchiveInputStream<TarArchiveEntry>>(ArchiveStreamFactory.TAR, fis).use { ais ->
+                var entry = ais.nextEntry
+                while (entry != null) {
+                    if (entry.name == "config.json") {
+                        foundConfiguration = true
+                        val json = ais.readBytes().toString(Charsets.UTF_8)
+                        assertTrue(json.contains("-javaagent:/opt/jib-agents/simple-agent.jar=12345:dependency-config.yaml"))
+                        assertFalse(json.contains("local-only-options"))
+                        assertFalse(json.contains("distribution-only-options"))
+                    }
+                    entry = ais.nextEntry
+                }
+            }
+        }
+        assertTrue(foundConfiguration, "The image must contain the configuration with the agent entrypoint")
     }
 
     @Test fun `works even without any javaagent dependencies`() {
@@ -124,7 +169,7 @@ class JavaagentJibExtensionFunctionalTest {
     private fun createAndBuildJavaagentProject(
         dependencies: String,
         buildArgs: List<String>,
-        extraBuildScript: String = "",
+        kotlinBuildScript: String? = null,
     ): BuildResult {
         val helloWorldDir = File(functionalTestDir, "hello-world")
         File(
@@ -149,8 +194,8 @@ class JavaagentJibExtensionFunctionalTest {
             """,
         )
 
-        helloWorldDir.resolve("build.gradle").writeText(
-            """
+        helloWorldDir.resolve(if (kotlinBuildScript == null) "build.gradle" else "build.gradle.kts").writeText(
+            kotlinBuildScript ?: """
                 plugins {
                     id('application')
                     id('com.google.cloud.tools.jib') version '3.1.4'
@@ -186,8 +231,6 @@ class JavaagentJibExtensionFunctionalTest {
                         image = "javaagent-hello-world"
                     }
                 }
-
-                $extraBuildScript
             """,
         )
 

@@ -5,7 +5,6 @@ import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.testing.Test
 
@@ -15,8 +14,6 @@ class JavaagentTestPlugin :
     companion object {
         const val CONFIGURATION_NAME = "testJavaagent"
     }
-
-    override fun dependentProjectPlugins(): Collection<String> = setOf("java")
 
     override fun applyAfterJavaagentSetup(
         project: Project,
@@ -28,38 +25,52 @@ class JavaagentTestPlugin :
                 // we expect javaagents to come as shaded JARs
                 it.isTransitive = false
                 it.extendsFrom(javaagentConfiguration.get())
-                it.resolutionStrategy { strategy ->
-                    strategy.eachDependency { dep ->
-                        if (dep.requested.version.isNullOrBlank()) {
-                            dep.useVersion(
-                                JavaagentVersionUtil.versionFromDependencyAndConfiguration(
-                                    dep.requested,
-                                    project.configurations.named("testRuntimeClasspath"),
-                                ),
-                            )
-                        }
-                    }
-                }
             }
+
+        configureVersionInference(project, javaagentTestConfiguration, "testRuntimeClasspath")
 
         val extension = project.extensions.create("javaagentTest", JavaagentTestExtension::class.java)
 
         val enabled = calculateEnabled(project, extension)
 
-        val optionsByFilePath =
-            AgentOptionsResolver.optionsByFilePath(javaagentTestConfiguration)
-
-        // configure the run task to use the `javaagent` flag pointing to the dependency stored in the local Maven repository
-        project.tasks.named(JavaPlugin.TEST_TASK_NAME, Test::class.java).configure {
+        project.tasks.withType(Test::class.java).configureEach { test ->
             if (enabled.get()) {
-                it.inputs.property("agentOptions", optionsByFilePath)
+                // Each test task resolves agents independently, since JVM targets can use different versions.
+                val taskConfiguration =
+                    if (test.name == "test") {
+                        javaagentTestConfiguration
+                    } else {
+                        JavaagentBasePlugin
+                            .targetConfiguration(project, "${test.name}Javaagent", javaagentTestConfiguration)
+                            .also { configureVersionInference(project, it, "${test.name}RuntimeClasspath") }
+                    }
+                val optionsByFilePath = AgentOptionsResolver.optionsByFilePath(taskConfiguration)
+                test.inputs.property("agentOptions", optionsByFilePath)
+                test.inputs.files(taskConfiguration)
                 JavaForkOptionsConfigurer.configureJavaForkOptions(
-                    it,
-                    javaagentTestConfiguration.map { configuration ->
-                        configuration.files
-                    },
+                    test,
+                    taskConfiguration.map { it.files },
                     optionsByFilePath,
                 )
+            }
+        }
+    }
+
+    private fun configureVersionInference(
+        project: Project,
+        configuration: NamedDomainObjectProvider<Configuration>,
+        runtimeConfigurationName: String,
+    ) {
+        configuration.configure {
+            it.resolutionStrategy.eachDependency { dependency ->
+                if (dependency.requested.version.isNullOrBlank()) {
+                    dependency.useVersion(
+                        JavaagentVersionUtil.versionFromDependencyAndConfiguration(
+                            dependency.requested,
+                            project.configurations.named(runtimeConfigurationName),
+                        ),
+                    )
+                }
             }
         }
     }

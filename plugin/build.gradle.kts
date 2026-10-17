@@ -51,7 +51,7 @@ gradlePlugin {
         create("javaagentTestPlugin") {
             id = "com.ryandens.javaagent-test"
             displayName = "Javaagent Test Plugin"
-            description = "Automatically attaches javaagents to the Java Plugin Test tasks"
+            description = "Automatically attaches javaagents to JVM Test tasks, including Kotlin Multiplatform"
             implementationClass = "com.ryandens.javaagent.JavaagentTestPlugin"
             tags.set(listOf("javaagent", "instrumentation", "test"))
             compatibility {

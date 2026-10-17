@@ -112,7 +112,7 @@ execution or packaging context:
 | Plugin | Dependency configuration | Used by |
 | --- | --- | --- |
 | `com.ryandens.javaagent-application-run` | `applicationRunJavaagent` | Local application `run` |
-| `com.ryandens.javaagent-test` | `testJavaagent` | Java `test` |
+| `com.ryandens.javaagent-test` | `testJavaagent` | JVM `Test` tasks (including Kotlin Multiplatform) |
 | `com.ryandens.javaagent-application-distribution` | `applicationDistributionJavaagent` | `installDist`, `distTar`, and `distZip` launchers |
 | `com.ryandens.javaagent-jib` | `jibJavaagent` | Jib container image entrypoints |
 
@@ -255,6 +255,40 @@ dependencies {
     testJavaagent("com.ryandens.example:agent:1.0.0") // only attached to test task but ignored by other gradle plugins in this project.
 }
 ```
+
+### Kotlin Multiplatform
+
+The test plugin also attaches agents to Kotlin Multiplatform JVM test tasks, including named JVM
+targets. Apply it alongside `kotlin("multiplatform")`; either plugin order works. Non-JVM targets
+are unaffected, and the Java plugin is not required.
+
+```kotlin
+plugins {
+    kotlin("multiplatform") version "2.4.21"
+    id("com.ryandens.javaagent-test") version "<plugin-version>"
+}
+
+kotlin {
+    jvm() // agents attach to jvmTest; jvm("desktop") is also supported
+    js { nodejs() }
+}
+
+dependencies {
+    add("testJavaagent", "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2")
+}
+```
+
+Use `javaagent` for shared agents or `testJavaagent` for agents attached only to JVM tests.
+Dependency-specific agent options and the `javaagentTest.enabled` extension and
+`javaagentTestEnabled` property work the same way as for Java tests.
+
+When an agent version is omitted, it is inferred separately for each test task from
+`<taskName>RuntimeClasspath` (for example, `jvmTestRuntimeClasspath` or
+`desktopTestRuntimeClasspath`). The agent must also be present on that runtime classpath.
+Custom `Test` tasks with a different runtime configuration naming scheme should declare explicit
+agent versions. Non-default test tasks resolve agents through `<taskName>Javaagent`, which extends
+`testJavaagent`. Configure resolution rules on all relevant agent configurations when using them
+across multiple test tasks.
 
 ### OpenTelemetry Integration
 [OpenTelemetry](https://OpenTelemetry.io) is a set of tools that enable distributed tracing. 

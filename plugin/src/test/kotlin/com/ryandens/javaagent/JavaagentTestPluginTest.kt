@@ -5,6 +5,7 @@ import org.gradle.testfixtures.ProjectBuilder
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 /**
  * A simple unit test for the 'com.ryandens.javaagent-test' plugin.
@@ -40,6 +41,20 @@ class JavaagentTestPluginTest {
         assertEquals(
             0,
             project.tasks
+                .named("test", org.gradle.api.tasks.testing.Test::class.java)
+                .get()
+                .jvmArgumentProviders.size,
+        )
+    }
+
+    @Test fun `plugin can be applied before a JVM plugin`() {
+        val pluginFirstProject = ProjectBuilder.builder().build()
+        pluginFirstProject.plugins.apply("com.ryandens.javaagent-test")
+        assertFalse(pluginFirstProject.plugins.hasPlugin("java"))
+        pluginFirstProject.plugins.apply("java")
+        assertEquals(
+            1,
+            pluginFirstProject.tasks
                 .named("test", org.gradle.api.tasks.testing.Test::class.java)
                 .get()
                 .jvmArgumentProviders.size,

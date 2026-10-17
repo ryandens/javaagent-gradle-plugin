@@ -24,8 +24,8 @@ class JavaagentJibPluginTest {
         // Verify the result
         assertNotNull(project.configurations.findByName("javaagent"))
         assertNotNull(project.configurations.findByName("jibJavaagent"))
-        assertNull(project.configurations.findByName("runJavaagent"))
-        assertNull(project.configurations.findByName("distributionJavaagent"))
+        assertNull(project.configurations.findByName("applicationRunJavaagent"))
+        assertNull(project.configurations.findByName("applicationDistributionJavaagent"))
         assertNull(project.configurations.findByName("testJavaagent"))
         assertNull(project.extensions.findByName("javaagent"))
 

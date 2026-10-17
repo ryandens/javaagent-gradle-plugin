@@ -30,9 +30,11 @@ class JavaagentJibExtensionFunctionalTest {
         functionalTestDir.deleteRecursively()
     }
 
-    @Test fun `can create docker image using jib`() {
+    @Test fun `can create docker image using shared agent options`() {
         val dependencies = """
-            javaagent project(':simple-agent')
+            javaagent(project(':simple-agent')) {
+                attributes { attribute(com.ryandens.javaagent.AgentOptions.OPTIONS, 'shared-options') }
+            }
             runtimeOnly 'commons-lang:commons-lang:2.6'
         """
 
@@ -51,7 +53,7 @@ class JavaagentJibExtensionFunctionalTest {
                 while (entry != null) {
                     if ("config.json" == entry.name) {
                         val json = ais.readBytes().toString(Charsets.UTF_8)
-                        assertTrue(json.contains("-javaagent:/opt/jib-agents/simple-agent.jar"))
+                        assertTrue(json.contains("-javaagent:/opt/jib-agents/simple-agent.jar=shared-options"))
                     }
                     entry = ais.nextEntry
                 }
@@ -106,8 +108,9 @@ class JavaagentJibExtensionFunctionalTest {
                 }
                 application { mainClass.set("com.ryandens.HelloWorld") }
                 dependencies {
-                    runJavaagent(project(":simple-agent")) { agentOptions = "local-only-options" }
-                    distributionJavaagent(project(":simple-agent")) { agentOptions = "distribution-only-options" }
+                    javaagent(project(":simple-agent")) { agentOptions = "shared-options" }
+                    applicationRunJavaagent(project(":simple-agent")) { agentOptions = "local-only-options" }
+                    applicationDistributionJavaagent(project(":simple-agent")) { agentOptions = "distribution-only-options" }
                     jibJavaagent(project(":simple-agent")) {
                         agentOptions = "12345:dependency-config.yaml"
                     }
@@ -131,6 +134,7 @@ class JavaagentJibExtensionFunctionalTest {
                         assertTrue(json.contains("-javaagent:/opt/jib-agents/simple-agent.jar=12345:dependency-config.yaml"))
                         assertFalse(json.contains("local-only-options"))
                         assertFalse(json.contains("distribution-only-options"))
+                        assertFalse(json.contains("shared-options"))
                     }
                     entry = ais.nextEntry
                 }

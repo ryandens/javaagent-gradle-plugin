@@ -41,8 +41,8 @@ public final class AgentOptionsResolver {
 
   /**
    * Builds a {@code filePath -> options} map from the resolved artifacts of the provided
-   * configuration. Direct declarations override inherited declarations. Only agents that have
-   * options declared appear in the resulting map.
+   * configuration. Declarations in descendant configurations override ancestor declarations. Only
+   * agents that have options declared appear in the resulting map.
    *
    * <p>The returned {@link Provider} is lazy and configuration-cache safe: it reads the
    * configuration's resolved artifacts and the options map without touching {@code Project} at
@@ -59,8 +59,7 @@ public final class AgentOptionsResolver {
           // Resolve first: callbacks may add direct declarations that override inherited options.
           final ResolvedComponentResult root =
               configuration.getIncoming().getResolutionResult().getRootComponent().get();
-          final Map<ComponentIdentifier, String> options =
-              dependencyOptions(root, configuration.getName(), directOptions(configuration));
+          final Map<ComponentIdentifier, String> options = dependencyOptions(root, configuration);
           final Map<String, String> byFilePath = new HashMap<>();
           if (options.isEmpty()) {
             return byFilePath;
@@ -173,14 +172,19 @@ public final class AgentOptionsResolver {
         : "module:" + dependency.getGroup() + ":" + dependency.getName();
   }
 
-  private static Map<String, Set<String>> directOptions(final Configuration configuration) {
-    final Map<String, Set<String>> options = new HashMap<>();
-    for (final ModuleDependency dependency :
-        configuration.getDependencies().withType(ModuleDependency.class)) {
-      final String value = dependency.getAttributes().getAttribute(AgentOptions.OPTIONS);
-      if (value != null) {
-        final String key = dependencyKey(dependency);
-        options.computeIfAbsent(key, unused -> new HashSet<>()).add(value);
+  private static Map<String, Map<Configuration, Set<String>>> declaredOptions(
+      final Configuration configuration) {
+    final Map<String, Map<Configuration, Set<String>>> options = new HashMap<>();
+    for (final Configuration scope : configuration.getHierarchy()) {
+      for (final ModuleDependency dependency :
+          scope.getDependencies().withType(ModuleDependency.class)) {
+        final String value = dependency.getAttributes().getAttribute(AgentOptions.OPTIONS);
+        if (value != null) {
+          options
+              .computeIfAbsent(dependencyKey(dependency), unused -> new HashMap<>())
+              .computeIfAbsent(scope, unused -> new HashSet<>())
+              .add(value);
+        }
       }
     }
     return options;
@@ -198,11 +202,10 @@ public final class AgentOptionsResolver {
   }
 
   private static Map<ComponentIdentifier, String> dependencyOptions(
-      final ResolvedComponentResult root,
-      final String configurationName,
-      final Map<String, Set<String>> directOptions) {
-    final Map<ComponentIdentifier, String> options = new HashMap<>();
-    final Map<ComponentIdentifier, Integer> priorities = new HashMap<>();
+      final ResolvedComponentResult root, final Configuration configuration) {
+    final Map<String, Map<Configuration, Set<String>>> declarations =
+        declaredOptions(configuration);
+    final Map<ComponentIdentifier, Map<Configuration, Set<String>>> candidates = new HashMap<>();
     for (final DependencyResult dependency : root.getDependencies()) {
       if (!(dependency instanceof ResolvedDependencyResult)) {
         continue;
@@ -214,21 +217,47 @@ public final class AgentOptionsResolver {
       }
       final ComponentIdentifier component =
           ((ResolvedDependencyResult) dependency).getSelected().getId();
-      final Set<String> directValues = directOptions.get(requestedKey(dependency.getRequested()));
-      final int priority = directValues != null && directValues.contains(value) ? 1 : 0;
-      final int previousPriority = priorities.getOrDefault(component, -1);
-      if (priority > previousPriority) {
-        options.put(component, value);
-        priorities.put(component, priority);
-      } else if (priority == previousPriority && !value.equals(options.get(component))) {
-        throw new GradleException(
-            "Conflicting javaagent options for "
-                + component.getDisplayName()
-                + " in configuration '"
-                + configurationName
-                + "'. Configure one option string per agent.");
+      final Map<Configuration, Set<String>> scopes =
+          declarations.get(requestedKey(dependency.getRequested()));
+      if (scopes != null) {
+        scopes.forEach(
+            (scope, values) -> {
+              if (values.contains(value)) {
+                candidates
+                    .computeIfAbsent(component, unused -> new HashMap<>())
+                    .computeIfAbsent(scope, unused -> new HashSet<>())
+                    .add(value);
+              }
+            });
       }
     }
+    final Map<ComponentIdentifier, String> options = new HashMap<>();
+    candidates.forEach(
+        (component, scopes) -> {
+          final Set<String> values = new HashSet<>();
+          scopes.forEach(
+              (scope, declaredValues) -> {
+                // A descendant wins even if the consumer also directly extends the ancestor.
+                final boolean overridden =
+                    scopes.keySet().stream()
+                        .anyMatch(
+                            other -> !other.equals(scope) && other.getHierarchy().contains(scope));
+                if (!overridden) {
+                  values.addAll(declaredValues);
+                }
+              });
+          if (values.size() > 1) {
+            throw new GradleException(
+                "Conflicting javaagent options for "
+                    + component.getDisplayName()
+                    + " in configuration '"
+                    + configuration.getName()
+                    + "'. Configure one option string per agent.");
+          }
+          if (!values.isEmpty()) {
+            options.put(component, values.iterator().next());
+          }
+        });
     return options;
   }
 }

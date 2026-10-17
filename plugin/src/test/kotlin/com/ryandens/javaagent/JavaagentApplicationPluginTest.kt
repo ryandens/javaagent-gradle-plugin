@@ -17,16 +17,16 @@ class JavaagentApplicationPluginTest {
 
         // Verify the result
         assertNotNull(project.configurations.findByName("javaagent"))
-        assertNotNull(project.configurations.findByName("runJavaagent"))
-        assertNotNull(project.configurations.findByName("distributionJavaagent"))
+        assertNotNull(project.configurations.findByName("applicationRunJavaagent"))
+        assertNotNull(project.configurations.findByName("applicationDistributionJavaagent"))
         assertNull(project.extensions.findByName("javaagent"))
     }
 
     @Test fun `individual plugins create only their own agent configuration`() {
         val plugins =
             mapOf(
-                "com.ryandens.javaagent-application-run" to "runJavaagent",
-                "com.ryandens.javaagent-application-distribution" to "distributionJavaagent",
+                "com.ryandens.javaagent-application-run" to "applicationRunJavaagent",
+                "com.ryandens.javaagent-application-distribution" to "applicationDistributionJavaagent",
                 "com.ryandens.javaagent-test" to "testJavaagent",
             )
         for ((pluginId, configuration) in plugins) {

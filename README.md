@@ -76,14 +76,14 @@ execution or packaging context:
 
 | Plugin | Dependency configuration | Used by |
 | --- | --- | --- |
-| `com.ryandens.javaagent-application-run` | `runJavaagent` | Local application `run` |
+| `com.ryandens.javaagent-application-run` | `applicationRunJavaagent` | Local application `run` |
 | `com.ryandens.javaagent-test` | `testJavaagent` | Java `test` |
-| `com.ryandens.javaagent-application-distribution` | `distributionJavaagent` | `installDist`, `distTar`, and `distZip` launchers |
+| `com.ryandens.javaagent-application-distribution` | `applicationDistributionJavaagent` | `installDist`, `distTar`, and `distZip` launchers |
 | `com.ryandens.javaagent-jib` | `jibJavaagent` | Jib container image entrypoints |
 
 The `com.ryandens.javaagent-application` convenience plugin applies both application plugins and
-provides both `runJavaagent` and `distributionJavaagent`. Apply only the plugins needed for your
-project; each registers its own configuration.
+provides both `applicationRunJavaagent` and `applicationDistributionJavaagent`. Apply only the plugins
+needed for your project; each registers its own configuration.
 
 In Kotlin DSL, import `agentOptions` and set it on each dependency:
 
@@ -99,13 +99,13 @@ plugins {
 }
 
 dependencies {
-    runJavaagent("io.prometheus.jmx:jmx_prometheus_javaagent:0.20.0") {
+    applicationRunJavaagent("io.prometheus.jmx:jmx_prometheus_javaagent:0.20.0") {
         agentOptions = "12345:config/local.yaml"
     }
     testJavaagent("io.prometheus.jmx:jmx_prometheus_javaagent:0.20.0") {
         agentOptions = "12346:config/test.yaml"
     }
-    distributionJavaagent("io.prometheus.jmx:jmx_prometheus_javaagent:0.20.0") {
+    applicationDistributionJavaagent("io.prometheus.jmx:jmx_prometheus_javaagent:0.20.0") {
         agentOptions = "12345:config/distribution.yaml"
     }
     jibJavaagent("io.prometheus.jmx:jmx_prometheus_javaagent:0.20.0") {
@@ -115,15 +115,38 @@ dependencies {
 ```
 
 Agents declared only in a plugin's configuration are included only in that context. Project
-dependencies work the same way, for example `runJavaagent(project(":my-agent")) { agentOptions = "..." }`.
+dependencies work the same way, for example `applicationRunJavaagent(project(":my-agent")) { agentOptions = "..." }`.
 Tar, zip, and installed distributions share options because they package the same generated launchers.
 
 The existing `javaagent` dependency configuration is shared: declarations there are inherited by each
 plugin-specific configuration. Use it when the same agent and options should apply to every enabled
 context. Options explicitly set on a plugin-specific declaration override inherited options for that
-resolved agent. An empty string overrides inherited options with an empty options suffix. Conflicting
-options on two direct declarations of the same resolved agent fail with an error. Agents without
-configured options are attached without an options suffix.
+resolved agent. This follows the configuration hierarchy: descendant declarations override ancestors.
+An empty string overrides inherited options with an empty options suffix. Conflicting options in the
+same configuration or in unrelated parent configurations fail unless a descendant supplies an override.
+Agents without configured options are attached without an options suffix.
+
+Every downstream configuration can override options inherited from `javaagent`. For example, to
+override shared options for tests:
+
+```kotlin
+dependencies {
+    javaagent("com.example:my-agent:1.0") {
+        agentOptions = "shared-options"
+    }
+    testJavaagent("com.example:my-agent:1.0") {
+        agentOptions = "test-options"
+    }
+}
+```
+
+Application runs, distributions, and Jib images use `shared-options`; tests use `test-options`.
+Declare overrides in `applicationRunJavaagent`, `applicationDistributionJavaagent`, or `jibJavaagent`
+in the same way to customize those contexts. The same rule applies to custom configurations extending
+`javaagent`.
+Omit `agentOptions` from the `javaagent` declaration to attach the agent everywhere with
+options only in tests. With only the shared declaration, every enabled context uses its options.
+The base plugin registers `javaagent`; the context plugins inherit from it and attach the agents.
 
 ### Migrating shared resolution rules
 
@@ -135,7 +158,7 @@ configurations when upgrading:
 
 ```kotlin
 val agentConfigurations = setOf(
-    "javaagent", "runJavaagent", "testJavaagent", "distributionJavaagent", "jibJavaagent",
+    "javaagent", "applicationRunJavaagent", "testJavaagent", "applicationDistributionJavaagent", "jibJavaagent",
 )
 
 configurations.matching { it.name in agentConfigurations }.configureEach {
@@ -147,7 +170,7 @@ configurations.matching { it.name in agentConfigurations }.configureEach {
 
 Use the same pattern for forced versions, `eachDependency` rules, or configuration attributes.
 `configureEach` also covers configurations registered later by another agent plugin. To customize only
-one context, configure that plugin's configuration directly, for example `configurations.runJavaagent`.
+one context, configure that plugin's configuration directly, for example `configurations.applicationRunJavaagent`.
 
 ## Jib integration
 

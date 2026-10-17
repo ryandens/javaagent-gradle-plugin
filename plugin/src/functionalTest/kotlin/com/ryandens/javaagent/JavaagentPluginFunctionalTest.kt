@@ -215,7 +215,7 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
 
     @Test fun `can pass agent options to application run task`() {
         val dependencies = """
-            runJavaagent(project(':simple-agent')) {
+            applicationRunJavaagent(project(':simple-agent')) {
                 attributes { attribute(com.ryandens.javaagent.AgentOptions.OPTIONS, '12345:config.yaml') }
             }
         """
@@ -227,6 +227,113 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
         assertTrue(result.output.contains("Hello from my simple agent!"))
         // the simple agent echoes the agentArgs it was launched with (the `=<options>` portion)
         assertTrue(result.output.contains("Simple agent args: 12345:config.yaml"))
+    }
+
+    @Test fun `shared agent options are inherited and can be overridden only for tests`() {
+        val sharedDependency = """
+            javaagent(project(':simple-agent')) {
+                attributes { attribute(com.ryandens.javaagent.AgentOptions.OPTIONS, 'shared-options') }
+            }
+        """
+        createJavaagentProject(sharedDependency)
+        val buildScript = helloWorldDir.resolve("build.gradle")
+        buildScript.appendText("\ntest { testLogging.showStandardStreams = true }\n")
+        val applicationTasks = listOf("run", "execStartScript", "distTar", "distZip")
+        val sharedApplication = runBuild(applicationTasks)
+        assertEquals(2, sharedApplication.output.lineSequence().count { it.trim() == "Simple agent args: shared-options" })
+        val sharedTests = runBuild(listOf("test"))
+        assertTrue(sharedTests.output.contains("Simple agent args: shared-options"))
+
+        buildScript.appendText(
+            """
+
+            dependencies {
+                testJavaagent(project(':simple-agent')) {
+                    attributes { attribute(com.ryandens.javaagent.AgentOptions.OPTIONS, 'test-options') }
+                }
+            }
+            """,
+        )
+        val arguments = applicationTasks + "test"
+        val overridden = runBuild(arguments)
+        assertEquals(2, overridden.output.lineSequence().count { it.trim() == "Simple agent args: shared-options" })
+        assertTrue(overridden.output.contains("Simple agent args: test-options"))
+        val launcher = helloWorldDir.resolve("build/scripts/hello-world$scriptExtension").readText()
+        assertTrue(launcher.contains("shared-options"))
+        assertFalse(launcher.contains("test-options"))
+
+        // A shared agent without options remains attached everywhere; only tests receive options.
+        buildScript.writeText(buildScript.readText().replace(sharedDependency, "javaagent project(':simple-agent')"))
+        val testOnlyOptions = runBuild(arguments + "--rerun-tasks")
+        assertEquals(3, testOnlyOptions.output.lineSequence().count { it.trim() == "Hello from my simple agent!" })
+        assertEquals(1, testOnlyOptions.output.lineSequence().count { it.trim().startsWith("Simple agent args:") })
+        assertTrue(testOnlyOptions.output.contains("Simple agent args: test-options"))
+        val optionlessLauncher = helloWorldDir.resolve("build/scripts/hello-world$scriptExtension").readText()
+        assertFalse(optionlessLauncher.contains("shared-options"))
+        assertFalse(optionlessLauncher.contains("test-options"))
+    }
+
+    @Test fun `custom downstream configurations override ancestor options and reject sibling conflicts`() {
+        createJavaagentProject(
+            """
+            javaagent(project(':simple-agent')) {
+                attributes { attribute(com.ryandens.javaagent.AgentOptions.OPTIONS, 'shared-options') }
+            }
+            """,
+        )
+        val buildScript = helloWorldDir.resolve("build.gradle")
+        buildScript.appendText(
+            """
+
+            configurations {
+                developmentJavaagent { extendsFrom javaagent }
+                applicationRunJavaagent { extendsFrom developmentJavaagent }
+            }
+            dependencies {
+                developmentJavaagent(project(':simple-agent')) {
+                    attributes { attribute(com.ryandens.javaagent.AgentOptions.OPTIONS, 'development-options') }
+                }
+            }
+            """,
+        )
+        val arguments = listOf("--configuration-cache", "run")
+        val inherited = runBuild(arguments)
+        assertTrue(inherited.output.contains("Simple agent args: development-options"))
+        assertFalse(inherited.output.contains("Simple agent args: shared-options"))
+        val cached = runBuild(arguments)
+        assertTrue(cached.output.contains("Reusing configuration cache."))
+        assertTrue(cached.output.contains("Simple agent args: development-options"))
+
+        buildScript.appendText(
+            """
+
+            configurations {
+                diagnosticJavaagent { extendsFrom javaagent }
+                applicationRunJavaagent { extendsFrom diagnosticJavaagent }
+            }
+            dependencies {
+                diagnosticJavaagent(project(':simple-agent')) {
+                    attributes { attribute(com.ryandens.javaagent.AgentOptions.OPTIONS, 'diagnostic-options') }
+                }
+            }
+            """,
+        )
+        val conflict = runBuild(arguments, expectFailure = true)
+        assertTrue(conflict.output.contains("Conflicting javaagent options for"))
+        buildScript.appendText(
+            """
+
+            dependencies {
+                applicationRunJavaagent(project(':simple-agent')) {
+                    attributes { attribute(com.ryandens.javaagent.AgentOptions.OPTIONS, 'run-options') }
+                }
+            }
+            """,
+        )
+        val overridden = runBuild(arguments)
+        assertTrue(overridden.output.contains("Simple agent args: run-options"))
+        assertFalse(overridden.output.contains("Simple agent args: development-options"))
+        assertFalse(overridden.output.contains("Simple agent args: diagnostic-options"))
     }
 
     @Test fun `can configure independent options in each plugin configuration`() {
@@ -251,10 +358,10 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
                 javaagent("com.ryandens.fixture:simple-agent:1.0") {
                     agentOptions = "shared-options"
                 }
-                runJavaagent("com.ryandens.fixture:simple-agent:1.0") {
+                applicationRunJavaagent("com.ryandens.fixture:simple-agent:1.0") {
                     agentOptions = "12345:config.yaml"
                 }
-                distributionJavaagent("com.ryandens.fixture:simple-agent:1.0") {
+                applicationDistributionJavaagent("com.ryandens.fixture:simple-agent:1.0") {
                     agentOptions = "distribution-options"
                 }
                 testJavaagent("com.ryandens.fixture:simple-agent:1.0") {
@@ -324,7 +431,7 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
         buildScript.appendText(
             """
 
-            val agentConfigurations = setOf("javaagent", "runJavaagent", "testJavaagent", "distributionJavaagent", "jibJavaagent")
+            val agentConfigurations = setOf("javaagent", "applicationRunJavaagent", "testJavaagent", "applicationDistributionJavaagent", "jibJavaagent")
             configurations.matching { it.name in agentConfigurations }.configureEach {
                 resolutionStrategy.dependencySubstitution {
                     substitute(module("com.ryandens.fixture:simple-agent")).using(project(":simple-agent"))
@@ -353,7 +460,7 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
             application { mainClass.set("com.ryandens.HelloWorld") }
             dependencies {
                 javaagent("com.ryandens.fixture:simple-agent:1.0:instrumented")
-                runJavaagent("com.ryandens.fixture:simple-agent:1.0") {
+                applicationRunJavaagent("com.ryandens.fixture:simple-agent:1.0") {
                     artifact { name = "simple-agent"; type = "jar"; extension = "jar" }
                 }
             }
@@ -377,7 +484,7 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
                     ) +
                 """
                 dependencies {
-                    runJavaagent("com.ryandens.fixture:simple-agent:1.0") {
+                    applicationRunJavaagent("com.ryandens.fixture:simple-agent:1.0") {
                         artifact { name = "alternate"; type = "jar"; extension = "jar" }
                     }
                 }
@@ -396,7 +503,7 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
             buildScript.readText().substringBefore("dependencies {") +
                 """
                 dependencies {
-                    runJavaagent(project(path = ":simple-agent", configuration = "runtimeElements"))
+                    applicationRunJavaagent(project(path = ":simple-agent", configuration = "runtimeElements"))
                 }
                 """,
         )
@@ -418,15 +525,15 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
         helloWorldDir.resolve("build.gradle").appendText(
             """
 
-            configurations.runJavaagent.incoming.beforeResolve {
-                project.dependencies.add('runJavaagent', project(':simple-agent')) {
+            configurations.applicationRunJavaagent.incoming.beforeResolve {
+                project.dependencies.add('applicationRunJavaagent', project(':simple-agent')) {
                     attributes { attribute(com.ryandens.javaagent.AgentOptions.OPTIONS, 'late-direct-options') }
                 }
             }
             // Resolve while the configuration is still mutable. Gradle rejects dependency mutation
             // in beforeResolve after task dependency discovery has observed a configuration.
             def resolvedOptions = com.ryandens.javaagent.AgentOptionsResolver
-                .optionsByFilePath(configurations.named('runJavaagent')).get()
+                .optionsByFilePath(configurations.named('applicationRunJavaagent')).get()
             assert resolvedOptions.values().toSet() == ['late-direct-options'].toSet()
             """,
         )
@@ -454,7 +561,7 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
             }
             repositories { maven { url = uri(rootProject.file("repo")) } }
             dependencyLocking { lockAllConfigurations() }
-            val agentConfigurations = setOf("javaagent", "runJavaagent", "testJavaagent", "distributionJavaagent", "jibJavaagent")
+            val agentConfigurations = setOf("javaagent", "applicationRunJavaagent", "testJavaagent", "applicationDistributionJavaagent", "jibJavaagent")
             configurations.matching { it.name in agentConfigurations }.configureEach {
                 resolutionStrategy.force("com.ryandens.fixture:simple-agent:2.0")
             }
@@ -483,7 +590,7 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
     @Test fun `run only agents are absent from tests and packaged distributions`() {
         createJavaagentProject(
             """
-            runJavaagent(project(':simple-agent')) {
+            applicationRunJavaagent(project(':simple-agent')) {
                 attributes { attribute(com.ryandens.javaagent.AgentOptions.OPTIONS, 'local-only') }
             }
             """,
@@ -562,7 +669,7 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
 
     @Test fun `can pass agent options to application distribution start script`() {
         val dependencies = """
-            distributionJavaagent(project(':simple-agent')) {
+            applicationDistributionJavaagent(project(':simple-agent')) {
                 attributes { attribute(com.ryandens.javaagent.AgentOptions.OPTIONS, '12345:config.yaml') }
             }
         """
@@ -599,7 +706,7 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar=12345:
         val groovyOptions = options.replace("\\", "\\\\").replace("'", "\\'")
         createJavaagentProject(
             """
-            distributionJavaagent(project(':simple-agent')) {
+            applicationDistributionJavaagent(project(':simple-agent')) {
                 attributes { attribute(com.ryandens.javaagent.AgentOptions.OPTIONS, '$groovyOptions') }
             }
             """,

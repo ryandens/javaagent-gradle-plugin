@@ -14,7 +14,7 @@ class JavaagentApplicationRunPlugin :
     Plugin<Project>,
     JavaagentPlugin {
     companion object {
-        const val CONFIGURATION_NAME = "runJavaagent"
+        const val CONFIGURATION_NAME = "applicationRunJavaagent"
     }
 
     override fun dependentProjectPlugins(): Collection<String> = setOf("application")
@@ -23,10 +23,10 @@ class JavaagentApplicationRunPlugin :
         project: Project,
         javaagentConfiguration: NamedDomainObjectProvider<Configuration>,
     ) {
-        val runJavaagentConfiguration =
+        val applicationRunJavaagentConfiguration =
             JavaagentBasePlugin.targetConfiguration(project, CONFIGURATION_NAME, javaagentConfiguration)
         val optionsByFilePath =
-            AgentOptionsResolver.optionsByFilePath(runJavaagentConfiguration)
+            AgentOptionsResolver.optionsByFilePath(applicationRunJavaagentConfiguration)
         // configure the run task to use the `javaagent` flag pointing to the dependency stored in the local Maven repository
         project.tasks.named(ApplicationPlugin.TASK_RUN_NAME, JavaExec::class.java).configure {
             // The agent jars are passed to the JVM via a CommandLineArgumentProvider (see
@@ -41,11 +41,11 @@ class JavaagentApplicationRunPlugin :
             // the start-script task. This requires every artifact added to the javaagent configuration to
             // carry its producing-task dependency (builtBy); consumers that synthesize a plain File must
             // preserve it (see the otel example's extendedAgent wiring).
-            it.inputs.files(runJavaagentConfiguration)
+            it.inputs.files(applicationRunJavaagentConfiguration)
             it.inputs.property("agentOptions", optionsByFilePath)
             JavaForkOptionsConfigurer.configureJavaForkOptions(
                 it,
-                runJavaagentConfiguration.map { configuration -> configuration.files },
+                applicationRunJavaagentConfiguration.map { configuration -> configuration.files },
                 optionsByFilePath,
             )
         }

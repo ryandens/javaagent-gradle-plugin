@@ -12,6 +12,7 @@ import java.io.Writer
 class JavaagentAwareStartScriptGenerator(
     private val javaagentConfiguration: Provider<Set<File>>,
     private val platform: Platform,
+    private val optionsByFileName: Provider<Map<String, String>>,
     private val inner: ScriptGenerator =
         DefaultTemplateBasedStartScriptGenerator(
             platform.lineSeparator,
@@ -25,7 +26,14 @@ class JavaagentAwareStartScriptGenerator(
     ) {
         inner.generateScript(
             details,
-            Fake(destination, javaagentConfiguration, platform.pathSeparator, platform.appHomeVar, platform.agentArgSeparator),
+            Fake(
+                destination,
+                javaagentConfiguration,
+                platform.pathSeparator,
+                platform.appHomeVar,
+                platform.agentArgSeparator,
+                optionsByFileName,
+            ),
         )
     }
 
@@ -53,6 +61,7 @@ class JavaagentAwareStartScriptGenerator(
         private val pathSeparator: String,
         private val appHomeVar: String,
         private val agentArgSeparator: String,
+        private val optionsByFileName: Provider<Map<String, String>>,
     ) : Writer() {
         override fun close() {
             inner.close()
@@ -97,11 +106,15 @@ class JavaagentAwareStartScriptGenerator(
                         .replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar ", "")
                         .replace("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar", "")
                 } else {
+                    val options = optionsByFileName.get()
                     str.replace(
                         "-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar",
                         files.joinToString(
                             agentArgSeparator,
-                        ) { jar -> "-javaagent:$appHomeVar${pathSeparator}agent-libs$pathSeparator${jar.name}" },
+                        ) { jar ->
+                            val suffix = options[jar.name]?.let { "=$it" } ?: ""
+                            "-javaagent:$appHomeVar${pathSeparator}agent-libs$pathSeparator${jar.name}$suffix"
+                        },
                     )
                 }
             super.write(replace)

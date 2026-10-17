@@ -34,5 +34,14 @@ jobs:
       - name: Setup TestLens
         uses: testlens-app/setup-testlens@v1
 
+      - name: Setup Android test SDK
+        uses: android-actions/setup-android@v4.0.4
+        with:
+          packages: 'platforms;android-36 build-tools;36.0.0'
+          log-accepted-android-sdk-licenses: false
+
       - name: Execute Gradle build
         run: ${{ matrix.platform == 'windows-latest' && '.\gradlew.bat' || './gradlew' }} build
+
+      - name: Validate Android Gradle Plugin 8 compatibility
+        run: ${{ matrix.platform == 'windows-latest' && '.\gradlew.bat' || './gradlew' }} :android:functionalTest -PandroidTestAgpVersion=8.13.2

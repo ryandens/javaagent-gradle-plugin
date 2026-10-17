@@ -13,7 +13,9 @@ import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ComponentSelector;
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentSelector;
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentSelector;
 import org.gradle.api.artifacts.result.DependencyResult;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
@@ -52,34 +54,123 @@ public final class AgentOptionsResolver {
    */
   public static Provider<Map<String, String>> optionsByFilePath(
       final Provider<? extends Configuration> configurationProvider) {
-    return configurationProvider.flatMap(
+    return configurationProvider.map(
         configuration -> {
-          final String configurationName = configuration.getName();
-          final Map<String, Set<String>> directOptions = directOptions(configuration);
-          return configuration
-              .getIncoming()
-              .getResolutionResult()
-              .getRootComponent()
-              .map(root -> dependencyOptions(root, configurationName, directOptions))
-              .zip(
-                  configuration.getIncoming().getArtifacts().getResolvedArtifacts(),
-                  (dependencyOptions, artifacts) -> {
-                    final Map<String, String> byFilePath = new HashMap<>();
-                    for (final ResolvedArtifactResult artifact : artifacts) {
-                      final ComponentIdentifier component =
-                          artifact.getId().getComponentIdentifier();
-                      final String options = dependencyOptions.get(component);
-                      if (options != null) {
-                        try {
-                          byFilePath.put(artifact.getFile().getCanonicalPath(), options);
-                        } catch (IOException e) {
-                          throw new UncheckedIOException(e);
+          // Resolve first: callbacks may add direct declarations that override inherited options.
+          final ResolvedComponentResult root =
+              configuration.getIncoming().getResolutionResult().getRootComponent().get();
+          final Map<ComponentIdentifier, String> options =
+              dependencyOptions(root, configuration.getName(), directOptions(configuration));
+          final Map<String, String> byFilePath = new HashMap<>();
+          if (options.isEmpty()) {
+            return byFilePath;
+          }
+          final Map<String, Set<String>> requests = new HashMap<>();
+          for (final DependencyResult dependency : root.getDependencies()) {
+            if (dependency instanceof ResolvedDependencyResult) {
+              final String value =
+                  dependency.getRequested().getAttributes().getAttribute(AgentOptions.OPTIONS);
+              final ComponentIdentifier selected =
+                  ((ResolvedDependencyResult) dependency).getSelected().getId();
+              if (value != null && value.equals(options.get(selected))) {
+                requests
+                    .computeIfAbsent(
+                        requestedKey(dependency.getRequested()), unused -> new HashSet<>())
+                    .add(value);
+              }
+            }
+          }
+          // Resolving just the declarations that own options identifies their actual artifacts.
+          // Component-wide artifact views also include optionless classifier/alternate requests.
+          final Configuration optionConfiguration =
+              configuration.copyRecursive(
+                  dependency -> {
+                    if (!(dependency instanceof ModuleDependency)) {
+                      return false;
+                    }
+                    final ModuleDependency module = (ModuleDependency) dependency;
+                    final Set<String> values = requests.get(dependencyKey(module));
+                    return values != null
+                        && values.contains(
+                            module.getAttributes().getAttribute(AgentOptions.OPTIONS));
+                  });
+          preserveSelections(configuration, optionConfiguration, root);
+          // The original configuration already validated locks; the unnamed copy uses those
+          // selections.
+          optionConfiguration.getResolutionStrategy().deactivateDependencyLocking();
+          final Map<String, ComponentIdentifier> originalArtifacts = new HashMap<>();
+          for (final ResolvedArtifactResult artifact :
+              configuration.getIncoming().getArtifacts().getArtifacts()) {
+            originalArtifacts.put(
+                canonicalPath(artifact), artifact.getId().getComponentIdentifier());
+          }
+          for (final ResolvedArtifactResult artifact :
+              optionConfiguration.getIncoming().getArtifacts().getArtifacts()) {
+            final String path = canonicalPath(artifact);
+            final ComponentIdentifier component = artifact.getId().getComponentIdentifier();
+            final String value = options.get(component);
+            if (value == null || !component.equals(originalArtifacts.get(path))) {
+              throw new GradleException(
+                  "Agent option resolution changed the selected artifact: "
+                      + artifact.getId().getDisplayName());
+            }
+            byFilePath.put(path, value);
+          }
+          return byFilePath;
+        });
+  }
+
+  private static String canonicalPath(final ResolvedArtifactResult artifact) {
+    try {
+      return artifact.getFile().getCanonicalPath();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  private static void preserveSelections(
+      final Configuration original, final Configuration copy, final ResolvedComponentResult root) {
+    final Map<String, ComponentIdentifier> selections = new HashMap<>();
+    for (final DependencyResult dependency :
+        original.getIncoming().getResolutionResult().getAllDependencies()) {
+      if (dependency instanceof ResolvedDependencyResult) {
+        selections.put(
+            requestedKey(dependency.getRequested()),
+            ((ResolvedDependencyResult) dependency).getSelected().getId());
+      }
+    }
+    final ProjectComponentIdentifier rootId = (ProjectComponentIdentifier) root.getId();
+    copy.getResolutionStrategy()
+        .dependencySubstitution(
+            substitutions ->
+                substitutions.all(
+                    details -> {
+                      final ComponentIdentifier selected =
+                          selections.get(requestedKey(details.getRequested()));
+                      if (selected instanceof ModuleComponentIdentifier) {
+                        final ModuleComponentIdentifier module =
+                            (ModuleComponentIdentifier) selected;
+                        details.useTarget(
+                            substitutions.module(
+                                module.getGroup()
+                                    + ":"
+                                    + module.getModule()
+                                    + ":"
+                                    + module.getVersion()));
+                      } else if (selected instanceof ProjectComponentIdentifier) {
+                        final ProjectComponentIdentifier project =
+                            (ProjectComponentIdentifier) selected;
+                        if (project.getBuild().equals(rootId.getBuild())) {
+                          details.useTarget(substitutions.project(project.getProjectPath()));
                         }
                       }
-                    }
-                    return byFilePath;
-                  });
-        });
+                    }));
+  }
+
+  private static String dependencyKey(final ModuleDependency dependency) {
+    return dependency instanceof ProjectDependency
+        ? "project:" + ((ProjectDependency) dependency).getPath()
+        : "module:" + dependency.getGroup() + ":" + dependency.getName();
   }
 
   private static Map<String, Set<String>> directOptions(final Configuration configuration) {
@@ -88,10 +179,7 @@ public final class AgentOptionsResolver {
         configuration.getDependencies().withType(ModuleDependency.class)) {
       final String value = dependency.getAttributes().getAttribute(AgentOptions.OPTIONS);
       if (value != null) {
-        final String key =
-            dependency instanceof ProjectDependency
-                ? "project:" + ((ProjectDependency) dependency).getPath()
-                : "module:" + dependency.getGroup() + ":" + dependency.getName();
+        final String key = dependencyKey(dependency);
         options.computeIfAbsent(key, unused -> new HashSet<>()).add(value);
       }
     }

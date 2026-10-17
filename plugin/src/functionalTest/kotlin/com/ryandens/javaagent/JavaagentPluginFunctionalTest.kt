@@ -340,6 +340,8 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
     @Test fun `classified explicit artifact and explicit configuration dependencies still work`() {
         createJavaagentProject("")
         publishAgentFixture("1.0")
+        val repository = functionalTestDir.resolve("repo/com/ryandens/fixture/simple-agent/1.0")
+        repository.resolve("simple-agent-1.0.jar").copyTo(repository.resolve("alternate-1.0.jar"))
         helloWorldDir.resolve("build.gradle").delete()
         helloWorldDir.resolve("build.gradle.kts").writeText(
             """
@@ -364,9 +366,32 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
         assertTrue(cached.output.contains("Reusing configuration cache."))
         assertEquals(2, cached.output.lineSequence().count { it == "Hello from my simple agent!" })
 
+        val buildScript = helloWorldDir.resolve("build.gradle.kts")
+        buildScript.writeText(
+            "import com.ryandens.javaagent.agentOptions\n" +
+                buildScript
+                    .readText()
+                    .replace(
+                        "artifact { name = \"simple-agent\"; type = \"jar\"; extension = \"jar\" }",
+                        "agentOptions = \"main-only-options\"",
+                    ) +
+                """
+                dependencies {
+                    runJavaagent("com.ryandens.fixture:simple-agent:1.0") {
+                        artifact { name = "alternate"; type = "jar"; extension = "jar" }
+                    }
+                }
+                """,
+        )
+        val withOptions = runBuild(arguments)
+        assertEquals(3, withOptions.output.lineSequence().count { it == "Hello from my simple agent!" })
+        assertEquals(1, withOptions.output.lineSequence().count { it == "Simple agent args: main-only-options" })
+        val cachedOptions = runBuild(arguments)
+        assertTrue(cachedOptions.output.contains("Reusing configuration cache."))
+        assertEquals(1, cachedOptions.output.lineSequence().count { it == "Simple agent args: main-only-options" })
+
         // Test the explicit project configuration separately: mixing it with the published module
         // selects the project for both requests, whose outgoing variants do not publish the classifier.
-        val buildScript = helloWorldDir.resolve("build.gradle.kts")
         buildScript.writeText(
             buildScript.readText().substringBefore("dependencies {") +
                 """
@@ -380,6 +405,38 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
         val cachedProject = runBuild(arguments)
         assertTrue(cachedProject.output.contains("Reusing configuration cache."))
         assertEquals(1, cachedProject.output.lineSequence().count { it == "Hello from my simple agent!" })
+    }
+
+    @Test fun `direct options added before resolution override inherited options`() {
+        createJavaagentProject(
+            """
+            javaagent(project(':simple-agent')) {
+                attributes { attribute(com.ryandens.javaagent.AgentOptions.OPTIONS, 'shared-options') }
+            }
+            """,
+        )
+        helloWorldDir.resolve("build.gradle").appendText(
+            """
+
+            configurations.runJavaagent.incoming.beforeResolve {
+                project.dependencies.add('runJavaagent', project(':simple-agent')) {
+                    attributes { attribute(com.ryandens.javaagent.AgentOptions.OPTIONS, 'late-direct-options') }
+                }
+            }
+            // Resolve while the configuration is still mutable. Gradle rejects dependency mutation
+            // in beforeResolve after task dependency discovery has observed a configuration.
+            def resolvedOptions = com.ryandens.javaagent.AgentOptionsResolver
+                .optionsByFilePath(configurations.named('runJavaagent')).get()
+            assert resolvedOptions.values().toSet() == ['late-direct-options'].toSet()
+            """,
+        )
+        val arguments = listOf("--configuration-cache", ":hello-world:run")
+        val result = runBuild(arguments)
+        assertTrue(result.output.contains("Simple agent args: late-direct-options"))
+        assertFalse(result.output.contains("Simple agent args: shared-options"))
+        val cached = runBuild(arguments)
+        assertTrue(cached.output.contains("Reusing configuration cache."))
+        assertTrue(cached.output.contains("Simple agent args: late-direct-options"))
     }
 
     @Test fun `common force rules apply to every agent configuration when configured together`() {
@@ -396,6 +453,7 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
                 id("com.ryandens.javaagent-test")
             }
             repositories { maven { url = uri(rootProject.file("repo")) } }
+            dependencyLocking { lockAllConfigurations() }
             val agentConfigurations = setOf("javaagent", "runJavaagent", "testJavaagent", "distributionJavaagent", "jibJavaagent")
             configurations.matching { it.name in agentConfigurations }.configureEach {
                 resolutionStrategy.force("com.ryandens.fixture:simple-agent:2.0")
@@ -413,8 +471,10 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
             """,
         )
         val arguments = listOf("--configuration-cache", ":hello-world:verifyAgentVersions", ":hello-world:run")
-        val result = runBuild(arguments)
+        val result = runBuild(arguments + "--write-locks")
         assertTrue(result.output.contains("Simple agent args: forced-options"))
+        assertFalse(helloWorldDir.resolve("gradle.lockfile").readText().contains("Copy"))
+        runBuild(arguments)
         val cached = runBuild(arguments)
         assertTrue(cached.output.contains("Reusing configuration cache."))
         assertTrue(cached.output.contains("Simple agent args: forced-options"))

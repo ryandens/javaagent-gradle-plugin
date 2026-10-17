@@ -26,7 +26,7 @@ class JavaagentApplicationRunPlugin :
         val runJavaagentConfiguration =
             JavaagentBasePlugin.targetConfiguration(project, CONFIGURATION_NAME, javaagentConfiguration)
         val optionsByFilePath =
-            AgentOptionsResolver.optionsByFilePath(runJavaagentConfiguration.get())
+            AgentOptionsResolver.optionsByFilePath(runJavaagentConfiguration)
         // configure the run task to use the `javaagent` flag pointing to the dependency stored in the local Maven repository
         project.tasks.named(ApplicationPlugin.TASK_RUN_NAME, JavaExec::class.java).configure {
             // The agent jars are passed to the JVM via a CommandLineArgumentProvider (see

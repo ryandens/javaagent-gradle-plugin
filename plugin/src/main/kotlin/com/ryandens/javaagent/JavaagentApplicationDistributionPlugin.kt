@@ -37,7 +37,7 @@ class JavaagentApplicationDistributionPlugin :
         val distributionJavaagentConfiguration =
             JavaagentBasePlugin.targetConfiguration(project, CONFIGURATION_NAME, javaagentConfiguration)
         val optionsByFilePath =
-            AgentOptionsResolver.optionsByFilePath(distributionJavaagentConfiguration.get())
+            AgentOptionsResolver.optionsByFilePath(distributionJavaagentConfiguration)
 
         project.extensions
             .getByType(DistributionContainer::class.java)

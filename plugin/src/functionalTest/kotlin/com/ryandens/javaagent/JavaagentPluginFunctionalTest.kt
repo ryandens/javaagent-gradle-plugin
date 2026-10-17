@@ -231,23 +231,7 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
 
     @Test fun `can configure independent options in each plugin configuration`() {
         createJavaagentProject("")
-        // Publish the fixture agent locally so the consumer uses the external module overload,
-        // exactly as in the documented Kotlin DSL example.
-        File(functionalTestDir, "simple-agent/build.gradle.kts").appendText(
-            """
-
-            apply(plugin = "maven-publish")
-            group = "com.ryandens.fixture"
-            version = "1.0"
-            configure<PublishingExtension> {
-                publications {
-                    create<MavenPublication>("agent") { from(components["java"]) }
-                }
-                repositories { maven { url = uri(rootProject.file("repo")) } }
-            }
-            """,
-        )
-        runBuild(listOf(":simple-agent:publish"))
+        publishAgentFixture("1.0")
         helloWorldDir.resolve("build.gradle").delete()
         helloWorldDir.resolve("build.gradle.kts").writeText(
             """
@@ -340,7 +324,8 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
         buildScript.appendText(
             """
 
-            configurations.all {
+            val agentConfigurations = setOf("javaagent", "runJavaagent", "testJavaagent", "distributionJavaagent", "jibJavaagent")
+            configurations.matching { it.name in agentConfigurations }.configureEach {
                 resolutionStrategy.dependencySubstitution {
                     substitute(module("com.ryandens.fixture:simple-agent")).using(project(":simple-agent"))
                 }
@@ -350,6 +335,89 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar\" \"-X
         val substitutedResult = runBuild(arguments)
         assertTrue(substitutedResult.output.contains("Simple agent args: changed-test-options"))
         assertTrue(substitutedResult.output.contains("Simple agent args: 12345:config.yaml"))
+    }
+
+    @Test fun `classified explicit artifact and explicit configuration dependencies still work`() {
+        createJavaagentProject("")
+        publishAgentFixture("1.0")
+        helloWorldDir.resolve("build.gradle").delete()
+        helloWorldDir.resolve("build.gradle.kts").writeText(
+            """
+            plugins {
+                application
+                id("com.ryandens.javaagent-application")
+            }
+            repositories { maven { url = uri(rootProject.file("repo")) } }
+            application { mainClass.set("com.ryandens.HelloWorld") }
+            dependencies {
+                javaagent("com.ryandens.fixture:simple-agent:1.0:instrumented")
+                runJavaagent("com.ryandens.fixture:simple-agent:1.0") {
+                    artifact { name = "simple-agent"; type = "jar"; extension = "jar" }
+                }
+            }
+            """,
+        )
+        val arguments = listOf("--configuration-cache", ":hello-world:run")
+        val result = runBuild(arguments)
+        assertEquals(2, result.output.lineSequence().count { it == "Hello from my simple agent!" })
+        val cached = runBuild(arguments)
+        assertTrue(cached.output.contains("Reusing configuration cache."))
+        assertEquals(2, cached.output.lineSequence().count { it == "Hello from my simple agent!" })
+
+        // Test the explicit project configuration separately: mixing it with the published module
+        // selects the project for both requests, whose outgoing variants do not publish the classifier.
+        val buildScript = helloWorldDir.resolve("build.gradle.kts")
+        buildScript.writeText(
+            buildScript.readText().substringBefore("dependencies {") +
+                """
+                dependencies {
+                    runJavaagent(project(path = ":simple-agent", configuration = "runtimeElements"))
+                }
+                """,
+        )
+        val projectResult = runBuild(arguments)
+        assertEquals(1, projectResult.output.lineSequence().count { it == "Hello from my simple agent!" })
+        val cachedProject = runBuild(arguments)
+        assertTrue(cachedProject.output.contains("Reusing configuration cache."))
+        assertEquals(1, cachedProject.output.lineSequence().count { it == "Hello from my simple agent!" })
+    }
+
+    @Test fun `common force rules apply to every agent configuration when configured together`() {
+        createJavaagentProject("")
+        publishAgentFixture("1.0", "2.0")
+        helloWorldDir.resolve("build.gradle").delete()
+        helloWorldDir.resolve("build.gradle.kts").writeText(
+            """
+            import com.ryandens.javaagent.agentOptions
+
+            plugins {
+                application
+                id("com.ryandens.javaagent-application")
+                id("com.ryandens.javaagent-test")
+            }
+            repositories { maven { url = uri(rootProject.file("repo")) } }
+            val agentConfigurations = setOf("javaagent", "runJavaagent", "testJavaagent", "distributionJavaagent", "jibJavaagent")
+            configurations.matching { it.name in agentConfigurations }.configureEach {
+                resolutionStrategy.force("com.ryandens.fixture:simple-agent:2.0")
+            }
+            dependencies {
+                javaagent("com.ryandens.fixture:simple-agent:1.0") { agentOptions = "forced-options" }
+            }
+            application { mainClass.set("com.ryandens.HelloWorld") }
+            tasks.register("verifyAgentVersions") {
+                inputs.files(agentConfigurations.filter { it != "jibJavaagent" }.map { configurations.named(it) })
+                doLast {
+                    check(inputs.files.files.map { it.name }.toSet() == setOf("simple-agent-2.0.jar"))
+                }
+            }
+            """,
+        )
+        val arguments = listOf("--configuration-cache", ":hello-world:verifyAgentVersions", ":hello-world:run")
+        val result = runBuild(arguments)
+        assertTrue(result.output.contains("Simple agent args: forced-options"))
+        val cached = runBuild(arguments)
+        assertTrue(cached.output.contains("Reusing configuration cache."))
+        assertTrue(cached.output.contains("Simple agent args: forced-options"))
     }
 
     @Test fun `run only agents are absent from tests and packaged distributions`() {
@@ -533,6 +601,31 @@ DEFAULT_JVM_OPTS="\"-javaagent:${"$"}APP_HOME/agent-libs/simple-agent.jar=12345:
             ).exists(),
         )
         assertTrue(result.output.contains("Hello World!"))
+    }
+
+    private fun publishAgentFixture(vararg versions: String) {
+        File(functionalTestDir, "simple-agent/build.gradle.kts").appendText(
+            """
+
+            apply(plugin = "maven-publish")
+            group = "com.ryandens.fixture"
+            version = providers.gradleProperty("fixtureVersion").get()
+            configure<PublishingExtension> {
+                publications {
+                    create<MavenPublication>("agent") {
+                        from(components["java"])
+                        artifact(tasks.named("jar")) { classifier = "instrumented" }
+                    }
+                }
+                repositories { maven { url = uri(rootProject.file("repo")) } }
+            }
+            """,
+        )
+        for (version in versions) {
+            runBuild(listOf(":simple-agent:publish", "-PfixtureVersion=$version"))
+        }
+        // Keep a default version for subsequent consumer builds that include the fixture project.
+        functionalTestDir.resolve("gradle.properties").appendText("\nfixtureVersion=${versions.last()}\n")
     }
 
     private fun createJavaagentProject(

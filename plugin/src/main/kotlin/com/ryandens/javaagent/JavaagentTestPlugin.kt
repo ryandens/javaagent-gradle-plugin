@@ -27,7 +27,6 @@ class JavaagentTestPlugin :
             project.configurations.register(CONFIGURATION_NAME) {
                 // we expect javaagents to come as shaded JARs
                 it.isTransitive = false
-                AgentOptions.trackDeclarations(it)
                 it.extendsFrom(javaagentConfiguration.get())
                 it.resolutionStrategy { strategy ->
                     strategy.eachDependency { dep ->
@@ -48,7 +47,7 @@ class JavaagentTestPlugin :
         val enabled = calculateEnabled(project, extension)
 
         val optionsByFilePath =
-            AgentOptionsResolver.optionsByFilePath(javaagentTestConfiguration.get())
+            AgentOptionsResolver.optionsByFilePath(javaagentTestConfiguration)
 
         // configure the run task to use the `javaagent` flag pointing to the dependency stored in the local Maven repository
         project.tasks.named(JavaPlugin.TEST_TASK_NAME, Test::class.java).configure {

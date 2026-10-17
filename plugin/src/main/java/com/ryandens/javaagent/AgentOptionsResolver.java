@@ -4,10 +4,17 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ModuleDependency;
+import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
+import org.gradle.api.artifacts.component.ComponentSelector;
+import org.gradle.api.artifacts.component.ModuleComponentSelector;
+import org.gradle.api.artifacts.component.ProjectComponentSelector;
 import org.gradle.api.artifacts.result.DependencyResult;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
@@ -39,37 +46,73 @@ public final class AgentOptionsResolver {
    * configuration's resolved artifacts and the options map without touching {@code Project} at
    * execution time.
    *
-   * @param configuration the resolvable javaagent configuration whose artifacts should be matched
+   * @param configurationProvider the resolvable javaagent configuration whose artifacts should be
+   *     matched
    * @return provider of a map from resolved artifact file path to its option string
    */
-  public static Provider<Map<String, String>> optionsByFilePath(final Configuration configuration) {
-    final String configurationName = configuration.getName();
-    return configuration
-        .getIncoming()
-        .getResolutionResult()
-        .getRootComponent()
-        .map(root -> dependencyOptions(root, configurationName))
-        .zip(
-            configuration.getIncoming().getArtifacts().getResolvedArtifacts(),
-            (dependencyOptions, artifacts) -> {
-              final Map<String, String> byFilePath = new HashMap<>();
-              for (final ResolvedArtifactResult artifact : artifacts) {
-                final ComponentIdentifier component = artifact.getId().getComponentIdentifier();
-                final String options = dependencyOptions.get(component);
-                if (options != null) {
-                  try {
-                    byFilePath.put(artifact.getFile().getCanonicalPath(), options);
-                  } catch (IOException e) {
-                    throw new UncheckedIOException(e);
-                  }
-                }
-              }
-              return byFilePath;
-            });
+  public static Provider<Map<String, String>> optionsByFilePath(
+      final Provider<? extends Configuration> configurationProvider) {
+    return configurationProvider.flatMap(
+        configuration -> {
+          final String configurationName = configuration.getName();
+          final Map<String, Set<String>> directOptions = directOptions(configuration);
+          return configuration
+              .getIncoming()
+              .getResolutionResult()
+              .getRootComponent()
+              .map(root -> dependencyOptions(root, configurationName, directOptions))
+              .zip(
+                  configuration.getIncoming().getArtifacts().getResolvedArtifacts(),
+                  (dependencyOptions, artifacts) -> {
+                    final Map<String, String> byFilePath = new HashMap<>();
+                    for (final ResolvedArtifactResult artifact : artifacts) {
+                      final ComponentIdentifier component =
+                          artifact.getId().getComponentIdentifier();
+                      final String options = dependencyOptions.get(component);
+                      if (options != null) {
+                        try {
+                          byFilePath.put(artifact.getFile().getCanonicalPath(), options);
+                        } catch (IOException e) {
+                          throw new UncheckedIOException(e);
+                        }
+                      }
+                    }
+                    return byFilePath;
+                  });
+        });
+  }
+
+  private static Map<String, Set<String>> directOptions(final Configuration configuration) {
+    final Map<String, Set<String>> options = new HashMap<>();
+    for (final ModuleDependency dependency :
+        configuration.getDependencies().withType(ModuleDependency.class)) {
+      final String value = dependency.getAttributes().getAttribute(AgentOptions.OPTIONS);
+      if (value != null) {
+        final String key =
+            dependency instanceof ProjectDependency
+                ? "project:" + ((ProjectDependency) dependency).getPath()
+                : "module:" + dependency.getGroup() + ":" + dependency.getName();
+        options.computeIfAbsent(key, unused -> new HashSet<>()).add(value);
+      }
+    }
+    return options;
+  }
+
+  private static String requestedKey(final ComponentSelector selector) {
+    if (selector instanceof ProjectComponentSelector) {
+      return "project:" + ((ProjectComponentSelector) selector).getProjectPath();
+    }
+    if (selector instanceof ModuleComponentSelector) {
+      final ModuleComponentSelector module = (ModuleComponentSelector) selector;
+      return "module:" + module.getGroup() + ":" + module.getModule();
+    }
+    return selector.getDisplayName();
   }
 
   private static Map<ComponentIdentifier, String> dependencyOptions(
-      final ResolvedComponentResult root, final String configurationName) {
+      final ResolvedComponentResult root,
+      final String configurationName,
+      final Map<String, Set<String>> directOptions) {
     final Map<ComponentIdentifier, String> options = new HashMap<>();
     final Map<ComponentIdentifier, Integer> priorities = new HashMap<>();
     for (final DependencyResult dependency : root.getDependencies()) {
@@ -83,9 +126,8 @@ public final class AgentOptionsResolver {
       }
       final ComponentIdentifier component =
           ((ResolvedDependencyResult) dependency).getSelected().getId();
-      final String declaredOn =
-          dependency.getRequested().getAttributes().getAttribute(AgentOptions.DECLARED_ON);
-      final int priority = configurationName.equals(declaredOn) ? 1 : 0;
+      final Set<String> directValues = directOptions.get(requestedKey(dependency.getRequested()));
+      final int priority = directValues != null && directValues.contains(value) ? 1 : 0;
       final int previousPriority = priorities.getOrDefault(component, -1);
       if (priority > previousPriority) {
         options.put(component, value);

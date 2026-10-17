@@ -125,6 +125,30 @@ resolved agent. An empty string overrides inherited options with an empty option
 options on two direct declarations of the same resolved agent fail with an error. Agents without
 configured options are attached without an options suffix.
 
+### Migrating shared resolution rules
+
+Plugin-specific configurations resolve their own dependencies. Gradle's `extendsFrom` shares dependency
+declarations, constraints, and exclusions; it does not inherit resolution strategies or configuration
+attributes. Previously, application run, distributions, and Jib resolved `javaagent` directly. If your
+build customized `configurations.javaagent.resolutionStrategy`, move those rules to all relevant agent
+configurations when upgrading:
+
+```kotlin
+val agentConfigurations = setOf(
+    "javaagent", "runJavaagent", "testJavaagent", "distributionJavaagent", "jibJavaagent",
+)
+
+configurations.matching { it.name in agentConfigurations }.configureEach {
+    resolutionStrategy.dependencySubstitution {
+        substitute(module("com.example:my-agent")).using(project(":my-agent"))
+    }
+}
+```
+
+Use the same pattern for forced versions, `eachDependency` rules, or configuration attributes.
+`configureEach` also covers configurations registered later by another agent plugin. To customize only
+one context, configure that plugin's configuration directly, for example `configurations.runJavaagent`.
+
 ## Jib integration
 
 [Jib](https://github.com/GoogleContainerTools/jib) is a build tool for containerizing Java applications without a Docker

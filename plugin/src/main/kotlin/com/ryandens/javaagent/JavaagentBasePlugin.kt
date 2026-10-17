@@ -22,7 +22,6 @@ class JavaagentBasePlugin : Plugin<Project> {
                 it.isTransitive = false
                 it.isCanBeConsumed = false
                 it.extendsFrom(shared.get())
-                AgentOptions.trackDeclarations(it)
             }
     }
 
@@ -31,7 +30,6 @@ class JavaagentBasePlugin : Plugin<Project> {
         project.configurations.register(CONFIGURATION_NAME) {
             // we expect javaagents to come as shaded JARs
             it.isTransitive = false
-            AgentOptions.trackDeclarations(it)
         }
     }
 }

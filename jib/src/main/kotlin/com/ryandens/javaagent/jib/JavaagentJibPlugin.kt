@@ -24,8 +24,15 @@ class JavaagentJibPlugin : Plugin<Project> {
         val javaagentConfiguration = project.configurations.named(JavaagentBasePlugin.CONFIGURATION_NAME)
 
         val javaagentExtension = project.extensions.getByType(JavaagentExtension::class.java)
+        val optionsByFilePath =
+            AgentOptionsResolver.optionsByFilePath(javaagentConfiguration.get(), javaagentExtension.agentOptions)
+        // Transform to file-name keyed map for the Jib extension, which looks up by the copied file's name
         val optionsByFileName =
-            AgentOptionsResolver.optionsByFileName(javaagentConfiguration.get(), javaagentExtension.agentOptions)
+            optionsByFilePath.map { pathMap ->
+                pathMap.entries.associate { (path, options) ->
+                    java.io.File(path).name to options
+                }
+            }
 
         val destinationDirectory =
             project.tasks

@@ -1,6 +1,8 @@
 package com.ryandens.javaagent;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
 import org.gradle.api.artifacts.Configuration;
@@ -12,9 +14,9 @@ import org.gradle.api.provider.Provider;
 
 /**
  * Resolves the {@link JavaagentExtension#getAgentOptions() agent options} declared by coordinate
- * into a map keyed by the resolved artifact file name, which is the join key every {@code
- * -javaagent:} argument site can compute (the run/test sites hold the {@link File}, the
- * distribution and jib sites use {@code file.getName()}).
+ * into a map keyed by the resolved artifact's full canonical file path, which is the join key every
+ * {@code -javaagent:} argument site can compute (the run/test sites hold the {@link File}, the
+ * distribution and jib sites use {@code file.getCanonicalPath()}).
  *
  * <p>This class is written in Java for the same reason as {@link JavaForkOptionsConfigurer}: to
  * avoid the <a
@@ -27,7 +29,7 @@ public final class AgentOptionsResolver {
   private AgentOptionsResolver() {}
 
   /**
-   * Builds a {@code fileName -> options} map from the resolved artifacts of the provided
+   * Builds a {@code filePath -> options} map from the resolved artifacts of the provided
    * configuration and the coordinate-keyed options declared on the {@link JavaagentExtension}. Only
    * agents that have options declared appear in the resulting map.
    *
@@ -38,9 +40,9 @@ public final class AgentOptionsResolver {
    * @param configuration the resolvable javaagent configuration whose artifacts should be matched
    * @param coordinateOptions options keyed by dependency coordinate (see {@link
    *     JavaagentExtension})
-   * @return provider of a map from resolved artifact file name to its option string
+   * @return provider of a map from resolved artifact file path to its option string
    */
-  public static Provider<Map<String, String>> optionsByFileName(
+  public static Provider<Map<String, String>> optionsByFilePath(
       final Configuration configuration, final Provider<Map<String, String>> coordinateOptions) {
     return configuration
         .getIncoming()
@@ -49,18 +51,22 @@ public final class AgentOptionsResolver {
         .map(
             artifacts -> {
               final Map<String, String> coordinates = coordinateOptions.getOrElse(new HashMap<>());
-              final Map<String, String> byFileName = new HashMap<>();
+              final Map<String, String> byFilePath = new HashMap<>();
               if (coordinates.isEmpty()) {
-                return byFileName;
+                return byFilePath;
               }
               for (final ResolvedArtifactResult artifact : artifacts) {
                 final String key = coordinateKey(artifact.getId().getComponentIdentifier());
                 final String options = coordinates.get(key);
                 if (options != null) {
-                  byFileName.put(artifact.getFile().getName(), options);
+                  try {
+                    byFilePath.put(artifact.getFile().getCanonicalPath(), options);
+                  } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                  }
                 }
               }
-              return byFileName;
+              return byFilePath;
             });
   }
 

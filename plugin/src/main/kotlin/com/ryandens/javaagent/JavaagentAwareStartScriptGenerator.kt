@@ -33,6 +33,7 @@ class JavaagentAwareStartScriptGenerator(
                 platform.appHomeVar,
                 platform.agentArgSeparator,
                 optionsByFilePath,
+                platform,
             ),
         )
     }
@@ -62,6 +63,7 @@ class JavaagentAwareStartScriptGenerator(
         private val appHomeVar: String,
         private val agentArgSeparator: String,
         private val optionsByFilePath: Provider<Map<String, String>>,
+        private val platform: Platform,
     ) : Writer() {
         override fun close() {
             inner.close()
@@ -78,6 +80,17 @@ class JavaagentAwareStartScriptGenerator(
         ) {
             inner.write(cbuf, off, len)
         }
+
+        /**
+         * Escapes a javaagent option value for safe inclusion in shell scripts.
+         * - For Unix: wraps in single quotes, escaping internal single quotes with '\''
+         * - For Windows: doubles percent signs to prevent variable expansion
+         */
+        private fun escapeOptionValue(value: String): String =
+            when (platform) {
+                Platform.UNIX -> "'" + value.replace("'", "'\\''") + "'"
+                Platform.WINDOWS -> value.replace("%", "%%")
+            }
 
         /**
          * Rewrites the javaagent placeholder that the templated `defaultJvmOpts` injects into the rendered start
@@ -112,7 +125,7 @@ class JavaagentAwareStartScriptGenerator(
                         files.joinToString(
                             agentArgSeparator,
                         ) { jar ->
-                            val suffix = options[jar.canonicalPath]?.let { "=$it" } ?: ""
+                            val suffix = options[jar.canonicalPath]?.let { "=" + escapeOptionValue(it) } ?: ""
                             "-javaagent:$appHomeVar${pathSeparator}agent-libs$pathSeparator${jar.name}$suffix"
                         },
                     )

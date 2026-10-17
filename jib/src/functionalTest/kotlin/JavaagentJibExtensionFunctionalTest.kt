@@ -30,9 +30,11 @@ class JavaagentJibExtensionFunctionalTest {
         functionalTestDir.deleteRecursively()
     }
 
-    @Test fun `can create docker image using jib`() {
+    @Test fun `can create docker image using shared agent options`() {
         val dependencies = """
-            javaagent project(':simple-agent')
+            javaagent(project(':simple-agent')) {
+                attributes { attribute(com.ryandens.javaagent.AgentOptions.OPTIONS, 'shared-options') }
+            }
             runtimeOnly 'commons-lang:commons-lang:2.6'
         """
 
@@ -51,12 +53,94 @@ class JavaagentJibExtensionFunctionalTest {
                 while (entry != null) {
                     if ("config.json" == entry.name) {
                         val json = ais.readBytes().toString(Charsets.UTF_8)
-                        assertTrue(json.contains("-javaagent:/opt/jib-agents/simple-agent.jar"))
+                        assertTrue(json.contains("-javaagent:/opt/jib-agents/simple-agent.jar=shared-options"))
                     }
                     entry = ais.nextEntry
                 }
             }
         }
+    }
+
+    @Test fun `can pass agent options to jib entrypoint`() {
+        val dependencies = """
+            jibJavaagent(project(':simple-agent')) {
+                attributes { attribute(com.ryandens.javaagent.AgentOptions.OPTIONS, '12345:config.yaml') }
+            }
+            runtimeOnly 'commons-lang:commons-lang:2.6'
+        """
+
+        val result =
+            createAndBuildJavaagentProject(
+                dependencies,
+                listOf("jibBuildTar"),
+            )
+
+        assertTrue(result.output.contains("Running extension: com.ryandens.javaagent.jib.JavaagentJibExtension"))
+        assertTrue(File(functionalTestDir, JIB_IMAGE).exists())
+
+        FileInputStream(File(functionalTestDir, JIB_IMAGE)).use { fis ->
+            ArchiveStreamFactory().createArchiveInputStream<ArchiveInputStream<TarArchiveEntry>>(ArchiveStreamFactory.TAR, fis).use { ais ->
+                var entry = ais.nextEntry
+                while (entry != null) {
+                    if ("config.json" == entry.name) {
+                        val json = ais.readBytes().toString(Charsets.UTF_8)
+                        assertTrue(json.contains("-javaagent:/opt/jib-agents/simple-agent.jar=12345:config.yaml"))
+                    }
+                    entry = ais.nextEntry
+                }
+            }
+        }
+    }
+
+    @Test fun `can pass dependency scoped options to jib entrypoint`() {
+        createAndBuildJavaagentProject(
+            "",
+            listOf("jibBuildTar"),
+            kotlinBuildScript =
+                """
+                import com.ryandens.javaagent.agentOptions
+
+                plugins {
+                    application
+                    id("com.google.cloud.tools.jib")
+                    id("com.ryandens.javaagent-jib")
+                    id("com.ryandens.javaagent-application")
+                }
+                application { mainClass.set("com.ryandens.HelloWorld") }
+                dependencies {
+                    javaagent(project(":simple-agent")) { agentOptions = "shared-options" }
+                    applicationRunJavaagent(project(":simple-agent")) { agentOptions = "local-only-options" }
+                    applicationDistributionJavaagent(project(":simple-agent")) { agentOptions = "distribution-only-options" }
+                    jibJavaagent(project(":simple-agent")) {
+                        agentOptions = "12345:dependency-config.yaml"
+                    }
+                }
+                jib {
+                    from { image = "scratch" }
+                    to { image = "javaagent-hello-world" }
+                    container { mainClass = "com.ryandens.HelloWorld" }
+                }
+                """,
+        )
+
+        var foundConfiguration = false
+        FileInputStream(File(functionalTestDir, JIB_IMAGE)).use { fis ->
+            ArchiveStreamFactory().createArchiveInputStream<ArchiveInputStream<TarArchiveEntry>>(ArchiveStreamFactory.TAR, fis).use { ais ->
+                var entry = ais.nextEntry
+                while (entry != null) {
+                    if (entry.name == "config.json") {
+                        foundConfiguration = true
+                        val json = ais.readBytes().toString(Charsets.UTF_8)
+                        assertTrue(json.contains("-javaagent:/opt/jib-agents/simple-agent.jar=12345:dependency-config.yaml"))
+                        assertFalse(json.contains("local-only-options"))
+                        assertFalse(json.contains("distribution-only-options"))
+                        assertFalse(json.contains("shared-options"))
+                    }
+                    entry = ais.nextEntry
+                }
+            }
+        }
+        assertTrue(foundConfiguration, "The image must contain the configuration with the agent entrypoint")
     }
 
     @Test fun `works even without any javaagent dependencies`() {
@@ -89,6 +173,7 @@ class JavaagentJibExtensionFunctionalTest {
     private fun createAndBuildJavaagentProject(
         dependencies: String,
         buildArgs: List<String>,
+        kotlinBuildScript: String? = null,
     ): BuildResult {
         val helloWorldDir = File(functionalTestDir, "hello-world")
         File(
@@ -113,8 +198,8 @@ class JavaagentJibExtensionFunctionalTest {
             """,
         )
 
-        helloWorldDir.resolve("build.gradle").writeText(
-            """
+        helloWorldDir.resolve(if (kotlinBuildScript == null) "build.gradle" else "build.gradle.kts").writeText(
+            kotlinBuildScript ?: """
                 plugins {
                     id('application')
                     id('com.google.cloud.tools.jib') version '3.1.4'

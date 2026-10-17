@@ -24,18 +24,27 @@ class JavaagentApplicationDistributionPlugin :
      */
     private val destinationDirectory = "agent-libs"
 
+    companion object {
+        const val CONFIGURATION_NAME = "applicationDistributionJavaagent"
+    }
+
     override fun dependentProjectPlugins(): Collection<String> = setOf("application")
 
     override fun applyAfterJavaagentSetup(
         project: Project,
         javaagentConfiguration: NamedDomainObjectProvider<Configuration>,
     ) {
+        val applicationDistributionJavaagentConfiguration =
+            JavaagentBasePlugin.targetConfiguration(project, CONFIGURATION_NAME, javaagentConfiguration)
+        val optionsByFilePath =
+            AgentOptionsResolver.optionsByFilePath(applicationDistributionJavaagentConfiguration)
+
         project.extensions
             .getByType(DistributionContainer::class.java)
             .named(DistributionPlugin.MAIN_DISTRIBUTION_NAME)
             .configure { distribution ->
                 distribution.contents { copy ->
-                    copy.from(javaagentConfiguration) {
+                    copy.from(applicationDistributionJavaagentConfiguration) {
                         it.into(destinationDirectory)
                     }
                 }
@@ -51,11 +60,12 @@ class JavaagentApplicationDistributionPlugin :
             it.defaultJvmOpts =
                 listOf("-javaagent:COM_RYANDENS_JAVAAGENTS_PLACEHOLDER.jar")
                     .plus(it.defaultJvmOpts ?: listOf())
-            it.inputs.files(javaagentConfiguration)
+            it.inputs.files(applicationDistributionJavaagentConfiguration)
+            it.inputs.property("agentOptions", optionsByFilePath)
             // custom start script generator that replaces the placeholder
-            val agentFiles: Provider<Set<File>> = javaagentConfiguration.map { configuration -> configuration.files }
-            it.unixStartScriptGenerator = JavaagentAwareStartScriptGenerator(agentFiles, Platform.UNIX)
-            it.windowsStartScriptGenerator = JavaagentAwareStartScriptGenerator(agentFiles, Platform.WINDOWS)
+            val agentFiles: Provider<Set<File>> = applicationDistributionJavaagentConfiguration.map { configuration -> configuration.files }
+            it.unixStartScriptGenerator = JavaagentAwareStartScriptGenerator(agentFiles, Platform.UNIX, optionsByFilePath)
+            it.windowsStartScriptGenerator = JavaagentAwareStartScriptGenerator(agentFiles, Platform.WINDOWS, optionsByFilePath)
         }
     }
 }

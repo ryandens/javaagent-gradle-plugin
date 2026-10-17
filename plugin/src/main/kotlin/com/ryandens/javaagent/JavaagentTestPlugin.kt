@@ -46,14 +46,19 @@ class JavaagentTestPlugin :
 
         val enabled = calculateEnabled(project, extension)
 
+        val optionsByFilePath =
+            AgentOptionsResolver.optionsByFilePath(javaagentTestConfiguration)
+
         // configure the run task to use the `javaagent` flag pointing to the dependency stored in the local Maven repository
         project.tasks.named(JavaPlugin.TEST_TASK_NAME, Test::class.java).configure {
             if (enabled.get()) {
+                it.inputs.property("agentOptions", optionsByFilePath)
                 JavaForkOptionsConfigurer.configureJavaForkOptions(
                     it,
                     javaagentTestConfiguration.map { configuration ->
                         configuration.files
                     },
+                    optionsByFilePath,
                 )
             }
         }

@@ -22,6 +22,12 @@ jobs:
         with:
           cache-read-only: false
 
+      - name: Setup Android test SDK
+        uses: android-actions/setup-android@v4.0.4
+        with:
+          packages: 'platforms;android-36 build-tools;36.0.0'
+          log-accepted-android-sdk-licenses: false
+
       - name: Execute Gradle build
         run: ./gradlew build
 

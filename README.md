@@ -38,6 +38,41 @@ dependencies {
 
 > ℹ️ **Note:** The [Javaagent Test Plugin](#java-test-task-integration) automatically resolves dependency versions for javaagents dependencies that did not request one from the test runtime classpath. 
 
+## Android JVM test integration
+
+The `com.ryandens.javaagent-test-android` plugin (available in the next release) attaches agents to
+host-side JVM tests in Android application and library projects. Apply it instead of
+`com.ryandens.javaagent-test` in Android modules:
+
+```kotlin
+plugins {
+    id("com.android.application") // or com.android.library, using your project's AGP version
+    id("com.ryandens.javaagent-test-android") version "<plugin-version>"
+}
+
+dependencies {
+    testImplementation(platform("org.mockito:mockito-bom:5.18.0"))
+    testImplementation("org.mockito:mockito-core")
+    testJavaagent("org.mockito:mockito-core")
+}
+```
+
+Agents declared in `javaagent` are inherited; options on `testJavaagent` can override shared options.
+Versionless agents are resolved using each host test variant's runtime classpath, including its
+flavor/build-type dependencies and BOM constraints. Custom flavors and build types are discovered
+through Android's public Variant API. Either plugin order works, and neither the Java nor Android
+plugin is applied implicitly. Device/emulator instrumentation tests and Android app packaging are
+unaffected.
+
+Set `javaagentTest { enabled.set(false) }` or `-PjavaagentTestEnabled=false` to disable attachment.
+The project property takes precedence. Disabled agents are not resolved.
+
+Compatibility is tested with AGP 8.13.2 / Gradle 9.5 and AGP 9.4.1 / Gradle 9.8.1, including
+configuration-cache reuse and Isolated Projects. AGP 8 requires Gradle below 9.6 because it uses
+an internal Gradle API removed in 9.6. To run this repository's Android functional tests, set
+`ANDROID_HOME` (or `ANDROID_SDK_ROOT`) and install `platforms;android-36` and `build-tools;36.0.0`.
+Run the compatibility suite with `./gradlew :android:functionalTest "-PandroidTestAgpVersion=8.13.2"`.
+
 ## Application Plugin integration
 
 This Gradle plugin tightly integrates with the [Gradle application plugin](https://docs.gradle.org/current/userguide/application_plugin.html) 

@@ -20,6 +20,9 @@ class JavaagentTestAndroidPluginFunctionalTest {
     private val directory = Files.createTempDirectory("android-javaagent-").toFile()
     private val module = directory.resolve("android-module")
 
+    // SDK initialization must not create an input directory after the first cache snapshot.
+    private val androidUserHome = directory.resolve("android-home").apply { resolve("cache").mkdirs() }
+
     @AfterTest fun cleanUp() {
         directory.deleteRecursively()
     }
@@ -298,6 +301,7 @@ class JavaagentTestAndroidPluginFunctionalTest {
                 .create()
                 .withProjectDir(directory)
                 .withPluginClasspath()
+                .withEnvironment(System.getenv() + ("ANDROID_USER_HOME" to androidUserHome.absolutePath))
                 .withArguments(*arguments, "--configuration-cache", "--stacktrace")
                 .forwardOutput()
         // AGP 8 uses a Gradle internal API removed in 9.6; exercise its supported Gradle line.

@@ -45,7 +45,7 @@ jobs:
         run: ${{ matrix.platform == 'windows-latest' && '.\gradlew.bat' || './gradlew' }} build
 
       - name: Validate Android Gradle Plugin 8 compatibility
-        run: ${{ matrix.platform == 'windows-latest' && '.\gradlew.bat' || './gradlew' }} :android:functionalTest -PandroidTestAgpVersion=8.13.2
+        run: ${{ matrix.platform == 'windows-latest' && '.\gradlew.bat' || './gradlew' }} :android:functionalTest "-PandroidTestAgpVersion=8.13.2"
 
       - name: Upload Android test reports
         if: always()

@@ -71,7 +71,7 @@ Compatibility is tested with AGP 8.13.2 / Gradle 9.5 and AGP 9.4.1 / Gradle 9.8.
 configuration-cache reuse and Isolated Projects. AGP 8 requires Gradle below 9.6 because it uses
 an internal Gradle API removed in 9.6. To run this repository's Android functional tests, set
 `ANDROID_HOME` (or `ANDROID_SDK_ROOT`) and install `platforms;android-36` and `build-tools;36.0.0`.
-Run the compatibility suite with `./gradlew :android:functionalTest -PandroidTestAgpVersion=8.13.2`.
+Run the compatibility suite with `./gradlew :android:functionalTest "-PandroidTestAgpVersion=8.13.2"`.
 
 ## Application Plugin integration
 

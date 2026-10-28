@@ -28,7 +28,7 @@ val androidTestPlugin =
 
 dependencies {
     implementation(project(":plugin"))
-    compileOnly("com.android.tools.build:gradle-api:9.4.1")
+    compileOnly("com.android.tools.build:gradle-api:9.5.0")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
     addProvider(

@@ -45,16 +45,15 @@ public final class JavaForkOptionsConfigurer {
           public Iterable<String> asArguments() {
             final Map<String, String> options = optionsByFilePath.get();
             return javaagentConfiguration.get().stream()
-                .map(
-                    file -> {
-                      try {
-                        final String options0 = options.get(file.getCanonicalPath());
-                        final String suffix = options0 == null ? "" : "=" + options0;
-                        return "-javaagent:" + file.getCanonicalPath() + suffix;
-                      } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                      }
-                    })
+                .map(file -> {
+                  try {
+                    final String options0 = options.get(file.getCanonicalPath());
+                    final String suffix = options0 == null ? "" : "=" + options0;
+                    return "-javaagent:" + file.getCanonicalPath() + suffix;
+                  } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                  }
+                })
                 .collect(Collectors.toList());
           }
         });

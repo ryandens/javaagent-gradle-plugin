@@ -9,8 +9,9 @@ java {
 val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 dependencies {
-    testImplementation(libs.findLibrary("junit-jupiter").orElseThrow())
-    testRuntimeOnly(libs.findLibrary("junit-launcher").orElseThrow())
+    testImplementation(platform(libs.findLibrary("junit-bom").orElseThrow()))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 tasks.named<Test>("test") {

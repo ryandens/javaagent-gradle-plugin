@@ -1,7 +1,7 @@
 import org.gradle.plugin.compatibility.compatibility
 
 plugins {
-    id("com.ryandens.archive-test-conventions")
+    id("com.ryandens.kotlin-test-conventions")
 }
 
 val pluginDependencies = configurations.dependencyScope("pluginDependencies").get()
@@ -25,6 +25,7 @@ tasks.named<PluginUnderTestMetadata>("pluginUnderTestMetadata") {
 }
 
 dependencies {
+    testImplementation(libs.commons.compress)
     add(pluginDependencies.name, libs.jib.extension.api)
     add(pluginDependencies.name, libs.jib.plugin)
     implementation(project(":plugin"))

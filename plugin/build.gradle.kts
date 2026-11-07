@@ -1,10 +1,11 @@
 import org.gradle.plugin.compatibility.compatibility
 
 plugins {
-    id("com.ryandens.archive-test-conventions")
+    id("com.ryandens.kotlin-test-conventions")
 }
 
 dependencies {
+    testImplementation(libs.commons.compress)
 }
 
 gradlePlugin {

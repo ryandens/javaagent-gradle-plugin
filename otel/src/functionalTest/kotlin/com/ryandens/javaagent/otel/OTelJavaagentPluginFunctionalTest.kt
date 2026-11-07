@@ -11,13 +11,20 @@ class OTelJavaagentPluginFunctionalTest {
     fun `can run task`(
         @TempDir projectDir: File,
     ) {
-        File("../example-projects/").copyRecursively(projectDir)
+        val exampleProject = File("../example-projects/")
+        exampleProject
+            .walkTopDown()
+            .onEnter { it.name !in setOf("build", ".gradle", ".kotlin") }
+            .forEach { source ->
+                val destination = File(projectDir, source.relativeTo(exampleProject).path)
+                if (source.isDirectory) destination.mkdirs() else source.copyTo(destination)
+            }
 
         // Run the build
         val runner = GradleRunner.create()
         runner.forwardOutput()
         runner.withPluginClasspath()
-        runner.withArguments("mergeInstrumentationServiceFiles", "extendedAgent", "run")
+        runner.withArguments("mergeInstrumentationServiceFiles", "extendedAgent", "run", ":app:distZip", ":app:distTar")
         runner.withProjectDir(projectDir)
         runner.withDebug(true)
         val result = runner.build()
@@ -39,5 +46,10 @@ class OTelJavaagentPluginFunctionalTest {
         assertTrue(result.output.contains(" [tracer: FibonacciTracer:]")) // tracer name
         val agent = File(projectDir, "app/build/agents/extended-opentelemetry-javaagent.jar")
         assertTrue(agent.exists())
+        assertTrue(File(projectDir, "app/build/distributions/app-0.0.1.zip").exists())
+        assertTrue(File(projectDir, "app/build/distributions/app-0.0.1.tar").exists())
+
+        val cachedResult = runner.build()
+        assertTrue(cachedResult.output.contains("Reusing configuration cache."))
     }
 }

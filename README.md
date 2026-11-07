@@ -332,9 +332,11 @@ application {
   mainClass.set("com.ryandens.javaaagent.example.App")
 }
 
-setOf(tasks.distTar, tasks.distZip).forEach {
+setOf(tasks.distTar, tasks.distZip, tasks.startScripts).forEach {
   it.configure {
-    dependsOn(tasks.extendedAgent)
+    inputs.file(tasks.extendedAgent.flatMap { it.archiveFile })
+      .withPropertyName("extendedAgent")
+      .withPathSensitivity(PathSensitivity.NONE)
   }
 }
 ```

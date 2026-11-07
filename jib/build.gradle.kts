@@ -1,45 +1,34 @@
 import org.gradle.plugin.compatibility.compatibility
 
 plugins {
-    id("com.ryandens.plugin-conventions")
+    id("com.ryandens.archive-test-conventions")
 }
 
-val plugin: Configuration =
-    configurations.create("plugin") {
-        isCanBeDeclared = true
-        isCanBeResolved = true
-        isCanBeConsumed = false
+val pluginDependencies = configurations.dependencyScope("pluginDependencies").get()
+val pluginClasspathConfiguration =
+    configurations.resolvable("pluginClasspath") {
+        extendsFrom(pluginDependencies)
+        attributes {
+            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+            attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
+            attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+        }
     }
 
 configurations {
-    compileOnly {
-        extendsFrom(plugin)
-    }
-    testImplementation {
-        extendsFrom(plugin)
-    }
+    compileOnly { extendsFrom(pluginDependencies) }
+    testImplementation { extendsFrom(pluginDependencies) }
 }
 
 tasks.named<PluginUnderTestMetadata>("pluginUnderTestMetadata") {
-    // adds dependencies with the plugin configuration to the plugin classpath
-    pluginClasspath.setFrom(pluginClasspath.plus(plugin.files))
-    // avoid warnings
-    dependsOn(tasks.compileKotlin)
-    dependsOn(tasks.compileJava)
-    dependsOn(tasks.processResources)
-    dependsOn(":jib-common:jar")
-    dependsOn(":plugin:jar")
+    pluginClasspath.from(pluginClasspathConfiguration)
 }
 
 dependencies {
-    plugin("com.google.cloud.tools:jib-gradle-plugin-extension-api:0.4.0")
-    plugin("com.google.cloud.tools.jib:com.google.cloud.tools.jib.gradle.plugin:3.5.4")
+    add(pluginDependencies.name, libs.jib.extension.api)
+    add(pluginDependencies.name, libs.jib.plugin)
     implementation(project(":plugin"))
     implementation(project(":jib-common"))
-
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
-    testImplementation("org.apache.commons:commons-compress:1.28.0")
 }
 
 gradlePlugin {

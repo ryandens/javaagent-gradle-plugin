@@ -1,24 +1,14 @@
 import org.gradle.plugin.compatibility.compatibility
 
 plugins {
-    id("com.ryandens.plugin-conventions")
-}
-
-repositories {
-    google {
-        content {
-            includeGroupByRegex("com\\.android.*")
-            includeGroupByRegex("androidx\\..*")
-            includeGroup("com.google.testing.platform")
-        }
-    }
+    id("com.ryandens.kotlin-test-conventions")
 }
 
 // TestKit injects plugins through a separate classloader: include the matching AGP only for tests.
-val androidTestPluginDependencies = configurations.dependencyScope("androidTestPluginDependencies")
+val androidTestPluginDependencies = configurations.dependencyScope("androidTestPluginDependencies").get()
 val androidTestPlugin =
     configurations.resolvable("androidTestPlugin") {
-        extendsFrom(androidTestPluginDependencies.get())
+        extendsFrom(androidTestPluginDependencies)
         attributes {
             attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
             attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
@@ -28,12 +18,14 @@ val androidTestPlugin =
 
 dependencies {
     implementation(project(":plugin"))
-    compileOnly("com.android.tools.build:gradle-api:9.5.1")
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+    compileOnly(libs.android.gradle.api)
     addProvider(
         androidTestPluginDependencies.name,
-        providers.gradleProperty("androidTestAgpVersion").orElse("9.4.1").map { "com.android.tools.build:gradle:$it" },
+        providers
+            .gradleProperty(
+                "androidTestAgpVersion",
+            ).orElse(libs.versions.android.test.gradle)
+            .map { "com.android.tools.build:gradle:$it" },
     )
 }
 

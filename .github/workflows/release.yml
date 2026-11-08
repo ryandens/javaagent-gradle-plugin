@@ -6,10 +6,9 @@ on:
       - '[0-9].[0-9]+.[0-9]+'
 
 jobs:
-  release-build:
+  validate:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
     steps:
       - uses: actions/checkout@v7.0.1
@@ -31,8 +30,24 @@ jobs:
       - name: Execute Gradle build
         run: ./gradlew build
 
+  publish:
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-java@v6.2.0
+        with:
+          distribution: temurin
+          java-version: 25
+      - name: Set up Gradle without restored caches
+        uses: gradle/actions/setup-gradle@v6.4.1
+        with:
+          cache-disabled: true
       - name: Publish release to Gradle Plugin Portal
-        run: "./gradlew publishPlugins"
+        run: ./gradlew publishPlugins --no-build-cache --no-configuration-cache --rerun-tasks
         env:
           GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
           GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}

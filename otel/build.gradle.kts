@@ -6,10 +6,10 @@ plugins {
 
 dependencies {
     implementation(project(":plugin"))
-    testImplementation(platform("org.junit:junit-bom:6.1.3"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.junit.jupiter:junit-jupiter-params")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.junit.jupiter.params)
+    testRuntimeOnly(libs.junit.launcher)
 }
 
 gradlePlugin {
@@ -34,8 +34,13 @@ gradlePlugin {
 
 tasks.functionalTest {
     useJUnitPlatform()
-    inputs.file(layout.projectDirectory.file("../example-projects/buildSrc/build.gradle.kts"))
-    inputs.files(layout.projectDirectory.dir("../example-projects/buildSrc/src/"))
+    inputs.files(
+        layout.projectDirectory.file("../example-projects/settings.gradle.kts"),
+        layout.projectDirectory.file("../example-projects/gradle.properties"),
+        layout.projectDirectory.file("../example-projects/build-logic/settings.gradle.kts"),
+    )
+    inputs.file(layout.projectDirectory.file("../example-projects/build-logic/build.gradle.kts"))
+    inputs.files(layout.projectDirectory.dir("../example-projects/build-logic/src/"))
 
     inputs.file(layout.projectDirectory.file("../example-projects/app/build.gradle.kts"))
     inputs.files(layout.projectDirectory.dir("../example-projects/app/src/"))

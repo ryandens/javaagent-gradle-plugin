@@ -11,10 +11,6 @@ spotless {
     }
 }
 
-repositories {
-    gradlePluginPortal()
-}
-
 dependencies {
     implementation(buildlibs.plugin.publish)
     implementation(buildlibs.kotlin)

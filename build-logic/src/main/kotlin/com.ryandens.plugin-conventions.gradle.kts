@@ -1,5 +1,4 @@
 import dev.sigstore.sign.tasks.SigstoreSignFilesTask
-import org.gradle.internal.extensions.stdlib.capitalized
 import org.gradle.kotlin.dsl.`java-gradle-plugin`
 import org.gradle.kotlin.dsl.`maven-publish`
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -15,10 +14,6 @@ plugins {
     id("com.ryandens.java-conventions")
 }
 
-repositories {
-    gradlePluginPortal()
-}
-
 spotless {
     kotlin {
         ktlint()
@@ -30,11 +25,11 @@ dependencies {
 }
 
 tasks.publishPlugins {
-    dependsOn(
-        publishing.publications.map { publication ->
-            tasks.named<SigstoreSignFilesTask>("sigstoreSign${publication.name.capitalized()}Publication")
-        },
-    )
+    // Signatures are publication artifacts; consuming their outputs also schedules signing.
+    inputs
+        .files(tasks.withType<SigstoreSignFilesTask>())
+        .withPropertyName("sigstoreSignatures")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
 gradlePlugin {
@@ -65,6 +60,8 @@ configurations["functionalTestRuntimeOnly"].extendsFrom(configurations["testRunt
 // Add a task to run the functional tests
 val functionalTest =
     tasks.register<Test>("functionalTest") {
+        group = "verification"
+        description = "Runs the plugin functional tests."
         testClassesDirs = functionalTestSourceSet.output.classesDirs
         classpath = functionalTestSourceSet.runtimeClasspath
     }

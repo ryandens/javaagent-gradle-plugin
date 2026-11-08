@@ -1,5 +1,22 @@
 [versions]
 otel = "2.33.1"
+otel-alpha = "2.33.1-alpha"
+muzzle = "2.29.0-alpha"
+auto-service = "1.1.1"
+junit = "6.1.3"
 
 [libraries]
 otel-agent = { module = "io.opentelemetry.javaagent:opentelemetry-javaagent", version.ref = "otel" }
+otel-extension-api = { module = "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api", version.ref = "otel-alpha" }
+otel-tooling = { module = "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling", version.ref = "otel-alpha" }
+otel-instrumentation-api = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api", version.ref = "otel" }
+otel-instrumentation-semconv = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv", version.ref = "otel" }
+otel-instrumentation-annotations = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-annotation-support", version.ref = "otel" }
+otel-instrumentation-appender = { module = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-appender-api-internal", version.ref = "otel" }
+otel-google-exporter = { module = "com.google.cloud.opentelemetry:exporter-auto", version = "0.33.0-alpha" }
+auto-service-annotations = { module = "com.google.auto.service:auto-service-annotations", version.ref = "auto-service" }
+auto-service-processor = { module = "com.google.auto.service:auto-service", version.ref = "auto-service" }
+shadow-plugin = { module = "com.gradleup.shadow:com.gradleup.shadow.gradle.plugin", version = "9.6.1" }
+muzzle-generation-plugin = { module = "io.opentelemetry.instrumentation.muzzle-generation:io.opentelemetry.instrumentation.muzzle-generation.gradle.plugin", version.ref = "muzzle" }
+muzzle-check-plugin = { module = "io.opentelemetry.instrumentation.muzzle-check:io.opentelemetry.instrumentation.muzzle-check.gradle.plugin", version.ref = "muzzle" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }

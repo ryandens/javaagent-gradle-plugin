@@ -5,13 +5,20 @@ plugins {
 }
 
 dependencies {
-  otel(libs.otel.agent)
-  otelExtension("com.google.cloud.opentelemetry:exporter-auto:0.33.0-alpha") {
-      artifact {
-          classifier = "shaded"
-      }
-  }
-  otelInstrumentation(project(":custom-instrumentation", "shadow"))
+    otel(libs.otel.agent)
+    otelExtension(libs.otel.google.exporter) {
+        artifact {
+            classifier = "shaded"
+        }
+    }
+    otelInstrumentation(project(":custom-instrumentation")) {
+        attributes {
+            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+            attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
+            attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+            attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.SHADOWED))
+        }
+    }
 }
 
 application {
@@ -20,15 +27,11 @@ application {
     applicationDefaultJvmArgs = listOf("-Dotel.javaagent.debug=true", "-Dotel.metrics.exporter=none")
 }
 
-/*
-  see https://github.com/johnrengelman/shadow/issues/713
-
-  Currently, tasks that consume the output of the extendedAgent shadowJar task need to be made aware of
-  the implicit dependency (https://docs.gradle.org/7.4.2/userguide/validation_problems.html#implicit_dependency)
-  due to an issue with the shadowJar plugin
-*/
+// Track the generated agent as an input so distributions retain its producer dependency.
 setOf(tasks.distTar, tasks.distZip, tasks.startScripts).forEach {
-  it.configure {
-    dependsOn(tasks.extendedAgent)
-  }
+    it.configure {
+        inputs.file(tasks.extendedAgent.flatMap { it.archiveFile })
+            .withPropertyName("extendedAgent")
+            .withPathSensitivity(PathSensitivity.NONE)
+    }
 }

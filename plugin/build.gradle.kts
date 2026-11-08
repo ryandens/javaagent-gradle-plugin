@@ -1,13 +1,11 @@
 import org.gradle.plugin.compatibility.compatibility
 
 plugins {
-    id("com.ryandens.plugin-conventions")
+    id("com.ryandens.kotlin-test-conventions")
 }
 
 dependencies {
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
-    testImplementation("org.apache.commons:commons-compress:1.28.0")
+    testImplementation(libs.commons.compress)
 }
 
 gradlePlugin {

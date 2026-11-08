@@ -1,0 +1,14 @@
+[versions]
+junit = "6.1.3"
+android-gradle = "9.5.1"
+android-test-gradle = "9.4.1"
+
+[libraries]
+commons-compress = { module = "org.apache.commons:commons-compress", version = "1.28.0" }
+jib-extension-api = { module = "com.google.cloud.tools:jib-gradle-plugin-extension-api", version = "0.4.0" }
+jib-plugin = { module = "com.google.cloud.tools.jib:com.google.cloud.tools.jib.gradle.plugin", version = "3.5.4" }
+android-gradle-api = { module = "com.android.tools.build:gradle-api", version.ref = "android-gradle" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params" }
+junit-launcher = { module = "org.junit.platform:junit-platform-launcher" }

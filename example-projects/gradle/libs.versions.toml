@@ -1,5 +1,5 @@
 [versions]
-otel = "2.33.1"
+otel = "2.34.0"
 otel-alpha = "2.33.1-alpha"
 muzzle = "2.29.0-alpha"
 auto-service = "1.1.1"
